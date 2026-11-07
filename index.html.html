@@ -42,14 +42,14 @@
       border: 1px solid #ccc; border-radius: 8px;
       box-sizing: border-box; font-size: 15px;
     }
-    button {
+    .btn-primary {
       width: 100%; padding: 12px; margin-top: 12px;
       background: var(--tg-theme-button-color, #2481cc);
       color: var(--tg-theme-button-text-color, #ffffff);
       border: none; border-radius: 8px;
       font-size: 16px; font-weight: bold; cursor: pointer;
     }
-    button:disabled { opacity: 0.6; }
+    .btn-primary:disabled { opacity: 0.6; }
 
     /* Лидерборд */
     .leaderboard-item {
@@ -80,6 +80,24 @@
       margin: 0 6px 6px 0;
       opacity: 0.9;
     }
+
+    /* Кнопки взаимодействия с ботом */
+    .action-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .action-btn {
+      background: var(--tg-theme-secondary-bg-color, #f4f5f7);
+      color: var(--tg-theme-text-color, #222);
+      border: 1px solid var(--tg-theme-hint-color, #ccc);
+      padding: 12px 8px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -93,7 +111,7 @@
     <p style="font-size: 14px; color: gray;">Чтобы привязать Telegram к вашему профилю в СНО, введите ФИО точно так же, как оно указано в списках.</p>
     <form onsubmit="registerUser(event)" style="text-align: left;">
       <input type="text" id="name-input" placeholder="Например: Иванов Иван Иванович" required>
-      <button type="submit" id="reg-btn">Привязать профиль</button>
+      <button type="submit" class="btn-primary" id="reg-btn">Привязать профиль</button>
     </form>
   </div>
 
@@ -127,10 +145,27 @@
       </div>
     </div>
 
+    <!-- Кнопки управления ботом -->
+    <div class="card">
+      <div class="stat-title" style="margin-bottom: 12px;">Управление</div>
+      <div class="action-grid">
+        <button class="action-btn" onclick="sendBotCommand('Мероприятия')">📅 Мероприятия</button>
+        <button class="action-btn" onclick="sendBotCommand('Проекты')">🚀 Проекты</button>
+        <button class="action-btn" onclick="sendBotCommand('Рейтинг')">🏆 Весь рейтинг</button>
+        <!-- Кнопка, открывающая Яндекс Форму напрямую -->
+        <button class="action-btn" onclick="window.Telegram.WebApp.openLink('https://forms.yandex.ru/u/6a82ad2c49af47f4fb6ba82d')">👨‍🏫 Консультация</button>
+      </div>
+    </div>
+
     <!-- Лидерборд (Топ-10) -->
     <div class="card">
       <div class="stat-title" style="margin-bottom: 8px;">Общий рейтинг СНО (Топ-10)</div>
       <div id="leaderboard-list"></div>
+      
+      <!-- Плашка со своим местом -->
+      <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.08); text-align: center; font-size: 14px;">
+        Ваше текущее место: <strong id="my-rank" style="color: var(--tg-theme-button-color, #2481cc); font-size: 16px;">—</strong>
+      </div>
     </div>
     
   </div>
@@ -142,6 +177,12 @@
     const tg = window.Telegram.WebApp;
     tg.expand(); // Разворачиваем окно на весь экран
 
+    // Функция взаимодействия с ботом
+    function sendBotCommand(command) {
+      // Отправляет текст боту (от лица пользователя) и автоматически закрывает Mini App
+      tg.sendData(command);
+    }
+
     async function loadProfile() {
       const currentUserId = tg.initDataUnsafe?.user?.id;
       
@@ -149,10 +190,7 @@
         const response = await fetch(APPS_SCRIPT_URL);
         const data = await response.json();
         
-        // Поддержка двух форматов (если в будущем добавите новости)
         const participantsList = Array.isArray(data) ? data : (data.participants || []);
-        
-        // Ищем пользователя по Telegram ID
         const userProfile = participantsList.find(item => String(item.user_id) === String(currentUserId));
         
         document.getElementById('loading').style.display = 'none';
@@ -166,7 +204,7 @@
           document.getElementById('user-group').innerText = userProfile['Институт/Группа'] || "—";
           document.getElementById('avatar').innerText = (userProfile['ФИО'] || "А").charAt(0);
 
-          // 2. Выводим научные интересы (тегами)
+          // 2. Выводим научные интересы
           const interestsContainer = document.getElementById('interests-list');
           const interestsStr = userProfile['Научные интересы'];
           if (interestsStr && interestsStr.trim() !== "") {
@@ -177,24 +215,23 @@
             interestsContainer.innerHTML = '<span style="font-size: 13px; color: gray;">Пока не указаны. Напишите куратору для добавления.</span>';
           }
 
-          // 3. Выводим Топ-10 лидерборд
+          // 3. Высчитываем общий отсортированный список всех студентов
           const parseScore = (val) => parseFloat(String(val).replace(',', '.')) || 0;
           
-          const top10 = participantsList
+          const sortedParticipants = participantsList
             .filter(p => p['ФИО'] && parseScore(p['score']) > 0) // Убираем нули
-            .sort((a, b) => parseScore(b['score']) - parseScore(a['score'])) // Сортируем
-            .slice(0, 10); // Берем первые 10
-
+            .sort((a, b) => parseScore(b['score']) - parseScore(a['score'])); // Сортируем от большего к меньшему
+            
+          // 4. Отрисовываем Топ-10
+          const top10 = sortedParticipants.slice(0, 10);
           const leaderboardHtml = top10.map((user, index) => {
             let rankClass = '';
             let rankText = index + 1;
             
-            // Раздаем медали
             if (index === 0) { rankClass = 'rank-1'; rankText = '🥇'; }
             else if (index === 1) { rankClass = 'rank-2'; rankText = '🥈'; }
             else if (index === 2) { rankClass = 'rank-3'; rankText = '🥉'; }
             
-            // Сокращаем ФИО до Фамилии и Имени
             const shortName = (user['ФИО'] || "").split(' ').slice(0, 2).join(' ');
 
             return `
@@ -207,11 +244,19 @@
               </div>
             `;
           }).join('');
-          
           document.getElementById('leaderboard-list').innerHTML = leaderboardHtml;
 
+          // 5. Ищем конкретное место текущего пользователя
+          const myRankIndex = sortedParticipants.findIndex(p => String(p.user_id) === String(currentUserId));
+          
+          if (myRankIndex !== -1) {
+             document.getElementById('my-rank').innerText = myRankIndex + 1;
+          } else {
+             document.getElementById('my-rank').innerText = "Пока без рейтинга (0 баллов)";
+             document.getElementById('my-rank').style.color = "gray";
+          }
+
         } else {
-          // Если не найден - показываем экран привязки аккаунта
           document.getElementById('registration-view').style.display = 'block';
         }
       } catch (error) {
@@ -220,7 +265,6 @@
       }
     }
 
-    // Функция отправки ФИО на сервер для привязки Telegram ID
     async function registerUser(event) {
       event.preventDefault();
       const nameInput = document.getElementById('name-input').value;
@@ -258,7 +302,6 @@
       }
     }
 
-    // Запуск после загрузки страницы
     document.addEventListener('DOMContentLoaded', loadProfile);
   </script>
 </body>
