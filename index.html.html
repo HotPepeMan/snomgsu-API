@@ -5,119 +5,38 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    body {
-      background-color: var(--tg-theme-bg-color, #f4f5f7);
-      color: var(--tg-theme-text-color, #222);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      margin: 0; padding: 16px;
-    }
-    .card {
-      background: var(--tg-theme-secondary-bg-color, #ffffff);
-      border-radius: 14px;
-      padding: 16px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-      margin-bottom: 16px;
-    }
-    .badge {
-      display: inline-block;
-      padding: 4px 10px;
-      background: var(--tg-theme-button-color, #2481cc);
-      color: var(--tg-theme-button-text-color, #ffffff);
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 600;
-      margin-top: 4px;
-    }
-    .stat-box {
-      margin-top: 16px; padding-top: 12px;
-      border-top: 1px solid rgba(0,0,0,0.08);
-      display: flex; justify-content: space-between;
-    }
+    body { background-color: var(--tg-theme-bg-color, #f4f5f7); color: var(--tg-theme-text-color, #222); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 16px; }
+    .card { background: var(--tg-theme-secondary-bg-color, #ffffff); border-radius: 14px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 16px; }
+    .badge { display: inline-block; padding: 4px 10px; background: var(--tg-theme-button-color, #2481cc); color: var(--tg-theme-button-text-color, #ffffff); border-radius: 20px; font-size: 12px; font-weight: 600; margin-top: 4px; }
+    .stat-box { margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.08); display: flex; justify-content: space-between; }
     .stat-title { font-size: 11px; color: gray; text-transform: uppercase;}
     .stat-value { font-size: 20px; font-weight: bold; margin-top: 4px;}
-    
-    /* Форма регистрации */
-    input {
-      width: 100%; padding: 12px; margin-top: 8px;
-      border: 1px solid #ccc; border-radius: 8px;
-      box-sizing: border-box; font-size: 15px;
-    }
-    .btn-primary {
-      width: 100%; padding: 12px; margin-top: 12px;
-      background: var(--tg-theme-button-color, #2481cc);
-      color: var(--tg-theme-button-text-color, #ffffff);
-      border: none; border-radius: 8px;
-      font-size: 16px; font-weight: bold; cursor: pointer;
-    }
+    input { width: 100%; padding: 12px; margin-top: 8px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 15px; }
+    .btn-primary { width: 100%; padding: 12px; margin-top: 12px; background: var(--tg-theme-button-color, #2481cc); color: var(--tg-theme-button-text-color, #ffffff); border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
     .btn-primary:disabled { opacity: 0.6; }
-
-    /* Лидерборд */
-    .leaderboard-item {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.05);
-    }
+    .leaderboard-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.05); }
     .leaderboard-item:last-child { border-bottom: none; }
-    .rank-badge {
-      width: 24px; height: 24px; border-radius: 50%;
-      display: inline-flex; align-items: center; justify-content: center;
-      font-size: 12px; font-weight: bold; margin-right: 12px;
-      background: #eee; color: #555;
-    }
+    .rank-badge { width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; margin-right: 12px; background: #eee; color: #555; }
     .rank-1 { background: #FFD700; color: #b8860b; font-size: 14px;} 
     .rank-2 { background: #E3E4E5; color: #777; font-size: 14px;} 
     .rank-3 { background: #cd7f32; color: #fff; font-size: 14px;} 
     .leader-name { font-size: 14px; font-weight: 500; }
     .leader-score { font-size: 14px; font-weight: bold; color: var(--tg-theme-button-color, #2481cc); }
-
-    /* Теги интересов */
-    .interest-tag {
-      display: inline-block;
-      background: var(--tg-theme-hint-color, #e0e0e0);
-      color: var(--tg-theme-text-color, #000);
-      padding: 6px 12px;
-      border-radius: 16px;
-      font-size: 13px;
-      margin: 0 6px 6px 0;
-      opacity: 0.9;
-    }
-
-    /* Кнопки взаимодействия с ботом */
-    .action-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-    .action-btn {
-      background: var(--tg-theme-secondary-bg-color, #f4f5f7);
-      color: var(--tg-theme-text-color, #222);
-      border: 1px solid var(--tg-theme-hint-color, #ccc);
-      padding: 12px 8px;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      text-align: center;
-    }
-    
-    /* Стили для аватара */
-    #avatar {
-      width: 60px; height: 60px; 
-      border-radius: 50%; 
-      background-color: var(--tg-theme-button-color, #2481cc); 
-      color: white; 
-      display: flex; align-items: center; justify-content: center; 
-      font-size: 24px; font-weight: bold;
-      background-size: cover;
-      background-position: center;
-    }
+    .interest-tag { display: inline-block; background: var(--tg-theme-hint-color, #e0e0e0); color: var(--tg-theme-text-color, #000); padding: 6px 12px; border-radius: 16px; font-size: 13px; margin: 0 6px 6px 0; opacity: 0.9; }
+    .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .action-btn { background: var(--tg-theme-secondary-bg-color, #f4f5f7); color: var(--tg-theme-text-color, #222); border: 1px solid var(--tg-theme-hint-color, #ccc); padding: 12px 8px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; text-align: center; }
+    #avatar { width: 60px; height: 60px; border-radius: 50%; background-color: var(--tg-theme-button-color, #2481cc); color: white; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; background-size: cover; background-position: center; }
+    .event-card { padding: 0; overflow: hidden; margin-bottom: 12px;}
+    .event-image { width: 100%; height: 150px; object-fit: cover; background: #ccc; }
+    .event-body { padding: 16px; }
   </style>
 </head>
 <body>
 
-  <!-- Экран загрузки -->
+  <!-- Экран Загрузки -->
   <div id="loading" style="text-align: center; margin-top: 50px;">Загрузка данных...</div>
 
-  <!-- Экран регистрации -->
+  <!-- Экран Регистрации -->
   <div id="registration-view" class="card" style="display: none; text-align: center;">
     <h3 style="margin-top: 0;">Вас нет в базе 🔍</h3>
     <p style="font-size: 14px; color: gray;">Чтобы привязать Telegram к вашему профилю в СНО, введите ФИО точно так же, как оно указано в списках.</p>
@@ -127,13 +46,10 @@
     </form>
   </div>
 
-  <!-- Экран личного кабинета -->
+  <!-- Главный Экран: Личный Кабинет -->
   <div id="profile-view" style="display: none;">
-    
-    <!-- Карточка профиля -->
     <div class="card">
       <div style="display: flex; gap: 14px; align-items: center;">
-        <!-- Место для аватарки -->
         <div id="avatar"></div>
         <div>
           <h3 id="user-name" style="margin: 0;">Загрузка...</h3>
@@ -141,37 +57,27 @@
         </div>
       </div>
       <div class="stat-box">
-        <div>
-          <div class="stat-title">Рейтинг (Баллы)</div>
-          <div id="user-score" class="stat-value">0</div>
-        </div>
-        <div style="text-align: right;">
-          <div class="stat-title">Группа / Институт</div>
-          <div id="user-group" class="stat-value" style="font-size: 16px;">—</div>
-        </div>
+        <div><div class="stat-title">Рейтинг (Баллы)</div><div id="user-score" class="stat-value">0</div></div>
+        <div style="text-align: right;"><div class="stat-title">Группа / Институт</div><div id="user-group" class="stat-value" style="font-size: 16px;">—</div></div>
       </div>
-      
-      <!-- Блок научных интересов -->
       <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.08);">
         <div class="stat-title" style="margin-bottom: 8px;">Научные интересы</div>
         <div id="interests-list"></div>
       </div>
     </div>
 
-    <!-- Кнопки управления ботом -->
+    <!-- Управление -->
     <div class="card">
       <div class="stat-title" style="margin-bottom: 12px;">Управление</div>
       <div class="action-grid">
-        <button class="action-btn" onclick="sendBotCommand('Мероприятия')">📅 Мероприятия</button>
+        <button class="action-btn" onclick="showScreen('events-view')">📅 Мероприятия</button>
         <button class="action-btn" onclick="sendBotCommand('Проекты')">🚀 Проекты</button>
         <button class="action-btn" onclick="sendBotCommand('Рейтинг')">🏆 Весь рейтинг</button>
-        <!-- Кнопка Консультации -->
         <button class="action-btn" onclick="window.Telegram.WebApp.openLink('https://forms.yandex.ru/u/6a82ad2c49af47f4fb6ba82d')">👨‍🏫 Консультация</button>
         
-        <!-- Кнопка Полезные ссылки -->
+        <!-- Полезные ссылки -->
         <button class="action-btn" onclick="toggleLinks()" style="grid-column: span 2; background: #e8f4fd; border-color: #2481cc; color: #2481cc;">🔗 Полезные ссылки</button>
         
-        <!-- Скрытое подменю -->
         <div id="links-submenu" style="display: none; grid-column: span 2; padding: 12px; background: #f9f9f9; border-radius: 8px; margin-top: -4px;">
           <a href="https://mgsu.ru/" target="_blank" style="display: block; margin-bottom: 8px; color: #2481cc; text-decoration: none; font-weight: 500;">🔹 Официальный сайт НИУ МГСУ</a>
           <a href="https://t.me/snomgsu" target="_blank" style="display: block; margin-bottom: 8px; color: #2481cc; text-decoration: none; font-weight: 500;">🔹 Канал СНО</a>
@@ -180,35 +86,66 @@
       </div>
     </div>
 
-    <!-- Лидерборд (Топ-10) -->
+    <!-- Лидерборд -->
     <div class="card">
       <div class="stat-title" style="margin-bottom: 8px;">Общий рейтинг СНО (Топ-10)</div>
       <div id="leaderboard-list"></div>
-      
-      <!-- Плашка со своим местом -->
       <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.08); text-align: center; font-size: 14px;">
         Ваше текущее место: <strong id="my-rank" style="color: var(--tg-theme-button-color, #2481cc); font-size: 16px;">—</strong>
       </div>
     </div>
+  </div>
+
+  <!-- Экран: Афиша -->
+  <div id="events-view" style="display: none;">
+    <div style="margin-bottom: 16px;">
+      <button onclick="showScreen('profile-view')" style="background: transparent; border: none; color: var(--tg-theme-button-color, #2481cc); font-size: 16px; font-weight: bold; cursor: pointer; padding: 0;">⬅ Назад в профиль</button>
+    </div>
+    <div class="stat-title" style="margin-bottom: 12px; margin-left: 4px;">Предстоящие события</div>
     
+    <div id="events-list">
+      <!-- Сюда динамически подгрузятся карточки мероприятий -->
+    </div>
   </div>
 
   <script>
-    // === ВАША ССЫЛКА НА APPS SCRIPT ===
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwhcJfMMlv2ZKcgJ1UKICfXsBlDt5cP2DazV3pW1fcqukOdNDJpeEBNfJescD9wKEzUFg/exec";
-    
     const tg = window.Telegram.WebApp;
-    tg.expand(); // Разворачиваем окно на весь экран
+    tg.expand();
 
-    // Отправка команды в бота
-    function sendBotCommand(command) {
-      tg.sendData(command);
+    let currentUserGlobalName = ""; // Переменная для сохранения имени текущего пользователя
+
+    function showScreen(screenId) {
+      document.getElementById('profile-view').style.display = 'none';
+      document.getElementById('events-view').style.display = 'none';
+      document.getElementById(screenId).style.display = 'block';
     }
+
+    function sendBotCommand(command) { tg.sendData(command); }
     
-    // Раскрытие меню ссылок
     function toggleLinks() {
       const menu = document.getElementById('links-submenu');
       menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // Регистрация на Мероприятие (Тихая версия без уведомлений)
+    async function registerForEvent(eventName, btnElement) {
+      if (!currentUserGlobalName) return;
+      
+      btnElement.innerText = "Запись...";
+      btnElement.disabled = true;
+
+      const url = `${APPS_SCRIPT_URL}?action=join_event&eventName=${encodeURIComponent(eventName)}&userName=${encodeURIComponent(currentUserGlobalName)}`;
+      
+      try {
+        await fetch(url);
+        // Меняем цвет кнопки на зеленый и пишем об успехе без системного popup'а
+        btnElement.innerText = "✅ Вы записаны";
+        btnElement.style.background = "#4CAF50"; 
+      } catch (e) {
+        btnElement.innerText = "Ошибка";
+        btnElement.disabled = false;
+      }
     }
 
     async function loadProfile() {
@@ -219,127 +156,92 @@
         const response = await fetch(APPS_SCRIPT_URL);
         const data = await response.json();
         
-        const participantsList = Array.isArray(data) ? data : (data.participants || []);
+        const participantsList = data.participants || [];
         const userProfile = participantsList.find(item => String(item.user_id) === String(currentUserId));
         
         document.getElementById('loading').style.display = 'none';
 
         if (userProfile) {
-          // 1. Показываем профиль
-          document.getElementById('profile-view').style.display = 'block';
-          document.getElementById('user-name').innerText = userProfile['ФИО'] || "Без имени";
+          showScreen('profile-view');
+          
+          currentUserGlobalName = userProfile['ФИО'] || "Без имени";
+
+          document.getElementById('user-name').innerText = currentUserGlobalName;
           document.getElementById('user-role').innerText = userProfile['Должность'] || "Активист СНО";
           document.getElementById('user-score').innerText = userProfile['score'] || "0";
           document.getElementById('user-group').innerText = userProfile['Институт/Группа'] || "—";
           
-          // --- УСТАНОВКА АВАТАРКИ ---
           const avatarDiv = document.getElementById('avatar');
           if (currentUserPhoto) {
-             // Если Telegram отдал картинку (настройки приватности позволяют)
              avatarDiv.style.backgroundImage = `url('${currentUserPhoto}')`;
              avatarDiv.innerHTML = '';
           } else {
-             // Если картинка скрыта, ставим первую букву имени (как в самом Telegram)
              avatarDiv.style.backgroundImage = 'none';
-             avatarDiv.innerHTML = (userProfile['ФИО'] || "А").charAt(0);
+             avatarDiv.innerHTML = currentUserGlobalName.charAt(0);
           }
 
-          // 2. Выводим научные интересы
-          const interestsContainer = document.getElementById('interests-list');
+          // Отрисовка интересов
           const interestsStr = userProfile['Научные интересы'];
-          if (interestsStr && interestsStr.trim() !== "") {
-            interestsContainer.innerHTML = interestsStr.split(',')
-              .map(tag => `<span class="interest-tag">${tag.trim()}</span>`)
-              .join('');
-          } else {
-            interestsContainer.innerHTML = '<span style="font-size: 13px; color: gray;">Пока не указаны. Напишите куратору для добавления.</span>';
-          }
+          document.getElementById('interests-list').innerHTML = (interestsStr && interestsStr.trim()) ? interestsStr.split(',').map(tag => `<span class="interest-tag">${tag.trim()}</span>`).join('') : '<span style="font-size: 13px; color: gray;">Пока не указаны. Напишите куратору для добавления.</span>';
 
-          // 3. Высчитываем общий отсортированный список
+          // Сортировка Топ-10
           const parseScore = (val) => parseFloat(String(val).replace(',', '.')) || 0;
-          
-          const sortedParticipants = participantsList
-            .filter(p => p['ФИО'] && parseScore(p['score']) > 0) // Убираем нули
-            .sort((a, b) => parseScore(b['score']) - parseScore(a['score'])); // Сортируем
+          const sortedParticipants = participantsList.filter(p => p['ФИО'] && parseScore(p['score']) > 0).sort((a, b) => parseScore(b['score']) - parseScore(a['score']));
             
-          // 4. Отрисовываем Топ-10
-          const top10 = sortedParticipants.slice(0, 10);
-          const leaderboardHtml = top10.map((user, index) => {
-            let rankClass = '';
-            let rankText = index + 1;
-            
-            if (index === 0) { rankClass = 'rank-1'; rankText = '🥇'; }
-            else if (index === 1) { rankClass = 'rank-2'; rankText = '🥈'; }
-            else if (index === 2) { rankClass = 'rank-3'; rankText = '🥉'; }
-            
-            const shortName = (user['ФИО'] || "").split(' ').slice(0, 2).join(' ');
+          document.getElementById('leaderboard-list').innerHTML = sortedParticipants.slice(0, 10).map((user, index) => {
+            let rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : index === 2 ? 'rank-3' : '';
+            return `<div class="leaderboard-item"><div style="display: flex; align-items: center;"><div class="rank-badge ${rankClass}">${index + 1}</div><div class="leader-name">${user['ФИО'].split(' ').slice(0, 2).join(' ')}</div></div><div class="leader-score">${user['score']}</div></div>`;
+          }).join('');
 
+          // Позиция пользователя
+          const myRankIndex = sortedParticipants.findIndex(p => String(p.user_id) === String(currentUserId));
+          document.getElementById('my-rank').innerText = myRankIndex !== -1 ? myRankIndex + 1 : "Пока без рейтинга (0 баллов)";
+
+          // ОТРИСОВКА МЕРОПРИЯТИЙ
+          const eventsList = data.events || [];
+          const eventsHtml = eventsList.map(ev => {
+            const isJoined = ev.participants && ev.participants.includes(currentUserGlobalName);
+            
+            // Если записан - кнопка зеленая неактивная. Иначе - стандартная синяя.
+            const btnHtml = isJoined 
+              ? `<button class="btn-primary" style="background: #4CAF50; margin-top: 0;" disabled>✅ Вы записаны</button>`
+              : `<button class="btn-primary" onclick="registerForEvent('${ev.name}', this)" style="margin-top: 0;">Зарегистрироваться</button>`;
+            
             return `
-              <div class="leaderboard-item">
-                <div style="display: flex; align-items: center;">
-                  <div class="rank-badge ${rankClass}">${rankText}</div>
-                  <div class="leader-name">${shortName}</div> 
+              <div class="card event-card">
+                <img src="https://images.unsplash.com/photo-1543269865-cbf427effbad?q=80&w=600&auto=format&fit=crop" class="event-image" alt="Обложка">
+                <div class="event-body">
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <h3 style="margin: 0; font-size: 18px;">${ev.name}</h3><span class="badge" style="background: #e8f4fd; color: #2481cc; margin-top: 0;">Активно</span>
+                  </div>
+                  ${btnHtml}
                 </div>
-                <div class="leader-score">${user['score'] || 0}</div>
               </div>
             `;
           }).join('');
-          document.getElementById('leaderboard-list').innerHTML = leaderboardHtml;
-
-          // 5. Ищем конкретное место текущего пользователя
-          const myRankIndex = sortedParticipants.findIndex(p => String(p.user_id) === String(currentUserId));
           
-          if (myRankIndex !== -1) {
-             document.getElementById('my-rank').innerText = myRankIndex + 1;
-          } else {
-             document.getElementById('my-rank').innerText = "Пока без рейтинга (0 баллов)";
-             document.getElementById('my-rank').style.color = "gray";
-          }
+          document.getElementById('events-list').innerHTML = eventsHtml || "<p style='text-align: center; color: gray; font-size: 14px;'>Пока нет открытых регистраций</p>";
 
         } else {
           document.getElementById('registration-view').style.display = 'block';
         }
-      } catch (error) {
-        document.getElementById('loading').innerText = 'Ошибка соединения с сервером. Попробуйте позже.';
-        console.error(error);
-      }
+      } catch (error) { document.getElementById('loading').innerText = 'Ошибка соединения с сервером.'; }
     }
 
     async function registerUser(event) {
       event.preventDefault();
       const nameInput = document.getElementById('name-input').value;
       const btn = document.getElementById('reg-btn');
-      
       const userId = tg.initDataUnsafe?.user?.id;
-      const username = tg.initDataUnsafe?.user?.username ? "@" + tg.initDataUnsafe.user.username : "";
-
-      if(!userId) {
-        alert("Ошибка: Не удалось получить ваш Telegram ID. Откройте приложение внутри мессенджера.");
-        return;
-      }
-
-      btn.innerText = "Ищем в базе...";
-      btn.disabled = true;
-
-      const url = `${APPS_SCRIPT_URL}?action=register&userId=${userId}&telegram=${username}&fullName=${encodeURIComponent(nameInput)}`;
-
+      if(!userId) return;
+      
+      btn.innerText = "Ищем в базе..."; btn.disabled = true;
       try {
-        const response = await fetch(url);
+        const response = await fetch(`${APPS_SCRIPT_URL}?action=register&userId=${userId}&telegram=${tg.initDataUnsafe?.user?.username ? "@"+tg.initDataUnsafe.user.username : ""}&fullName=${encodeURIComponent(nameInput)}`);
         const result = await response.json();
-
-        if (result.status === "success") {
-          btn.innerText = "Успешно!";
-          location.reload(); 
-        } else {
-          alert(result.message + " Проверьте опечатки.");
-          btn.innerText = "Привязать профиль";
-          btn.disabled = false;
-        }
-      } catch (e) {
-        alert("Проблема с сетью. Попробуйте еще раз.");
-        btn.innerText = "Привязать профиль";
-        btn.disabled = false;
-      }
+        if (result.status === "success") location.reload(); 
+        else { alert(result.message); btn.innerText = "Привязать профиль"; btn.disabled = false; }
+      } catch (e) { alert("Проблема с сетью"); btn.innerText = "Привязать профиль"; btn.disabled = false; }
     }
 
     document.addEventListener('DOMContentLoaded', loadProfile);
