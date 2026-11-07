@@ -59,15 +59,40 @@
     <div class="card">
       <div style="display: flex; gap: 14px; align-items: center;">
         <div id="avatar"></div>
-        <div><h3 id="user-name" style="margin: 0;"></h3><span id="user-role" class="badge"></span></div>
+        <div>
+          <h3 id="user-name" style="margin: 0;"></h3>
+          <!-- Блок с ролью и галочкой соавтора -->
+          <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+            <span id="user-role" class="badge" style="margin-top: 0;"></span>
+            <label style="display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: bold; color: #d32f2f; cursor: pointer; background: #ffebee; padding: 4px 8px; border-radius: 12px; border: 1px solid #ffcdd2;">
+              <input type="checkbox" id="coauthor-checkbox" onchange="toggleCoauthor(this)" style="width: 14px; height: 14px; margin: 0; accent-color: #d32f2f;">
+              Ищу соавтора
+            </label>
+          </div>
+        </div>
       </div>
       <div class="stat-box">
         <div><div class="stat-title">Рейтинг</div><div id="user-score" class="stat-value">0</div></div>
         <div style="text-align: right;"><div class="stat-title">Группа</div><div id="user-group" class="stat-value" style="font-size: 16px;">—</div></div>
       </div>
+      
+      <!-- Блок научных интересов -->
       <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.08);">
-        <div class="stat-title" style="margin-bottom: 8px;">Научные интересы</div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <div class="stat-title" style="margin: 0;">Научные интересы</div>
+          <button onclick="editInterests()" id="edit-interests-btn" style="background: transparent; border: none; color: #2481cc; font-size: 12px; font-weight: bold; cursor: pointer; padding: 0;">✏️ Изменить</button>
+        </div>
+        
         <div id="interests-list"></div>
+        
+        <!-- Поле редактирования (скрыто по умолчанию) -->
+        <div id="interests-edit-box" style="display: none; margin-top: 8px;">
+           <input type="text" id="interests-input" placeholder="Например: Экология, BIM, Нейросети" style="margin-top: 0; font-size: 13px;">
+           <div style="display: flex; gap: 8px; margin-top: 8px;">
+             <button class="btn-primary" onclick="saveInterests()" style="margin-top: 0; padding: 8px; font-size: 13px; flex: 1;">Сохранить</button>
+             <button class="action-btn" onclick="cancelEditInterests()" style="margin-top: 0; padding: 8px; font-size: 13px; flex: 1;">Отмена</button>
+           </div>
+        </div>
       </div>
     </div>
 
@@ -76,7 +101,7 @@
       <div class="stat-title" style="margin-bottom: 12px;">Управление</div>
       <div class="action-grid">
         <button class="action-btn" onclick="showScreen('events-view')">📅 Мероприятия</button>
-        <button class="action-btn" onclick="sendBotCommand('Проекты')">🚀 Проекты</button>
+        <button class="action-btn" onclick="showScreen('coauthors-view')">👥 Поиск соавторов</button>
         <button class="action-btn" onclick="sendBotCommand('Рейтинг')">🏆 Весь рейтинг</button>
         <button class="action-btn" onclick="window.Telegram.WebApp.openLink('https://forms.yandex.ru/u/6a82ad2c49af47f4fb6ba82d')">👨‍🏫 Консультация</button>
         
@@ -104,6 +129,15 @@
     </div>
   </div>
 
+  <!-- ЭКРАН: Поиск соавторов -->
+  <div id="coauthors-view" style="display: none;">
+    <div style="margin-bottom: 16px;">
+      <button onclick="showScreen('profile-view')" style="background: transparent; border: none; color: var(--tg-theme-button-color, #2481cc); font-size: 16px; font-weight: bold; cursor: pointer; padding: 0;">⬅ Назад</button>
+    </div>
+    <div class="stat-title" style="margin-bottom: 12px; margin-left: 4px;">Поиск соавторов</div>
+    <div id="coauthors-list"></div>
+  </div>
+
   <!-- ЭКРАН: Создание/Редактирование мероприятия -->
   <div id="admin-view" style="display: none;">
     <div style="margin-bottom: 16px;">
@@ -112,37 +146,28 @@
     <div class="card">
       <h3 id="admin-title" style="margin-top: 0;">Новое мероприятие 📝</h3>
       <form onsubmit="submitNewEvent(event)" style="text-align: left;">
-        
         <input type="hidden" id="ev-originalname">
-        
         <label style="font-size: 13px; color: gray;">Название *</label>
         <input type="text" id="ev-name" required placeholder="Например: Научный Хакатон">
-        
         <label style="font-size: 13px; color: gray; display: block; margin-top: 12px;">Дата и время проведения *</label>
         <input type="datetime-local" id="ev-datetime" required>
-
         <label style="font-size: 13px; color: gray; display: block; margin-top: 12px;">Дедлайн регистрации (необязательно)</label>
         <input type="datetime-local" id="ev-deadline">
-
         <label style="font-size: 13px; color: gray; display: block; margin-top: 12px;">Ссылка на картинку (необязательно)</label>
         <input type="text" id="ev-photo" placeholder="https://... (пусто = стандарт)">
-        
         <label style="font-size: 13px; color: gray; display: block; margin-top: 12px;">Описание *</label>
-        <textarea id="ev-desc" required placeholder="Опишите подробности мероприятия..."></textarea>
-        
+        <textarea id="ev-desc" required placeholder="Опишите подробности..."></textarea>
         <label style="font-size: 13px; color: gray; display: block; margin-top: 12px;">Тип регистрации *</label>
         <select id="ev-regtype" onchange="toggleExternalLink()">
           <option value="internal">Внутренняя (Сбор в таблицу)</option>
           <option value="no">Регистрация не требуется</option>
           <option value="external">Внешняя ссылка (Форма и т.д.)</option>
         </select>
-
         <div id="external-link-box" style="display: none; margin-top: 12px;">
            <label style="font-size: 13px; color: gray;">Внешняя ссылка (с https://)</label>
            <input type="text" id="ev-externallink" placeholder="https://forms.yandex.ru/...">
         </div>
-        
-        <button type="submit" class="btn-primary" id="ev-submit-btn" style="background: #d32f2f;">Опубликовать в приложении</button>
+        <button type="submit" class="btn-primary" id="ev-submit-btn" style="background: #d32f2f;">Опубликовать</button>
       </form>
     </div>
   </div>
@@ -162,12 +187,14 @@
     tg.expand();
 
     let currentUserGlobalName = ""; 
+    let currentUserGlobalInterests = "";
     let globalEventsData = []; 
 
     function showScreen(screenId) {
       document.getElementById('profile-view').style.display = 'none';
       document.getElementById('events-view').style.display = 'none';
       document.getElementById('admin-view').style.display = 'none';
+      document.getElementById('coauthors-view').style.display = 'none';
       document.getElementById(screenId).style.display = 'block';
     }
 
@@ -187,6 +214,55 @@
       } catch(e) { return dateString; }
     }
 
+    // --- ФУНКЦИИ РЕДАКТИРОВАНИЯ ПРОФИЛЯ ---
+    async function toggleCoauthor(checkbox) {
+      const isChecked = checkbox.checked;
+      const currentUserId = tg.initDataUnsafe?.user?.id;
+      if (!currentUserId) return;
+      checkbox.disabled = true;
+      const url = `${APPS_SCRIPT_URL}?action=update_profile&userId=${currentUserId}&coauthor=${isChecked}`;
+      try {
+        await fetch(url);
+        checkbox.disabled = false;
+      } catch (e) {
+        checkbox.checked = !isChecked; 
+        checkbox.disabled = false;
+        tg.showAlert("Ошибка при сохранении статуса");
+      }
+    }
+
+    function editInterests() {
+      document.getElementById('interests-list').style.display = 'none';
+      document.getElementById('edit-interests-btn').style.display = 'none';
+      document.getElementById('interests-edit-box').style.display = 'block';
+      document.getElementById('interests-input').value = currentUserGlobalInterests || "";
+    }
+
+    function cancelEditInterests() {
+      document.getElementById('interests-list').style.display = 'block';
+      document.getElementById('edit-interests-btn').style.display = 'block';
+      document.getElementById('interests-edit-box').style.display = 'none';
+    }
+
+    async function saveInterests() {
+      const inputVal = document.getElementById('interests-input').value;
+      const currentUserId = tg.initDataUnsafe?.user?.id;
+      if (!currentUserId) return;
+      
+      const btn = document.querySelector('#interests-edit-box .btn-primary');
+      btn.innerText = "Сохранение..."; btn.disabled = true;
+      
+      const url = `${APPS_SCRIPT_URL}?action=update_profile&userId=${currentUserId}&interests=${encodeURIComponent(inputVal)}`;
+      try {
+        await fetch(url);
+        location.reload(); 
+      } catch (e) {
+        alert("Ошибка сохранения");
+        btn.innerText = "Сохранить"; btn.disabled = false;
+      }
+    }
+
+    // --- АДМИН: ФОРМЫ ---
     function openAdminForCreate() {
       document.getElementById('admin-title').innerText = "Новое мероприятие 📝";
       document.getElementById('ev-submit-btn').innerText = "Опубликовать в приложении";
@@ -228,56 +304,14 @@
       document.getElementById('external-link-box').style.display = (type === 'external') ? 'block' : 'none';
     }
 
-    // НОВОЕ: УДАЛЕНИЕ МЕРОПРИЯТИЯ
     async function deleteEvent(eventName) {
       const currentUserId = tg.initDataUnsafe?.user?.id;
       if (!currentUserId) return;
-      
-      tg.showConfirm(`Вы уверены, что хотите НАВСЕГДА удалить мероприятие «${eventName}»? Это действие нельзя отменить.`, async (confirm) => {
+      tg.showConfirm(`Вы уверены, что хотите НАВСЕГДА удалить мероприятие «${eventName}»?`, async (confirm) => {
         if(confirm) {
           const url = `${APPS_SCRIPT_URL}?action=delete_event&adminId=${currentUserId}&eventName=${encodeURIComponent(eventName)}`;
-          try {
-            await fetch(url);
-            tg.showAlert("🗑 Мероприятие удалено.");
-            location.reload(); 
-          } catch (e) {
-            alert("Ошибка сети при удалении.");
-          }
-        }
-      });
-    }
-
-    async function registerForEvent(eventName, btnElement, eventObj) {
-      eventObj.stopPropagation();
-      const currentUserId = tg.initDataUnsafe?.user?.id;
-      if (!currentUserId) return;
-      
-      btnElement.innerText = "Запись..."; btnElement.disabled = true;
-      const url = `${APPS_SCRIPT_URL}?action=join_event&eventName=${encodeURIComponent(eventName)}&userId=${encodeURIComponent(currentUserId)}`;
-      try {
-        await fetch(url);
-        tg.showAlert("✅ Вы успешно зарегистрировались!");
-        location.reload(); 
-      } catch (e) {
-        btnElement.innerText = "Ошибка"; btnElement.disabled = false;
-      }
-    }
-
-    async function leaveEvent(eventName, eventObj) {
-      eventObj.stopPropagation();
-      const currentUserId = tg.initDataUnsafe?.user?.id;
-      if (!currentUserId) return;
-      
-      tg.showConfirm(`Отменить регистрацию на «${eventName}»?`, async (confirm) => {
-        if(confirm) {
-          const url = `${APPS_SCRIPT_URL}?action=leave_event&eventName=${encodeURIComponent(eventName)}&userId=${encodeURIComponent(currentUserId)}`;
-          try {
-            await fetch(url);
-            tg.showAlert("❌ Ваша запись отменена.");
-            location.reload(); 
-          } catch (e) {
-            alert("Ошибка сети при отмене.");
-          }
+          try { await fetch(url); tg.showAlert("🗑 Мероприятие удалено."); location.reload(); } 
+          catch (e) { alert("Ошибка сети при удалении."); }
         }
       });
     }
@@ -303,11 +337,37 @@
         await fetch(url);
         tg.showAlert(originalName ? "✅ Изменения сохранены!" : "✅ Мероприятие создано!");
         location.reload(); 
-      } catch(e) {
-        alert("Ошибка сети"); btn.innerText = originalName ? "Сохранить изменения" : "Опубликовать в приложении"; btn.disabled = false;
-      }
+      } catch(e) { alert("Ошибка сети"); btn.innerText = originalName ? "Сохранить изменения" : "Опубликовать"; btn.disabled = false; }
     }
 
+    // --- РЕГИСТРАЦИЯ НА ИВЕНТЫ ---
+    async function registerForEvent(eventName, btnElement, eventObj) {
+      eventObj.stopPropagation();
+      const currentUserId = tg.initDataUnsafe?.user?.id;
+      if (!currentUserId) return;
+      btnElement.innerText = "Запись..."; btnElement.disabled = true;
+      const url = `${APPS_SCRIPT_URL}?action=join_event&eventName=${encodeURIComponent(eventName)}&userId=${encodeURIComponent(currentUserId)}`;
+      try {
+        await fetch(url);
+        tg.showAlert("✅ Вы успешно зарегистрировались!");
+        location.reload(); 
+      } catch (e) { btnElement.innerText = "Ошибка"; btnElement.disabled = false; }
+    }
+
+    async function leaveEvent(eventName, eventObj) {
+      eventObj.stopPropagation();
+      const currentUserId = tg.initDataUnsafe?.user?.id;
+      if (!currentUserId) return;
+      tg.showConfirm(`Отменить регистрацию на «${eventName}»?`, async (confirm) => {
+        if(confirm) {
+          const url = `${APPS_SCRIPT_URL}?action=leave_event&eventName=${encodeURIComponent(eventName)}&userId=${encodeURIComponent(currentUserId)}`;
+          try { await fetch(url); tg.showAlert("❌ Ваша запись отменена."); location.reload(); } 
+          catch (e) { alert("Ошибка сети при отмене."); }
+        }
+      });
+    }
+
+    // --- ЗАГРУЗКА И ОТРИСОВКА ---
     async function loadProfile() {
       const currentUserId = tg.initDataUnsafe?.user?.id;
       const currentUserPhoto = tg.initDataUnsafe?.user?.photo_url;
@@ -330,6 +390,13 @@
           document.getElementById('user-score').innerText = userProfile['score'] || "0";
           document.getElementById('user-group').innerText = userProfile['Институт/Группа'] || "—";
           
+          // Сохраняем интересы глобально для редактирования
+          currentUserGlobalInterests = userProfile['Научные интересы'] || "";
+          
+          // Установка галочки
+          const coauthorStatus = String(userProfile['Ищу соавтора']).toLowerCase() === 'true';
+          document.getElementById('coauthor-checkbox').checked = coauthorStatus;
+
           const avatarDiv = document.getElementById('avatar');
           if (currentUserPhoto) {
              avatarDiv.style.backgroundImage = `url('${currentUserPhoto}')`;
@@ -341,12 +408,14 @@
 
           if (isAdmin) document.getElementById('admin-panel').style.display = 'block';
 
-          const interestsStr = userProfile['Научные интересы'];
-          document.getElementById('interests-list').innerHTML = (interestsStr && interestsStr.trim()) ? interestsStr.split(',').map(tag => `<span class="interest-tag">${tag.trim()}</span>`).join('') : '<span style="font-size: 13px; color: gray;">Пока не указаны</span>';
+          // Отрисовка интересов
+          document.getElementById('interests-list').innerHTML = (currentUserGlobalInterests && currentUserGlobalInterests.trim()) 
+             ? currentUserGlobalInterests.split(',').map(tag => `<span class="interest-tag">${tag.trim()}</span>`).join('') 
+             : '<span style="font-size: 13px; color: gray;">Пока не указаны</span>';
 
+          // Топ-10
           const parseScore = (val) => parseFloat(String(val).replace(',', '.')) || 0;
           const sortedParticipants = participantsList.filter(p => p['ФИО'] && parseScore(p['score']) > 0).sort((a, b) => parseScore(b['score']) - parseScore(a['score']));
-            
           document.getElementById('leaderboard-list').innerHTML = sortedParticipants.slice(0, 10).map((user, index) => {
             let rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : index === 2 ? 'rank-3' : '';
             return `<div class="leaderboard-item"><div style="display: flex; align-items: center;"><div class="rank-badge ${rankClass}">${index + 1}</div><div class="leader-name">${user['ФИО'].split(' ').slice(0, 2).join(' ')}</div></div><div class="leader-score">${user['score']}</div></div>`;
@@ -355,6 +424,46 @@
           const myRankIndex = sortedParticipants.findIndex(p => String(p.user_id) === String(currentUserId));
           document.getElementById('my-rank').innerText = myRankIndex !== -1 ? myRankIndex + 1 : "Пока без рейтинга (0 баллов)";
 
+          // ОТРИСОВКА СОАВТОРОВ (Новый функционал)
+          const coauthorsHtml = participantsList
+            .filter(p => String(p['Ищу соавтора']).toLowerCase() === 'true' && String(p.user_id) !== String(currentUserId))
+            .map(user => {
+               // Безопасно достаем username телеграма (без собачки)
+               let tgLink = user.telegram_raw ? String(user.telegram_raw).replace('@', '').trim() : '';
+               let contactBtn = tgLink 
+                  ? `<button class="btn-primary" onclick="window.Telegram.WebApp.openLink('https://t.me/${tgLink}')" style="margin-top: 10px; padding: 8px; font-size: 14px;">💬 Связаться в Telegram</button>`
+                  : `<div style="font-size: 12px; color: gray; margin-top: 10px; text-align: center;">Нет username в профиле Telegram</div>`;
+                  
+               const initials = user['ФИО'] ? String(user['ФИО']).charAt(0) : '?';
+               const userInterestsStr = user['Научные интересы'] || '';
+               const tagsHtml = userInterestsStr.split(',').map(t => t.trim() ? `<span class="interest-tag" style="background: #e8f4fd; color: #2481cc; margin-bottom: 4px;">${t.trim()}</span>` : '').join('');
+               
+               return `
+                 <div class="card" style="padding: 14px; margin-bottom: 12px;">
+                   <div style="display: flex; gap: 12px; align-items: center;">
+                     <div style="width: 45px; height: 45px; border-radius: 50%; background: #2481cc; color: white; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; flex-shrink: 0;">${initials}</div>
+                     <div>
+                       <div style="font-weight: bold; font-size: 15px;">${user['ФИО']}</div>
+                       <div style="font-size: 12px; color: gray; margin-top: 2px;">${user['Институт/Группа'] || 'СНО'}</div>
+                     </div>
+                   </div>
+                   <div style="margin-top: 12px;">
+                     <div style="font-size: 11px; color: gray; text-transform: uppercase; margin-bottom: 6px;">Научные интересы:</div>
+                     ${tagsHtml || '<span style="font-size: 13px; color: gray;">Не указаны</span>'}
+                   </div>
+                   ${contactBtn}
+                 </div>
+               `;
+            }).join('');
+            
+          document.getElementById('coauthors-list').innerHTML = coauthorsHtml || `
+            <div style="text-align: center; color: gray; padding: 20px;">
+               <div style="font-size: 40px; margin-bottom: 10px;">🕵️‍♂️</div>
+               <div style="font-size: 15px; font-weight: bold;">Пока никто не ищет соавторов</div>
+               <div style="font-size: 13px; margin-top: 4px;">Станьте первым, нажав галочку в профиле!</div>
+            </div>`;
+
+          // ОТРИСОВКА МЕРОПРИЯТИЙ
           globalEventsData = data.events || [];
           const now = new Date();
           
@@ -366,9 +475,7 @@
             let isClosed = false;
             if (ev.deadline) {
               const dlDate = new Date(ev.deadline);
-              if (!isNaN(dlDate.getTime()) && now > dlDate) {
-                isClosed = true;
-              }
+              if (!isNaN(dlDate.getTime()) && now > dlDate) isClosed = true;
             }
             
             if (regType === 'no' || regType === 'нет') {
@@ -390,7 +497,6 @@
                }
             }
             
-            // НОВОЕ: Две кнопки (Редактировать и Удалить) для Админа
             const adminEditBtnHtml = isAdmin ? `
               <div style="display: flex; gap: 8px; margin-top: 12px;">
                 <button class="btn-primary" onclick="event.stopPropagation(); openAdminForEdit('${ev.name}')" style="background: #ff9800; margin-top: 0; flex: 1;">✏️ Редактировать</button>
@@ -410,7 +516,6 @@
                     <h3 style="margin: 0; font-size: 18px;">${ev.name}</h3>
                     <span style="font-size: 12px; color: #2481cc; background: #e8f4fd; padding: 3px 8px; border-radius: 12px; font-weight: bold; flex-shrink: 0; margin-left: 8px;">👇 Развернуть</span>
                   </div>
-                  
                   <div class="event-details">
                     ${deadlineInfo}
                     ${ev.desc ? `<p class="event-desc-text">${ev.desc}</p>` : ''}
@@ -421,7 +526,6 @@
               </div>
             `;
           }).join('');
-          
           document.getElementById('events-list').innerHTML = eventsHtml || "<p style='text-align: center; color: gray; font-size: 14px;'>Пока нет открытых регистраций</p>";
 
         } else {
