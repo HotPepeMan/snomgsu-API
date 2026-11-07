@@ -338,8 +338,32 @@
             // Если Админ - показываем кнопку редактирования
             const adminEditBtnHtml = isAdmin ? `<button class="btn-primary" onclick="event.stopPropagation(); openAdminForEdit('${ev.name}')" style="background: #ff9800; margin-top: 8px;">✏️ Редактировать карточку</button>` : '';
 
-            // Красивый вывод даты
-            const dateHtml = ev.datetime ? `<div class="event-date-badge">📅 ${ev.datetime.replace('T', ' ')}</div>` : '';
+            // --- ИСПРАВЛЕННЫЙ ВЫВОД ДАТЫ (ДД.ММ.ГГГГ ЧЧ:ММ) ---
+let dateHtml = '';
+if (ev.datetime) {
+  try {
+    // Создаем объект даты, учитывая, что таблица может отдавать строку в UTC (с буквой Z)
+    const dateObj = new Date(ev.datetime);
+    
+    // Проверяем, не сломалась ли дата
+    if (!isNaN(dateObj.getTime())) {
+      // Форматируем под локаль (русский язык), чтобы часовой пояс браузера всё починил
+      const formattedDate = dateObj.toLocaleString('ru-RU', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      dateHtml = `<div class="event-date-badge">📅 ${formattedDate.replace(',', '')}</div>`;
+    } else {
+      // Если это просто текст, а не дата
+      dateHtml = `<div class="event-date-badge">📅 ${ev.datetime}</div>`;
+    }
+  } catch (e) {
+    dateHtml = `<div class="event-date-badge">📅 ${ev.datetime}</div>`;
+  }
+}
 
             return `
               <div class="card event-card" onclick="toggleEvent(this)">
