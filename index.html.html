@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
+    /* ... (ваши старые стили остаются без изменений до блока event-card) ... */
     body { background-color: var(--tg-theme-bg-color, #f4f5f7); color: var(--tg-theme-text-color, #222); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 16px; }
     .card { background: var(--tg-theme-secondary-bg-color, #ffffff); border-radius: 14px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 16px; }
     .badge { display: inline-block; padding: 4px 10px; background: var(--tg-theme-button-color, #2481cc); color: var(--tg-theme-button-text-color, #ffffff); border-radius: 20px; font-size: 12px; font-weight: 600; margin-top: 4px; }
@@ -26,39 +27,43 @@
     .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .action-btn { background: var(--tg-theme-secondary-bg-color, #f4f5f7); color: var(--tg-theme-text-color, #222); border: 1px solid var(--tg-theme-hint-color, #ccc); padding: 12px 8px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; text-align: center; }
     #avatar { width: 60px; height: 60px; border-radius: 50%; background-color: var(--tg-theme-button-color, #2481cc); color: white; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; background-size: cover; background-position: center; }
-    .event-card { padding: 0; overflow: hidden; margin-bottom: 12px;}
-    .event-image { width: 100%; height: 150px; object-fit: cover; background: #ccc; }
-    .event-body { padding: 16px; }
+    
+    /* НОВЫЕ СТИЛИ АФИШИ */
+    .event-card { padding: 0; overflow: hidden; margin-bottom: 12px; cursor: pointer; transition: 0.2s;}
+    .event-image { width: 100%; height: 120px; object-fit: cover; background: #ccc; transition: 0.3s; }
+    .event-body { padding: 14px; }
+    .event-details { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid #eee; }
+    
+    /* Когда карточка раскрыта */
+    .event-card.expanded .event-details { display: block; }
+    .event-card.expanded .event-image { height: 180px; }
+    .event-desc-text { font-size: 14px; color: gray; margin: 0 0 16px 0; line-height: 1.4; white-space: pre-wrap;}
   </style>
 </head>
 <body>
 
-  <!-- Экран Загрузки -->
+  <!-- Загрузка -->
   <div id="loading" style="text-align: center; margin-top: 50px;">Загрузка данных...</div>
 
-  <!-- Экран Регистрации -->
+  <!-- Регистрация -->
   <div id="registration-view" class="card" style="display: none; text-align: center;">
     <h3 style="margin-top: 0;">Вас нет в базе 🔍</h3>
-    <p style="font-size: 14px; color: gray;">Чтобы привязать Telegram к вашему профилю в СНО, введите ФИО точно так же, как оно указано в списках.</p>
     <form onsubmit="registerUser(event)" style="text-align: left;">
       <input type="text" id="name-input" placeholder="Например: Иванов Иван Иванович" required>
       <button type="submit" class="btn-primary" id="reg-btn">Привязать профиль</button>
     </form>
   </div>
 
-  <!-- Главный Экран: Личный Кабинет -->
+  <!-- Профиль -->
   <div id="profile-view" style="display: none;">
     <div class="card">
       <div style="display: flex; gap: 14px; align-items: center;">
         <div id="avatar"></div>
-        <div>
-          <h3 id="user-name" style="margin: 0;">Загрузка...</h3>
-          <span id="user-role" class="badge">Активист СНО</span>
-        </div>
+        <div><h3 id="user-name" style="margin: 0;"></h3><span id="user-role" class="badge"></span></div>
       </div>
       <div class="stat-box">
-        <div><div class="stat-title">Рейтинг (Баллы)</div><div id="user-score" class="stat-value">0</div></div>
-        <div style="text-align: right;"><div class="stat-title">Группа / Институт</div><div id="user-group" class="stat-value" style="font-size: 16px;">—</div></div>
+        <div><div class="stat-title">Рейтинг</div><div id="user-score" class="stat-value">0</div></div>
+        <div style="text-align: right;"><div class="stat-title">Группа</div><div id="user-group" class="stat-value" style="font-size: 16px;">—</div></div>
       </div>
       <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.08);">
         <div class="stat-title" style="margin-bottom: 8px;">Научные интересы</div>
@@ -74,38 +79,18 @@
         <button class="action-btn" onclick="sendBotCommand('Проекты')">🚀 Проекты</button>
         <button class="action-btn" onclick="sendBotCommand('Рейтинг')">🏆 Весь рейтинг</button>
         <button class="action-btn" onclick="window.Telegram.WebApp.openLink('https://forms.yandex.ru/u/6a82ad2c49af47f4fb6ba82d')">👨‍🏫 Консультация</button>
-        
-        <!-- Полезные ссылки -->
-        <button class="action-btn" onclick="toggleLinks()" style="grid-column: span 2; background: #e8f4fd; border-color: #2481cc; color: #2481cc;">🔗 Полезные ссылки</button>
-        
-        <div id="links-submenu" style="display: none; grid-column: span 2; padding: 12px; background: #f9f9f9; border-radius: 8px; margin-top: -4px;">
-          <a href="https://mgsu.ru/" target="_blank" style="display: block; margin-bottom: 8px; color: #2481cc; text-decoration: none; font-weight: 500;">🔹 Официальный сайт НИУ МГСУ</a>
-          <a href="https://t.me/snomgsu" target="_blank" style="display: block; margin-bottom: 8px; color: #2481cc; text-decoration: none; font-weight: 500;">🔹 Канал СНО</a>
-          <a href="https://vk.com/snomgsu" target="_blank" style="display: block; color: #2481cc; text-decoration: none; font-weight: 500;">🔹 Группа ВКонтакте</a>
-        </div>
-      </div>
-    </div>
-
-    <!-- Лидерборд -->
-    <div class="card">
-      <div class="stat-title" style="margin-bottom: 8px;">Общий рейтинг СНО (Топ-10)</div>
-      <div id="leaderboard-list"></div>
-      <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.08); text-align: center; font-size: 14px;">
-        Ваше текущее место: <strong id="my-rank" style="color: var(--tg-theme-button-color, #2481cc); font-size: 16px;">—</strong>
       </div>
     </div>
   </div>
 
-  <!-- Экран: Афиша -->
+  <!-- Афиша -->
   <div id="events-view" style="display: none;">
     <div style="margin-bottom: 16px;">
-      <button onclick="showScreen('profile-view')" style="background: transparent; border: none; color: var(--tg-theme-button-color, #2481cc); font-size: 16px; font-weight: bold; cursor: pointer; padding: 0;">⬅ Назад в профиль</button>
+      <button onclick="showScreen('profile-view')" style="background: transparent; border: none; color: var(--tg-theme-button-color, #2481cc); font-size: 16px; font-weight: bold; cursor: pointer; padding: 0;">⬅ Назад</button>
     </div>
     <div class="stat-title" style="margin-bottom: 12px; margin-left: 4px;">Предстоящие события</div>
     
-    <div id="events-list">
-      <!-- Сюда динамически подгрузятся карточки мероприятий -->
-    </div>
+    <div id="events-list"></div>
   </div>
 
   <script>
@@ -113,7 +98,7 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    let currentUserGlobalName = ""; // Переменная для сохранения имени текущего пользователя
+    let currentUserGlobalName = ""; 
 
     function showScreen(screenId) {
       document.getElementById('profile-view').style.display = 'none';
@@ -123,23 +108,22 @@
 
     function sendBotCommand(command) { tg.sendData(command); }
     
-    function toggleLinks() {
-      const menu = document.getElementById('links-submenu');
-      menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+    // Раскрытие карточки мероприятия
+    function toggleEvent(element) {
+      element.classList.toggle('expanded');
     }
 
-    // Регистрация на Мероприятие (Тихая версия без уведомлений)
-    async function registerForEvent(eventName, btnElement) {
+    // Регистрация на Мероприятие (event.stopPropagation не дает карточке свернуться при клике на кнопку)
+    async function registerForEvent(eventName, btnElement, eventObj) {
+      eventObj.stopPropagation();
       if (!currentUserGlobalName) return;
       
       btnElement.innerText = "Запись...";
       btnElement.disabled = true;
 
       const url = `${APPS_SCRIPT_URL}?action=join_event&eventName=${encodeURIComponent(eventName)}&userName=${encodeURIComponent(currentUserGlobalName)}`;
-      
       try {
         await fetch(url);
-        // Меняем цвет кнопки на зеленый и пишем об успехе без системного popup'а
         btnElement.innerText = "✅ Вы записаны";
         btnElement.style.background = "#4CAF50"; 
       } catch (e) {
@@ -165,7 +149,6 @@
           showScreen('profile-view');
           
           currentUserGlobalName = userProfile['ФИО'] || "Без имени";
-
           document.getElementById('user-name').innerText = currentUserGlobalName;
           document.getElementById('user-role').innerText = userProfile['Должность'] || "Активист СНО";
           document.getElementById('user-score').innerText = userProfile['score'] || "0";
@@ -180,41 +163,42 @@
              avatarDiv.innerHTML = currentUserGlobalName.charAt(0);
           }
 
-          // Отрисовка интересов
           const interestsStr = userProfile['Научные интересы'];
-          document.getElementById('interests-list').innerHTML = (interestsStr && interestsStr.trim()) ? interestsStr.split(',').map(tag => `<span class="interest-tag">${tag.trim()}</span>`).join('') : '<span style="font-size: 13px; color: gray;">Пока не указаны. Напишите куратору для добавления.</span>';
+          document.getElementById('interests-list').innerHTML = (interestsStr && interestsStr.trim()) ? interestsStr.split(',').map(tag => `<span class="interest-tag">${tag.trim()}</span>`).join('') : '<span style="font-size: 13px; color: gray;">Пока не указаны</span>';
 
-          // Сортировка Топ-10
-          const parseScore = (val) => parseFloat(String(val).replace(',', '.')) || 0;
-          const sortedParticipants = participantsList.filter(p => p['ФИО'] && parseScore(p['score']) > 0).sort((a, b) => parseScore(b['score']) - parseScore(a['score']));
-            
-          document.getElementById('leaderboard-list').innerHTML = sortedParticipants.slice(0, 10).map((user, index) => {
-            let rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : index === 2 ? 'rank-3' : '';
-            return `<div class="leaderboard-item"><div style="display: flex; align-items: center;"><div class="rank-badge ${rankClass}">${index + 1}</div><div class="leader-name">${user['ФИО'].split(' ').slice(0, 2).join(' ')}</div></div><div class="leader-score">${user['score']}</div></div>`;
-          }).join('');
-
-          // Позиция пользователя
-          const myRankIndex = sortedParticipants.findIndex(p => String(p.user_id) === String(currentUserId));
-          document.getElementById('my-rank').innerText = myRankIndex !== -1 ? myRankIndex + 1 : "Пока без рейтинга (0 баллов)";
-
-          // ОТРИСОВКА МЕРОПРИЯТИЙ
+          // ОТРИСОВКА МЕРОПРИЯТИЙ (Аккордеоны)
           const eventsList = data.events || [];
           const eventsHtml = eventsList.map(ev => {
             const isJoined = ev.participants && ev.participants.includes(currentUserGlobalName);
+            let btnHtml = "";
+            let regType = String(ev.regType).trim().toLowerCase();
             
-            // Если записан - кнопка зеленая неактивная. Иначе - стандартная синяя.
-            const btnHtml = isJoined 
-              ? `<button class="btn-primary" style="background: #4CAF50; margin-top: 0;" disabled>✅ Вы записаны</button>`
-              : `<button class="btn-primary" onclick="registerForEvent('${ev.name}', this)" style="margin-top: 0;">Зарегистрироваться</button>`;
+            // Логика кнопок
+            if (regType === 'no' || regType === 'нет') {
+               btnHtml = `<div style="text-align: center; color: gray; font-size: 13px; font-weight: bold; margin-top: 8px;">Регистрация не требуется</div>`;
+            } else if (regType.startsWith('http')) {
+               btnHtml = `<button class="btn-primary" onclick="event.stopPropagation(); window.Telegram.WebApp.openLink('${ev.regType}')" style="margin-top: 0; background: #333;">Внешняя регистрация ➔</button>`;
+            } else {
+               if (isJoined) {
+                 btnHtml = `<button class="btn-primary" style="background: #4CAF50; margin-top: 0;" disabled>✅ Вы записаны</button>`;
+               } else {
+                 btnHtml = `<button class="btn-primary" onclick="registerForEvent('${ev.name}', this, event)" style="margin-top: 0;">Зарегистрироваться</button>`;
+               }
+            }
             
             return `
-              <div class="card event-card">
-                <img src="https://images.unsplash.com/photo-1543269865-cbf427effbad?q=80&w=600&auto=format&fit=crop" class="event-image" alt="Обложка">
+              <div class="card event-card" onclick="toggleEvent(this)">
+                <img src="${ev.photo}" class="event-image">
                 <div class="event-body">
-                  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
-                    <h3 style="margin: 0; font-size: 18px;">${ev.name}</h3><span class="badge" style="background: #e8f4fd; color: #2481cc; margin-top: 0;">Активно</span>
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <h3 style="margin: 0; font-size: 18px;">${ev.name}</h3>
+                    <span style="font-size: 12px; color: #2481cc; background: #e8f4fd; padding: 3px 8px; border-radius: 12px; font-weight: bold; flex-shrink: 0; margin-left: 8px;">👇 Развернуть</span>
                   </div>
-                  ${btnHtml}
+                  
+                  <div class="event-details">
+                    ${ev.desc ? `<p class="event-desc-text">${ev.desc}</p>` : ''}
+                    ${btnHtml}
+                  </div>
                 </div>
               </div>
             `;
@@ -225,7 +209,7 @@
         } else {
           document.getElementById('registration-view').style.display = 'block';
         }
-      } catch (error) { document.getElementById('loading').innerText = 'Ошибка соединения с сервером.'; }
+      } catch (error) { document.getElementById('loading').innerText = 'Ошибка соединения.'; }
     }
 
     async function registerUser(event) {
@@ -234,14 +218,13 @@
       const btn = document.getElementById('reg-btn');
       const userId = tg.initDataUnsafe?.user?.id;
       if(!userId) return;
-      
       btn.innerText = "Ищем в базе..."; btn.disabled = true;
       try {
-        const response = await fetch(`${APPS_SCRIPT_URL}?action=register&userId=${userId}&telegram=${tg.initDataUnsafe?.user?.username ? "@"+tg.initDataUnsafe.user.username : ""}&fullName=${encodeURIComponent(nameInput)}`);
+        const response = await fetch(`${APPS_SCRIPT_URL}?action=register&userId=${userId}&fullName=${encodeURIComponent(nameInput)}`);
         const result = await response.json();
         if (result.status === "success") location.reload(); 
         else { alert(result.message); btn.innerText = "Привязать профиль"; btn.disabled = false; }
-      } catch (e) { alert("Проблема с сетью"); btn.innerText = "Привязать профиль"; btn.disabled = false; }
+      } catch (e) { alert("Ошибка сети"); btn.disabled = false; }
     }
 
     document.addEventListener('DOMContentLoaded', loadProfile);
