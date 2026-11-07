@@ -11,7 +11,10 @@
     .stat-box { margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.08); display: flex; justify-content: space-between; }
     .stat-title { font-size: 11px; color: gray; text-transform: uppercase;}
     .stat-value { font-size: 20px; font-weight: bold; margin-top: 4px;}
-    input { width: 100%; padding: 12px; margin-top: 8px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 15px; }
+    
+    input, textarea, select { width: 100%; padding: 12px; margin-top: 8px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 14px; font-family: inherit;}
+    textarea { resize: vertical; min-height: 80px; }
+    
     .btn-primary { width: 100%; padding: 12px; margin-top: 12px; background: var(--tg-theme-button-color, #2481cc); color: var(--tg-theme-button-text-color, #ffffff); border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
     .btn-primary:disabled { opacity: 0.6; }
     .leaderboard-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.05); }
@@ -76,7 +79,6 @@
         <button class="action-btn" onclick="sendBotCommand('Рейтинг')">🏆 Весь рейтинг</button>
         <button class="action-btn" onclick="window.Telegram.WebApp.openLink('https://forms.yandex.ru/u/6a82ad2c49af47f4fb6ba82d')">👨‍🏫 Консультация</button>
         
-        <!-- ВОТ ОНА: ПРОПАВШАЯ КНОПКА ССЫЛОК -->
         <button class="action-btn" onclick="toggleLinks()" style="grid-column: span 2; background: #e8f4fd; border-color: #2481cc; color: #2481cc;">🔗 Полезные ссылки</button>
         <div id="links-submenu" style="display: none; grid-column: span 2; padding: 12px; background: #f9f9f9; border-radius: 8px; margin-top: -4px;">
           <a href="https://mgsu.ru/" target="_blank" style="display: block; margin-bottom: 8px; color: #2481cc; text-decoration: none; font-weight: 500;">🔹 Официальный сайт НИУ МГСУ</a>
@@ -84,15 +86,55 @@
           <a href="https://vk.com/snomgsu" target="_blank" style="display: block; color: #2481cc; text-decoration: none; font-weight: 500;">🔹 Группа ВКонтакте</a>
         </div>
       </div>
+
+      <!-- СКРЫТАЯ ПАНЕЛЬ АДМИНА -->
+      <div id="admin-panel" style="display: none; margin-top: 10px;">
+        <button class="action-btn" style="width: 100%; background: #ffebee; color: #d32f2f; border-color: #ef9a9a;" onclick="showScreen('admin-view')">👑 Панель Администратора (Создать)</button>
+      </div>
     </div>
 
-    <!-- ВОТ ОН: ПРОПАВШИЙ ЛИДЕРБОРД -->
+    <!-- Лидерборд -->
     <div class="card">
       <div class="stat-title" style="margin-bottom: 8px;">Общий рейтинг СНО (Топ-10)</div>
       <div id="leaderboard-list"></div>
       <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.08); text-align: center; font-size: 14px;">
         Ваше текущее место: <strong id="my-rank" style="color: var(--tg-theme-button-color, #2481cc); font-size: 16px;">—</strong>
       </div>
+    </div>
+  </div>
+
+  <!-- ЭКРАН: Создание мероприятия (Только Админ) -->
+  <div id="admin-view" style="display: none;">
+    <div style="margin-bottom: 16px;">
+      <button onclick="showScreen('profile-view')" style="background: transparent; border: none; color: var(--tg-theme-button-color, #2481cc); font-size: 16px; font-weight: bold; cursor: pointer; padding: 0;">⬅ Назад</button>
+    </div>
+    <div class="card">
+      <h3 style="margin-top: 0;">Новое мероприятие 📝</h3>
+      <form onsubmit="submitNewEvent(event)" style="text-align: left;">
+        
+        <label style="font-size: 13px; color: gray;">Название *</label>
+        <input type="text" id="ev-name" required placeholder="Например: Научный Хакатон">
+        
+        <label style="font-size: 13px; color: gray; display: block; margin-top: 12px;">Ссылка на картинку (необязательно)</label>
+        <input type="text" id="ev-photo" placeholder="https://... (оставьте пустым для стандарта)">
+        
+        <label style="font-size: 13px; color: gray; display: block; margin-top: 12px;">Описание *</label>
+        <textarea id="ev-desc" required placeholder="Опишите подробности мероприятия..."></textarea>
+        
+        <label style="font-size: 13px; color: gray; display: block; margin-top: 12px;">Тип регистрации *</label>
+        <select id="ev-regtype" onchange="toggleExternalLink()">
+          <option value="internal">Внутренняя (Сбор в таблицу)</option>
+          <option value="no">Регистрация не требуется</option>
+          <option value="external">Внешняя ссылка (Форма и т.д.)</option>
+        </select>
+
+        <div id="external-link-box" style="display: none; margin-top: 12px;">
+           <label style="font-size: 13px; color: gray;">Внешняя ссылка (с https://)</label>
+           <input type="text" id="ev-externallink" placeholder="https://forms.yandex.ru/...">
+        </div>
+        
+        <button type="submit" class="btn-primary" id="ev-submit-btn" style="background: #d32f2f;">Опубликовать в приложении</button>
+      </form>
     </div>
   </div>
 
@@ -115,6 +157,7 @@
     function showScreen(screenId) {
       document.getElementById('profile-view').style.display = 'none';
       document.getElementById('events-view').style.display = 'none';
+      document.getElementById('admin-view').style.display = 'none';
       document.getElementById(screenId).style.display = 'block';
     }
 
@@ -125,25 +168,50 @@
       menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
     }
 
-    function toggleEvent(element) {
-      element.classList.toggle('expanded');
+    function toggleEvent(element) { element.classList.toggle('expanded'); }
+
+    // Для формы админа
+    function toggleExternalLink() {
+      const type = document.getElementById('ev-regtype').value;
+      document.getElementById('external-link-box').style.display = (type === 'external') ? 'block' : 'none';
     }
 
     async function registerForEvent(eventName, btnElement, eventObj) {
       eventObj.stopPropagation();
       if (!currentUserGlobalName) return;
-      
-      btnElement.innerText = "Запись...";
-      btnElement.disabled = true;
-
+      btnElement.innerText = "Запись..."; btnElement.disabled = true;
       const url = `${APPS_SCRIPT_URL}?action=join_event&eventName=${encodeURIComponent(eventName)}&userName=${encodeURIComponent(currentUserGlobalName)}`;
       try {
         await fetch(url);
-        btnElement.innerText = "✅ Вы записаны";
-        btnElement.style.background = "#4CAF50"; 
+        btnElement.innerText = "✅ Вы записаны"; btnElement.style.background = "#4CAF50"; 
       } catch (e) {
-        btnElement.innerText = "Ошибка";
-        btnElement.disabled = false;
+        btnElement.innerText = "Ошибка"; btnElement.disabled = false;
+      }
+    }
+
+    // ОТПРАВКА НОВОГО МЕРОПРИЯТИЯ АДМИНОМ
+    async function submitNewEvent(event) {
+      event.preventDefault();
+      const btn = document.getElementById('ev-submit-btn');
+      btn.innerText = "Публикация..."; btn.disabled = true;
+
+      const name = document.getElementById('ev-name').value;
+      const photo = document.getElementById('ev-photo').value;
+      const desc = document.getElementById('ev-desc').value;
+      let regType = document.getElementById('ev-regtype').value;
+      
+      if (regType === 'external') {
+         regType = document.getElementById('ev-externallink').value;
+      }
+
+      const url = `${APPS_SCRIPT_URL}?action=create_event&adminId=${tg.initDataUnsafe?.user?.id}&name=${encodeURIComponent(name)}&photo=${encodeURIComponent(photo)}&desc=${encodeURIComponent(desc)}&regType=${encodeURIComponent(regType)}`;
+      
+      try {
+        await fetch(url);
+        tg.showAlert("✅ Мероприятие успешно создано!");
+        location.reload(); // Перезагружаем приложение, чтобы обновить афишу
+      } catch(e) {
+        alert("Ошибка публикации"); btn.innerText = "Опубликовать"; btn.disabled = false;
       }
     }
 
@@ -154,7 +222,6 @@
       try {
         const response = await fetch(APPS_SCRIPT_URL);
         const data = await response.json();
-        
         const participantsList = data.participants || [];
         const userProfile = participantsList.find(item => String(item.user_id) === String(currentUserId));
         
@@ -176,6 +243,11 @@
           } else {
              avatarDiv.style.backgroundImage = 'none';
              avatarDiv.innerHTML = currentUserGlobalName.charAt(0);
+          }
+
+          // Показываем кнопку админа только вам!
+          if (String(currentUserId) === "1486703011") {
+             document.getElementById('admin-panel').style.display = 'block';
           }
 
           const interestsStr = userProfile['Научные интересы'];
