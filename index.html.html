@@ -16,6 +16,7 @@
       border-radius: 14px;
       padding: 16px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      margin-bottom: 16px;
     }
     .badge {
       display: inline-block;
@@ -35,7 +36,7 @@
     .stat-title { font-size: 11px; color: gray; text-transform: uppercase;}
     .stat-value { font-size: 20px; font-weight: bold; margin-top: 4px;}
     
-    /* Стили формы регистрации */
+    /* Форма регистрации */
     input {
       width: 100%; padding: 12px; margin-top: 8px;
       border: 1px solid #ccc; border-radius: 8px;
@@ -49,6 +50,36 @@
       font-size: 16px; font-weight: bold; cursor: pointer;
     }
     button:disabled { opacity: 0.6; }
+
+    /* Лидерборд */
+    .leaderboard-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+    .leaderboard-item:last-child { border-bottom: none; }
+    .rank-badge {
+      width: 24px; height: 24px; border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: bold; margin-right: 12px;
+      background: #eee; color: #555;
+    }
+    .rank-1 { background: #FFD700; color: #b8860b; font-size: 14px;} 
+    .rank-2 { background: #E3E4E5; color: #777; font-size: 14px;} 
+    .rank-3 { background: #cd7f32; color: #fff; font-size: 14px;} 
+    .leader-name { font-size: 14px; font-weight: 500; }
+    .leader-score { font-size: 14px; font-weight: bold; color: var(--tg-theme-button-color, #2481cc); }
+
+    /* Теги интересов */
+    .interest-tag {
+      display: inline-block;
+      background: var(--tg-theme-hint-color, #e0e0e0);
+      color: var(--tg-theme-text-color, #000);
+      padding: 6px 12px;
+      border-radius: 16px;
+      font-size: 13px;
+      margin: 0 6px 6px 0;
+      opacity: 0.9;
+    }
   </style>
 </head>
 <body>
@@ -56,44 +87,60 @@
   <!-- Экран загрузки -->
   <div id="loading" style="text-align: center; margin-top: 50px;">Загрузка данных...</div>
 
-  <!-- Экран личного кабинета -->
-  <div id="profile-view" class="card" style="display: none;">
-    <div style="display: flex; gap: 14px; align-items: center;">
-      <div id="avatar" style="width: 60px; height: 60px; border-radius: 50%; background: #2481cc; color: white; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold;"></div>
-      <div>
-        <h3 id="user-name" style="margin: 0;">Загрузка...</h3>
-        <span id="user-role" class="badge">Активист СНО</span>
-      </div>
-    </div>
-    <div class="stat-box">
-      <div>
-        <div class="stat-title">Рейтинг (Баллы)</div>
-        <div id="user-score" class="stat-value">0</div>
-      </div>
-      <div style="text-align: right;">
-        <div class="stat-title">Группа / Институт</div>
-        <div id="user-group" class="stat-value" style="font-size: 16px;">—</div>
-      </div>
-    </div>
-  </div>
-
   <!-- Экран регистрации -->
   <div id="registration-view" class="card" style="display: none; text-align: center;">
     <h3 style="margin-top: 0;">Вас нет в базе 🔍</h3>
     <p style="font-size: 14px; color: gray;">Чтобы привязать Telegram к вашему профилю в СНО, введите ФИО точно так же, как оно указано в списках.</p>
-    
     <form onsubmit="registerUser(event)" style="text-align: left;">
       <input type="text" id="name-input" placeholder="Например: Иванов Иван Иванович" required>
       <button type="submit" id="reg-btn">Привязать профиль</button>
     </form>
   </div>
 
+  <!-- Экран личного кабинета -->
+  <div id="profile-view" style="display: none;">
+    
+    <!-- Карточка профиля -->
+    <div class="card">
+      <div style="display: flex; gap: 14px; align-items: center;">
+        <div id="avatar" style="width: 60px; height: 60px; border-radius: 50%; background: var(--tg-theme-button-color, #2481cc); color: white; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold;"></div>
+        <div>
+          <h3 id="user-name" style="margin: 0;">Загрузка...</h3>
+          <span id="user-role" class="badge">Активист СНО</span>
+        </div>
+      </div>
+      <div class="stat-box">
+        <div>
+          <div class="stat-title">Рейтинг (Баллы)</div>
+          <div id="user-score" class="stat-value">0</div>
+        </div>
+        <div style="text-align: right;">
+          <div class="stat-title">Группа / Институт</div>
+          <div id="user-group" class="stat-value" style="font-size: 16px;">—</div>
+        </div>
+      </div>
+      
+      <!-- Блок научных интересов -->
+      <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.08);">
+        <div class="stat-title" style="margin-bottom: 8px;">Научные интересы</div>
+        <div id="interests-list"></div>
+      </div>
+    </div>
+
+    <!-- Лидерборд (Топ-10) -->
+    <div class="card">
+      <div class="stat-title" style="margin-bottom: 8px;">Общий рейтинг СНО (Топ-10)</div>
+      <div id="leaderboard-list"></div>
+    </div>
+    
+  </div>
+
   <script>
-    // === ВСТАВЬТЕ ССЫЛКУ ИЗ APPS SCRIPT НИЖЕ ===
+    // === ВАША ССЫЛКА НА APPS SCRIPT ===
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwhcJfMMlv2ZKcgJ1UKICfXsBlDt5cP2DazV3pW1fcqukOdNDJpeEBNfJescD9wKEzUFg/exec";
     
     const tg = window.Telegram.WebApp;
-    tg.expand();
+    tg.expand(); // Разворачиваем окно на весь экран
 
     async function loadProfile() {
       const currentUserId = tg.initDataUnsafe?.user?.id;
@@ -102,29 +149,78 @@
         const response = await fetch(APPS_SCRIPT_URL);
         const data = await response.json();
         
+        // Поддержка двух форматов (если в будущем добавите новости)
+        const participantsList = Array.isArray(data) ? data : (data.participants || []);
+        
         // Ищем пользователя по Telegram ID
-        const userProfile = data.find(item => String(item.user_id) === String(currentUserId));
+        const userProfile = participantsList.find(item => String(item.user_id) === String(currentUserId));
         
         document.getElementById('loading').style.display = 'none';
 
         if (userProfile) {
-          // Если найден - показываем профиль
+          // 1. Показываем профиль
           document.getElementById('profile-view').style.display = 'block';
           document.getElementById('user-name').innerText = userProfile['ФИО'] || "Без имени";
           document.getElementById('user-role').innerText = userProfile['Должность'] || "Активист СНО";
           document.getElementById('user-score').innerText = userProfile['score'] || "0";
           document.getElementById('user-group').innerText = userProfile['Институт/Группа'] || "—";
           document.getElementById('avatar').innerText = (userProfile['ФИО'] || "А").charAt(0);
+
+          // 2. Выводим научные интересы (тегами)
+          const interestsContainer = document.getElementById('interests-list');
+          const interestsStr = userProfile['Научные интересы'];
+          if (interestsStr && interestsStr.trim() !== "") {
+            interestsContainer.innerHTML = interestsStr.split(',')
+              .map(tag => `<span class="interest-tag">${tag.trim()}</span>`)
+              .join('');
+          } else {
+            interestsContainer.innerHTML = '<span style="font-size: 13px; color: gray;">Пока не указаны. Напишите куратору для добавления.</span>';
+          }
+
+          // 3. Выводим Топ-10 лидерборд
+          const parseScore = (val) => parseFloat(String(val).replace(',', '.')) || 0;
+          
+          const top10 = participantsList
+            .filter(p => p['ФИО'] && parseScore(p['score']) > 0) // Убираем нули
+            .sort((a, b) => parseScore(b['score']) - parseScore(a['score'])) // Сортируем
+            .slice(0, 10); // Берем первые 10
+
+          const leaderboardHtml = top10.map((user, index) => {
+            let rankClass = '';
+            let rankText = index + 1;
+            
+            // Раздаем медали
+            if (index === 0) { rankClass = 'rank-1'; rankText = '🥇'; }
+            else if (index === 1) { rankClass = 'rank-2'; rankText = '🥈'; }
+            else if (index === 2) { rankClass = 'rank-3'; rankText = '🥉'; }
+            
+            // Сокращаем ФИО до Фамилии и Имени
+            const shortName = (user['ФИО'] || "").split(' ').slice(0, 2).join(' ');
+
+            return `
+              <div class="leaderboard-item">
+                <div style="display: flex; align-items: center;">
+                  <div class="rank-badge ${rankClass}">${rankText}</div>
+                  <div class="leader-name">${shortName}</div> 
+                </div>
+                <div class="leader-score">${user['score'] || 0}</div>
+              </div>
+            `;
+          }).join('');
+          
+          document.getElementById('leaderboard-list').innerHTML = leaderboardHtml;
+
         } else {
           // Если не найден - показываем экран привязки аккаунта
           document.getElementById('registration-view').style.display = 'block';
         }
       } catch (error) {
-        document.getElementById('loading').innerText = 'Ошибка соединения с сервером.';
+        document.getElementById('loading').innerText = 'Ошибка соединения с сервером. Попробуйте позже.';
+        console.error(error);
       }
     }
 
-    // Функция отправки ФИО на сервер
+    // Функция отправки ФИО на сервер для привязки Telegram ID
     async function registerUser(event) {
       event.preventDefault();
       const nameInput = document.getElementById('name-input').value;
@@ -141,7 +237,6 @@
       btn.innerText = "Ищем в базе...";
       btn.disabled = true;
 
-      // Формируем ссылку запроса
       const url = `${APPS_SCRIPT_URL}?action=register&userId=${userId}&telegram=${username}&fullName=${encodeURIComponent(nameInput)}`;
 
       try {
@@ -150,7 +245,6 @@
 
         if (result.status === "success") {
           btn.innerText = "Успешно!";
-          // Перезагружаем страницу, теперь профиль найдется автоматически
           location.reload(); 
         } else {
           alert(result.message + " Проверьте опечатки.");
@@ -164,6 +258,7 @@
       }
     }
 
+    // Запуск после загрузки страницы
     document.addEventListener('DOMContentLoaded', loadProfile);
   </script>
 </body>
