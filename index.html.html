@@ -224,19 +224,95 @@
       document.getElementById('external-link-box').style.display = (type === 'external') ? 'block' : 'none';
     }
 
-    // ОБРАБОТЧИК: Регистрация юзера на мероприятие
+    // Отправляем ID вместо ФИО
     async function registerForEvent(eventName, btnElement, eventObj) {
       eventObj.stopPropagation();
-      if (!currentUserGlobalName) return;
+      const currentUserId = tg.initDataUnsafe?.user?.id;
+      if (!currentUserId) return;
+      
       btnElement.innerText = "Запись..."; btnElement.disabled = true;
-      const url = `${APPS_SCRIPT_URL}?action=join_event&eventName=${encodeURIComponent(eventName)}&userName=${encodeURIComponent(currentUserGlobalName)}`;
+      // В URL теперь передается userId
+      const url = `${APPS_SCRIPT_URL}?action=join_event&eventName=${encodeURIComponent(eventName)}&userId=${encodeURIComponent(currentUserId)}`;
       try {
         await fetch(url);
         btnElement.innerText = "✅ Вы записаны"; btnElement.style.background = "#4CAF50"; 
+        
+        // Добавляем наш ID локально, чтобы кнопка не сбросилась до перезагрузки
+        const ev = globalEventsData.find(e => e.name === eventName);
+        if(ev) ev.participants += "," + currentUserId;
+        
       } catch (e) {
         btnElement.innerText = "Ошибка"; btnElement.disabled = false;
       }
     }
+
+    // Внутри функции loadProfile() найдите блок отрисовки мероприятий и замените его:
+    
+          // ... (старый код внутри loadProfile) ...
+          
+          // ОТРИСОВКА МЕРОПРИЯТИЙ
+          globalEventsData = data.events || [];
+          const eventsHtml = globalEventsData.map(ev => {
+            // ТЕПЕРЬ ПРОВЕРЯЕМ ПО ID, А НЕ ПО ИМЕНИ
+            const isJoined = ev.participants && ev.participants.includes(String(currentUserId));
+            let btnHtml = "";
+            let regType = String(ev.regType).trim().toLowerCase();
+            
+            if (regType === 'no' || regType === 'нет') {
+               btnHtml = `<div style="text-align: center; color: gray; font-size: 13px; font-weight: bold; margin-top: 8px;">Регистрация не требуется</div>`;
+            } else if (regType.startsWith('http')) {
+               btnHtml = `<button class="btn-primary" onclick="event.stopPropagation(); window.Telegram.WebApp.openLink('${ev.regType}')" style="margin-top: 0; background: #333;">Внешняя регистрация ➔</button>`;
+            } else {
+               if (isJoined) {
+                 btnHtml = `<button class="btn-primary" style="background: #4CAF50; margin-top: 0;" disabled>✅ Вы записаны</button>`;
+               } else {
+                 btnHtml = `<button class="btn-primary" onclick="registerForEvent('${ev.name}', this, event)" style="margin-top: 0;">Зарегистрироваться</button>`;
+               }
+            }
+            
+            // Если Админ - показываем кнопку редактирования
+            const adminEditBtnHtml = isAdmin ? `<button class="btn-primary" onclick="event.stopPropagation(); openAdminForEdit('${ev.name}')" style="background: #ff9800; margin-top: 8px;">✏️ Редактировать карточку</button>` : '';
+
+            // Красивый вывод даты (с обработкой UTC часового пояса)
+            let dateHtml = '';
+            if (ev.datetime) {
+              try {
+                const dateObj = new Date(ev.datetime);
+                if (!isNaN(dateObj.getTime())) {
+                  const formattedDate = dateObj.toLocaleString('ru-RU', {
+                    day: '2-digit', month: '2-digit', year: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
+                  });
+                  dateHtml = `<div class="event-date-badge">📅 ${formattedDate.replace(',', '')}</div>`;
+                } else {
+                  dateHtml = `<div class="event-date-badge">📅 ${ev.datetime}</div>`;
+                }
+              } catch (e) {
+                dateHtml = `<div class="event-date-badge">📅 ${ev.datetime}</div>`;
+              }
+            }
+
+            return `
+              <div class="card event-card" onclick="toggleEvent(this)">
+                <img src="${ev.photo}" class="event-image">
+                <div class="event-body">
+                  ${dateHtml}
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <h3 style="margin: 0; font-size: 18px;">${ev.name}</h3>
+                    <span style="font-size: 12px; color: #2481cc; background: #e8f4fd; padding: 3px 8px; border-radius: 12px; font-weight: bold; flex-shrink: 0; margin-left: 8px;">👇 Развернуть</span>
+                  </div>
+                  
+                  <div class="event-details">
+                    ${ev.desc ? `<p class="event-desc-text">${ev.desc}</p>` : ''}
+                    ${btnHtml}
+                    ${adminEditBtnHtml}
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('');
+          
+          document.getElementById('events-list').innerHTML = eventsHtml || "<p style='text-align: center; color: gray; font-size: 14px;'>Пока нет открытых регистраций</p>";
 
     // ОБРАБОТЧИК: Создание ИЛИ Редактирование админом
     async function submitNewEvent(event) {
