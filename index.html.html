@@ -113,7 +113,6 @@
       <h3 id="admin-title" style="margin-top: 0;">Новое мероприятие 📝</h3>
       <form onsubmit="submitNewEvent(event)" style="text-align: left;">
         
-        <!-- Скрытое поле для старого имени (нужно при редактировании) -->
         <input type="hidden" id="ev-originalname">
         
         <label style="font-size: 13px; color: gray;">Название *</label>
@@ -160,7 +159,7 @@
     tg.expand();
 
     let currentUserGlobalName = ""; 
-    let globalEventsData = []; // Храним загруженные мероприятия
+    let globalEventsData = []; 
 
     function showScreen(screenId) {
       document.getElementById('profile-view').style.display = 'none';
@@ -178,7 +177,6 @@
 
     function toggleEvent(element) { element.classList.toggle('expanded'); }
 
-    // АДМИН: Открыть форму чистой (Создание)
     function openAdminForCreate() {
       document.getElementById('admin-title').innerText = "Новое мероприятие 📝";
       document.getElementById('ev-submit-btn').innerText = "Опубликовать в приложении";
@@ -194,7 +192,6 @@
       showScreen('admin-view');
     }
 
-    // АДМИН: Открыть форму заполненной (Редактирование)
     function openAdminForEdit(eventName) {
       const ev = globalEventsData.find(e => e.name === eventName);
       if(!ev) return;
@@ -224,20 +221,21 @@
       document.getElementById('external-link-box').style.display = (type === 'external') ? 'block' : 'none';
     }
 
-    // Отправляем ID вместо ФИО
+    // РЕГИСТРАЦИЯ НА ИВЕНТ ПО ID
     async function registerForEvent(eventName, btnElement, eventObj) {
       eventObj.stopPropagation();
       const currentUserId = tg.initDataUnsafe?.user?.id;
       if (!currentUserId) return;
       
       btnElement.innerText = "Запись..."; btnElement.disabled = true;
-      // В URL теперь передается userId
+      
+      // Передаем userId для сохранения в таблицу
       const url = `${APPS_SCRIPT_URL}?action=join_event&eventName=${encodeURIComponent(eventName)}&userId=${encodeURIComponent(currentUserId)}`;
       try {
         await fetch(url);
         btnElement.innerText = "✅ Вы записаны"; btnElement.style.background = "#4CAF50"; 
         
-        // Добавляем наш ID локально, чтобы кнопка не сбросилась до перезагрузки
+        // Локально обновляем список участников для этой карточки, чтобы кнопка работала без перезагрузки
         const ev = globalEventsData.find(e => e.name === eventName);
         if(ev) ev.participants += "," + currentUserId;
         
@@ -246,81 +244,13 @@
       }
     }
 
-    // Внутри функции loadProfile() найдите блок отрисовки мероприятий и замените его:
-    
-          // ... (старый код внутри loadProfile) ...
-          
-          // ОТРИСОВКА МЕРОПРИЯТИЙ
-          globalEventsData = data.events || [];
-          const eventsHtml = globalEventsData.map(ev => {
-            // ТЕПЕРЬ ПРОВЕРЯЕМ ПО ID, А НЕ ПО ИМЕНИ
-            const isJoined = ev.participants && ev.participants.includes(String(currentUserId));
-            let btnHtml = "";
-            let regType = String(ev.regType).trim().toLowerCase();
-            
-            if (regType === 'no' || regType === 'нет') {
-               btnHtml = `<div style="text-align: center; color: gray; font-size: 13px; font-weight: bold; margin-top: 8px;">Регистрация не требуется</div>`;
-            } else if (regType.startsWith('http')) {
-               btnHtml = `<button class="btn-primary" onclick="event.stopPropagation(); window.Telegram.WebApp.openLink('${ev.regType}')" style="margin-top: 0; background: #333;">Внешняя регистрация ➔</button>`;
-            } else {
-               if (isJoined) {
-                 btnHtml = `<button class="btn-primary" style="background: #4CAF50; margin-top: 0;" disabled>✅ Вы записаны</button>`;
-               } else {
-                 btnHtml = `<button class="btn-primary" onclick="registerForEvent('${ev.name}', this, event)" style="margin-top: 0;">Зарегистрироваться</button>`;
-               }
-            }
-            
-            // Если Админ - показываем кнопку редактирования
-            const adminEditBtnHtml = isAdmin ? `<button class="btn-primary" onclick="event.stopPropagation(); openAdminForEdit('${ev.name}')" style="background: #ff9800; margin-top: 8px;">✏️ Редактировать карточку</button>` : '';
-
-            // Красивый вывод даты (с обработкой UTC часового пояса)
-            let dateHtml = '';
-            if (ev.datetime) {
-              try {
-                const dateObj = new Date(ev.datetime);
-                if (!isNaN(dateObj.getTime())) {
-                  const formattedDate = dateObj.toLocaleString('ru-RU', {
-                    day: '2-digit', month: '2-digit', year: 'numeric',
-                    hour: '2-digit', minute: '2-digit'
-                  });
-                  dateHtml = `<div class="event-date-badge">📅 ${formattedDate.replace(',', '')}</div>`;
-                } else {
-                  dateHtml = `<div class="event-date-badge">📅 ${ev.datetime}</div>`;
-                }
-              } catch (e) {
-                dateHtml = `<div class="event-date-badge">📅 ${ev.datetime}</div>`;
-              }
-            }
-
-            return `
-              <div class="card event-card" onclick="toggleEvent(this)">
-                <img src="${ev.photo}" class="event-image">
-                <div class="event-body">
-                  ${dateHtml}
-                  <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                    <h3 style="margin: 0; font-size: 18px;">${ev.name}</h3>
-                    <span style="font-size: 12px; color: #2481cc; background: #e8f4fd; padding: 3px 8px; border-radius: 12px; font-weight: bold; flex-shrink: 0; margin-left: 8px;">👇 Развернуть</span>
-                  </div>
-                  
-                  <div class="event-details">
-                    ${ev.desc ? `<p class="event-desc-text">${ev.desc}</p>` : ''}
-                    ${btnHtml}
-                    ${adminEditBtnHtml}
-                  </div>
-                </div>
-              </div>
-            `;
-          }).join('');
-          
-          document.getElementById('events-list').innerHTML = eventsHtml || "<p style='text-align: center; color: gray; font-size: 14px;'>Пока нет открытых регистраций</p>";
-
-    // ОБРАБОТЧИК: Создание ИЛИ Редактирование админом
+    // АДМИН ПУБЛИКАЦИЯ
     async function submitNewEvent(event) {
       event.preventDefault();
       const btn = document.getElementById('ev-submit-btn');
       btn.innerText = "Загрузка..."; btn.disabled = true;
 
-      const originalName = document.getElementById('ev-originalname').value; // Если есть - значит режим ред.
+      const originalName = document.getElementById('ev-originalname').value; 
       const name = document.getElementById('ev-name').value;
       const datetime = document.getElementById('ev-datetime').value;
       const photo = document.getElementById('ev-photo').value;
@@ -332,7 +262,6 @@
       }
 
       const action = originalName ? "edit_event" : "create_event";
-      
       const url = `${APPS_SCRIPT_URL}?action=${action}&adminId=${tg.initDataUnsafe?.user?.id}&originalName=${encodeURIComponent(originalName)}&name=${encodeURIComponent(name)}&datetime=${encodeURIComponent(datetime)}&photo=${encodeURIComponent(photo)}&desc=${encodeURIComponent(desc)}&regType=${encodeURIComponent(regType)}`;
       
       try {
@@ -395,7 +324,8 @@
           // ОТРИСОВКА МЕРОПРИЯТИЙ
           globalEventsData = data.events || [];
           const eventsHtml = globalEventsData.map(ev => {
-            const isJoined = ev.participants && ev.participants.includes(currentUserGlobalName);
+            // Проверяем наличие нашего ID в строке participants
+            const isJoined = ev.participants && String(ev.participants).includes(String(currentUserId));
             let btnHtml = "";
             let regType = String(ev.regType).trim().toLowerCase();
             
@@ -411,35 +341,26 @@
                }
             }
             
-            // Если Админ - показываем кнопку редактирования
             const adminEditBtnHtml = isAdmin ? `<button class="btn-primary" onclick="event.stopPropagation(); openAdminForEdit('${ev.name}')" style="background: #ff9800; margin-top: 8px;">✏️ Редактировать карточку</button>` : '';
 
-            // --- ИСПРАВЛЕННЫЙ ВЫВОД ДАТЫ (ДД.ММ.ГГГГ ЧЧ:ММ) ---
-let dateHtml = '';
-if (ev.datetime) {
-  try {
-    // Создаем объект даты, учитывая, что таблица может отдавать строку в UTC (с буквой Z)
-    const dateObj = new Date(ev.datetime);
-    
-    // Проверяем, не сломалась ли дата
-    if (!isNaN(dateObj.getTime())) {
-      // Форматируем под локаль (русский язык), чтобы часовой пояс браузера всё починил
-      const formattedDate = dateObj.toLocaleString('ru-RU', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-      dateHtml = `<div class="event-date-badge">📅 ${formattedDate.replace(',', '')}</div>`;
-    } else {
-      // Если это просто текст, а не дата
-      dateHtml = `<div class="event-date-badge">📅 ${ev.datetime}</div>`;
-    }
-  } catch (e) {
-    dateHtml = `<div class="event-date-badge">📅 ${ev.datetime}</div>`;
-  }
-}
+            // Исправленный блок вывода даты
+            let dateHtml = '';
+            if (ev.datetime) {
+              try {
+                const dateObj = new Date(ev.datetime);
+                if (!isNaN(dateObj.getTime())) {
+                  const formattedDate = dateObj.toLocaleString('ru-RU', {
+                    day: '2-digit', month: '2-digit', year: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
+                  });
+                  dateHtml = `<div class="event-date-badge">📅 ${formattedDate.replace(',', '')}</div>`;
+                } else {
+                  dateHtml = `<div class="event-date-badge">📅 ${ev.datetime}</div>`;
+                }
+              } catch (e) {
+                dateHtml = `<div class="event-date-badge">📅 ${ev.datetime}</div>`;
+              }
+            }
 
             return `
               <div class="card event-card" onclick="toggleEvent(this)">
