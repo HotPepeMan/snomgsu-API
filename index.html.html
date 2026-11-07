@@ -104,7 +104,7 @@
     </div>
   </div>
 
-  <!-- ЭКРАН: Создание/Редактирование мероприятия (Только Админ) -->
+  <!-- ЭКРАН: Создание/Редактирование мероприятия -->
   <div id="admin-view" style="display: none;">
     <div style="margin-bottom: 16px;">
       <button onclick="showScreen('profile-view')" style="background: transparent; border: none; color: var(--tg-theme-button-color, #2481cc); font-size: 16px; font-weight: bold; cursor: pointer; padding: 0;">⬅ Назад</button>
@@ -120,6 +120,9 @@
         
         <label style="font-size: 13px; color: gray; display: block; margin-top: 12px;">Дата и время проведения *</label>
         <input type="datetime-local" id="ev-datetime" required>
+
+        <label style="font-size: 13px; color: gray; display: block; margin-top: 12px;">Дедлайн регистрации (необязательно)</label>
+        <input type="datetime-local" id="ev-deadline">
 
         <label style="font-size: 13px; color: gray; display: block; margin-top: 12px;">Ссылка на картинку (необязательно)</label>
         <input type="text" id="ev-photo" placeholder="https://... (пусто = стандарт)">
@@ -169,39 +172,44 @@
     }
 
     function sendBotCommand(command) { tg.sendData(command); }
-    
     function toggleLinks() {
       const menu = document.getElementById('links-submenu');
       menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
     }
-
     function toggleEvent(element) { element.classList.toggle('expanded'); }
+
+    function formatLocalDate(dateString) {
+      if(!dateString) return "";
+      try {
+        const d = new Date(dateString);
+        if (isNaN(d.getTime())) return dateString; 
+        return d.toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(',', '');
+      } catch(e) { return dateString; }
+    }
 
     function openAdminForCreate() {
       document.getElementById('admin-title').innerText = "Новое мероприятие 📝";
       document.getElementById('ev-submit-btn').innerText = "Опубликовать в приложении";
-      
       document.getElementById('ev-originalname').value = "";
       document.getElementById('ev-name').value = "";
       document.getElementById('ev-datetime').value = "";
+      document.getElementById('ev-deadline').value = "";
       document.getElementById('ev-photo').value = "";
       document.getElementById('ev-desc').value = "";
       document.getElementById('ev-regtype').value = "internal";
       toggleExternalLink();
-      
       showScreen('admin-view');
     }
 
     function openAdminForEdit(eventName) {
       const ev = globalEventsData.find(e => e.name === eventName);
       if(!ev) return;
-
       document.getElementById('admin-title').innerText = "Редактирование ✏️";
       document.getElementById('ev-submit-btn').innerText = "Сохранить изменения";
-      
       document.getElementById('ev-originalname').value = ev.name;
       document.getElementById('ev-name').value = ev.name;
       document.getElementById('ev-datetime').value = ev.datetime || "";
+      document.getElementById('ev-deadline').value = ev.deadline || "";
       document.getElementById('ev-photo').value = ev.photo || "";
       document.getElementById('ev-desc').value = ev.desc || "";
       
@@ -212,7 +220,6 @@
          document.getElementById('ev-externallink').value = ev.regType;
       }
       toggleExternalLink();
-      
       showScreen('admin-view');
     }
 
@@ -221,30 +228,60 @@
       document.getElementById('external-link-box').style.display = (type === 'external') ? 'block' : 'none';
     }
 
-    // РЕГИСТРАЦИЯ НА ИВЕНТ ПО ID
+    // НОВОЕ: УДАЛЕНИЕ МЕРОПРИЯТИЯ
+    async function deleteEvent(eventName) {
+      const currentUserId = tg.initDataUnsafe?.user?.id;
+      if (!currentUserId) return;
+      
+      tg.showConfirm(`Вы уверены, что хотите НАВСЕГДА удалить мероприятие «${eventName}»? Это действие нельзя отменить.`, async (confirm) => {
+        if(confirm) {
+          const url = `${APPS_SCRIPT_URL}?action=delete_event&adminId=${currentUserId}&eventName=${encodeURIComponent(eventName)}`;
+          try {
+            await fetch(url);
+            tg.showAlert("🗑 Мероприятие удалено.");
+            location.reload(); 
+          } catch (e) {
+            alert("Ошибка сети при удалении.");
+          }
+        }
+      });
+    }
+
     async function registerForEvent(eventName, btnElement, eventObj) {
       eventObj.stopPropagation();
       const currentUserId = tg.initDataUnsafe?.user?.id;
       if (!currentUserId) return;
       
       btnElement.innerText = "Запись..."; btnElement.disabled = true;
-      
-      // Передаем userId для сохранения в таблицу
       const url = `${APPS_SCRIPT_URL}?action=join_event&eventName=${encodeURIComponent(eventName)}&userId=${encodeURIComponent(currentUserId)}`;
       try {
         await fetch(url);
-        btnElement.innerText = "✅ Вы записаны"; btnElement.style.background = "#4CAF50"; 
-        
-        // Локально обновляем список участников для этой карточки, чтобы кнопка работала без перезагрузки
-        const ev = globalEventsData.find(e => e.name === eventName);
-        if(ev) ev.participants += "," + currentUserId;
-        
+        tg.showAlert("✅ Вы успешно зарегистрировались!");
+        location.reload(); 
       } catch (e) {
         btnElement.innerText = "Ошибка"; btnElement.disabled = false;
       }
     }
 
-    // АДМИН ПУБЛИКАЦИЯ
+    async function leaveEvent(eventName, eventObj) {
+      eventObj.stopPropagation();
+      const currentUserId = tg.initDataUnsafe?.user?.id;
+      if (!currentUserId) return;
+      
+      tg.showConfirm(`Отменить регистрацию на «${eventName}»?`, async (confirm) => {
+        if(confirm) {
+          const url = `${APPS_SCRIPT_URL}?action=leave_event&eventName=${encodeURIComponent(eventName)}&userId=${encodeURIComponent(currentUserId)}`;
+          try {
+            await fetch(url);
+            tg.showAlert("❌ Ваша запись отменена.");
+            location.reload(); 
+          } catch (e) {
+            alert("Ошибка сети при отмене.");
+          }
+        }
+      });
+    }
+
     async function submitNewEvent(event) {
       event.preventDefault();
       const btn = document.getElementById('ev-submit-btn');
@@ -253,16 +290,14 @@
       const originalName = document.getElementById('ev-originalname').value; 
       const name = document.getElementById('ev-name').value;
       const datetime = document.getElementById('ev-datetime').value;
+      const deadline = document.getElementById('ev-deadline').value;
       const photo = document.getElementById('ev-photo').value;
       const desc = document.getElementById('ev-desc').value;
       let regType = document.getElementById('ev-regtype').value;
-      
-      if (regType === 'external') {
-         regType = document.getElementById('ev-externallink').value;
-      }
+      if (regType === 'external') regType = document.getElementById('ev-externallink').value;
 
       const action = originalName ? "edit_event" : "create_event";
-      const url = `${APPS_SCRIPT_URL}?action=${action}&adminId=${tg.initDataUnsafe?.user?.id}&originalName=${encodeURIComponent(originalName)}&name=${encodeURIComponent(name)}&datetime=${encodeURIComponent(datetime)}&photo=${encodeURIComponent(photo)}&desc=${encodeURIComponent(desc)}&regType=${encodeURIComponent(regType)}`;
+      const url = `${APPS_SCRIPT_URL}?action=${action}&adminId=${tg.initDataUnsafe?.user?.id}&originalName=${encodeURIComponent(originalName)}&name=${encodeURIComponent(name)}&datetime=${encodeURIComponent(datetime)}&deadline=${encodeURIComponent(deadline)}&photo=${encodeURIComponent(photo)}&desc=${encodeURIComponent(desc)}&regType=${encodeURIComponent(regType)}`;
       
       try {
         await fetch(url);
@@ -273,7 +308,6 @@
       }
     }
 
-    // ЗАГРУЗКА ДАННЫХ
     async function loadProfile() {
       const currentUserId = tg.initDataUnsafe?.user?.id;
       const currentUserPhoto = tg.initDataUnsafe?.user?.photo_url;
@@ -321,13 +355,21 @@
           const myRankIndex = sortedParticipants.findIndex(p => String(p.user_id) === String(currentUserId));
           document.getElementById('my-rank').innerText = myRankIndex !== -1 ? myRankIndex + 1 : "Пока без рейтинга (0 баллов)";
 
-          // ОТРИСОВКА МЕРОПРИЯТИЙ
           globalEventsData = data.events || [];
+          const now = new Date();
+          
           const eventsHtml = globalEventsData.map(ev => {
-            // Проверяем наличие нашего ID в строке participants
             const isJoined = ev.participants && String(ev.participants).includes(String(currentUserId));
             let btnHtml = "";
             let regType = String(ev.regType).trim().toLowerCase();
+            
+            let isClosed = false;
+            if (ev.deadline) {
+              const dlDate = new Date(ev.deadline);
+              if (!isNaN(dlDate.getTime()) && now > dlDate) {
+                isClosed = true;
+              }
+            }
             
             if (regType === 'no' || regType === 'нет') {
                btnHtml = `<div style="text-align: center; color: gray; font-size: 13px; font-weight: bold; margin-top: 8px;">Регистрация не требуется</div>`;
@@ -335,32 +377,29 @@
                btnHtml = `<button class="btn-primary" onclick="event.stopPropagation(); window.Telegram.WebApp.openLink('${ev.regType}')" style="margin-top: 0; background: #333;">Внешняя регистрация ➔</button>`;
             } else {
                if (isJoined) {
-                 btnHtml = `<button class="btn-primary" style="background: #4CAF50; margin-top: 0;" disabled>✅ Вы записаны</button>`;
+                 btnHtml = `
+                   <button class="btn-primary" style="background: #4CAF50; margin-top: 0; pointer-events: none;">✅ Вы записаны</button>
+                   <div style="text-align: center; margin-top: 10px;">
+                     <span onclick="leaveEvent('${ev.name}', event)" style="color: #d32f2f; font-size: 13px; font-weight: bold; cursor: pointer; text-decoration: underline;">❌ Отменить запись</span>
+                   </div>
+                 `;
+               } else if (isClosed) {
+                 btnHtml = `<button class="btn-primary" style="background: #9e9e9e; margin-top: 0;" disabled>⏳ Регистрация закрыта</button>`;
                } else {
                  btnHtml = `<button class="btn-primary" onclick="registerForEvent('${ev.name}', this, event)" style="margin-top: 0;">Зарегистрироваться</button>`;
                }
             }
             
-            const adminEditBtnHtml = isAdmin ? `<button class="btn-primary" onclick="event.stopPropagation(); openAdminForEdit('${ev.name}')" style="background: #ff9800; margin-top: 8px;">✏️ Редактировать карточку</button>` : '';
-
-            // Исправленный блок вывода даты
-            let dateHtml = '';
-            if (ev.datetime) {
-              try {
-                const dateObj = new Date(ev.datetime);
-                if (!isNaN(dateObj.getTime())) {
-                  const formattedDate = dateObj.toLocaleString('ru-RU', {
-                    day: '2-digit', month: '2-digit', year: 'numeric',
-                    hour: '2-digit', minute: '2-digit'
-                  });
-                  dateHtml = `<div class="event-date-badge">📅 ${formattedDate.replace(',', '')}</div>`;
-                } else {
-                  dateHtml = `<div class="event-date-badge">📅 ${ev.datetime}</div>`;
-                }
-              } catch (e) {
-                dateHtml = `<div class="event-date-badge">📅 ${ev.datetime}</div>`;
-              }
-            }
+            // НОВОЕ: Две кнопки (Редактировать и Удалить) для Админа
+            const adminEditBtnHtml = isAdmin ? `
+              <div style="display: flex; gap: 8px; margin-top: 12px;">
+                <button class="btn-primary" onclick="event.stopPropagation(); openAdminForEdit('${ev.name}')" style="background: #ff9800; margin-top: 0; flex: 1;">✏️ Редактировать</button>
+                <button class="btn-primary" onclick="event.stopPropagation(); deleteEvent('${ev.name}')" style="background: #d32f2f; margin-top: 0; flex: 1;">🗑️ Удалить</button>
+              </div>
+            ` : '';
+            
+            const dateHtml = ev.datetime ? `<div class="event-date-badge">📅 ${formatLocalDate(ev.datetime)}</div>` : '';
+            const deadlineInfo = (ev.deadline && !isJoined) ? `<div style="font-size: 12px; color: #d32f2f; margin-bottom: 8px; font-weight: bold;">⏳ Дедлайн записи: ${formatLocalDate(ev.deadline)}</div>` : '';
 
             return `
               <div class="card event-card" onclick="toggleEvent(this)">
@@ -373,6 +412,7 @@
                   </div>
                   
                   <div class="event-details">
+                    ${deadlineInfo}
                     ${ev.desc ? `<p class="event-desc-text">${ev.desc}</p>` : ''}
                     ${btnHtml}
                     ${adminEditBtnHtml}
