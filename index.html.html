@@ -7,7 +7,10 @@
   <style>
     body { background-color: var(--tg-theme-bg-color, #f4f5f7); color: var(--tg-theme-text-color, #222); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 16px; }
     .card { background: var(--tg-theme-secondary-bg-color, #ffffff); border-radius: 14px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 16px; }
-    .badge { display: inline-block; padding: 4px 10px; background: var(--tg-theme-button-color, #2481cc); color: var(--tg-theme-button-text-color, #ffffff); border-radius: 20px; font-size: 12px; font-weight: 600; margin-top: 4px; }
+    
+    /* Обновленные стили для бейджа должности */
+    .badge { display: inline-block; padding: 6px 12px; background: var(--tg-theme-button-color, #2481cc); color: var(--tg-theme-button-text-color, #ffffff); border-radius: 12px; font-size: 13px; font-weight: bold; margin-top: 6px; width: fit-content;}
+    
     .stat-box { margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.08); display: flex; justify-content: space-between; }
     .stat-title { font-size: 11px; color: gray; text-transform: uppercase;}
     .stat-value { font-size: 20px; font-weight: bold; margin-top: 4px;}
@@ -28,7 +31,7 @@
     .interest-tag { display: inline-block; background: var(--tg-theme-hint-color, #e0e0e0); color: var(--tg-theme-text-color, #000); padding: 6px 12px; border-radius: 16px; font-size: 13px; margin: 0 6px 6px 0; opacity: 0.9; }
     .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .action-btn { background: var(--tg-theme-secondary-bg-color, #f4f5f7); color: var(--tg-theme-text-color, #222); border: 1px solid var(--tg-theme-hint-color, #ccc); padding: 12px 8px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; text-align: center; }
-    #avatar { width: 60px; height: 60px; border-radius: 50%; background-color: var(--tg-theme-button-color, #2481cc); color: white; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; background-size: cover; background-position: center; }
+    #avatar { width: 60px; height: 60px; border-radius: 50%; background-color: var(--tg-theme-button-color, #2481cc); color: white; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; background-size: cover; background-position: center; flex-shrink: 0;}
     
     .event-card { padding: 0; overflow: hidden; margin-bottom: 12px; cursor: pointer; transition: 0.2s;}
     .event-image { width: 100%; height: 120px; object-fit: cover; background: #ccc; transition: 0.3s; }
@@ -38,6 +41,10 @@
     .event-card.expanded .event-image { height: 180px; }
     .event-desc-text { font-size: 14px; color: gray; margin: 0 0 16px 0; line-height: 1.4; white-space: pre-wrap;}
     .event-date-badge { font-size: 13px; color: #2481cc; background: #e8f4fd; padding: 4px 8px; border-radius: 6px; display: inline-block; font-weight: bold; margin-bottom: 8px; }
+
+    /* Стили для нового расположения галочки */
+    .coauthor-badge-container { display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: bold; color: #d32f2f; cursor: pointer; background: #ffebee; padding: 4px 8px; border-radius: 12px; border: 1px solid #ffcdd2; height: fit-content; flex-shrink: 0;}
+    .profile-header-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; width: 100%;}
   </style>
 </head>
 <body>
@@ -56,19 +63,22 @@
   <!-- Профиль -->
   <div id="profile-view" style="display: none;">
     <div class="card">
-      <div style="display: flex; gap: 14px; align-items: center;">
+      <div style="display: flex; gap: 14px; align-items: flex-start;">
         <div id="avatar"></div>
-        <div>
-          <h3 id="user-name" style="margin: 0;"></h3>
-          <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
-            <span id="user-role" class="badge" style="margin-top: 0;"></span>
-            <label style="display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: bold; color: #d32f2f; cursor: pointer; background: #ffebee; padding: 4px 8px; border-radius: 12px; border: 1px solid #ffcdd2;">
+        <div style="flex-grow: 1; min-width: 0;">
+          <!-- Блок с ФИО и Галочкой на одной линии -->
+          <div class="profile-header-top">
+            <h3 id="user-name" style="margin: 0; line-height: 1.2; word-break: break-word;"></h3>
+            <label class="coauthor-badge-container">
               <input type="checkbox" id="coauthor-checkbox" onchange="toggleCoauthor(this)" style="width: 14px; height: 14px; margin: 0; accent-color: #d32f2f;">
               Ищу соавтора
             </label>
           </div>
+          <!-- Должность (синяя плашка) внизу -->
+          <div id="user-role" class="badge"></div>
         </div>
       </div>
+      
       <div class="stat-box">
         <div><div class="stat-title">Рейтинг</div><div id="user-score" class="stat-value">0</div></div>
         <div style="text-align: right;"><div class="stat-title">Группа</div><div id="user-group" class="stat-value" style="font-size: 16px;">—</div></div>
@@ -96,7 +106,8 @@
       <div class="action-grid">
         <button class="action-btn" onclick="showScreen('events-view')">📅 Мероприятия</button>
         <button class="action-btn" onclick="showScreen('coauthors-view')">👥 Поиск соавторов</button>
-        <button class="action-btn" onclick="sendBotCommand('Рейтинг')">🏆 Весь рейтинг</button>
+        <!-- КНОПКА ЗАМЕНЕНА: Открывает ссылку на гугл диск -->
+        <button class="action-btn" onclick="window.Telegram.WebApp.openLink('https://drive.google.com/drive/folders/ВАША_ССЫЛКА_ТУТ')">📚 Банк статей</button>
         <button class="action-btn" onclick="window.Telegram.WebApp.openLink('https://forms.yandex.ru/u/6a82ad2c49af47f4fb6ba82d')">👨‍🏫 Консультация</button>
         
         <button class="action-btn" onclick="toggleLinks()" style="grid-column: span 2; background: #e8f4fd; border-color: #2481cc; color: #2481cc;">🔗 Мы есть тут</button>
@@ -165,7 +176,6 @@
         <label style="font-size: 13px; color: gray; display: block; margin-top: 12px;">Описание *</label>
         <textarea id="ev-desc" required placeholder="Опишите подробности..."></textarea>
         
-        <!-- Галочка Освобождение -->
         <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: bold; color: #222; margin-top: 16px; cursor: pointer;">
           <input type="checkbox" id="ev-exemption" style="width: 18px; height: 18px; margin: 0; accent-color: #d32f2f;">
           Предоставляется освобождение
@@ -182,7 +192,6 @@
            <input type="text" id="ev-externallink" placeholder="https://forms.yandex.ru/...">
         </div>
         
-        <!-- Галочка Отправки в Канал -->
         <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: bold; color: #2481cc; margin-top: 16px; margin-bottom: 16px; cursor: pointer; background: #e8f4fd; padding: 10px; border-radius: 8px;">
            <input type="checkbox" id="ev-post-channel" style="width: 18px; height: 18px; margin: 0;">
            📢 Опубликовать в Telegram-канал
@@ -283,7 +292,7 @@
       document.getElementById('ev-desc').value = "";
       document.getElementById('ev-regtype').value = "internal";
       document.getElementById('ev-exemption').checked = false;
-      document.getElementById('ev-post-channel').checked = false; // Сброс галочки публикации в канал
+      document.getElementById('ev-post-channel').checked = false;
       toggleExternalLink();
       showScreen('admin-view');
     }
@@ -300,7 +309,7 @@
       document.getElementById('ev-photo').value = ev.photo || "";
       document.getElementById('ev-desc').value = ev.desc || "";
       document.getElementById('ev-exemption').checked = (ev.exemption === "true"); 
-      document.getElementById('ev-post-channel').checked = false; // Оставляем выключенной при редактировании по умолчанию
+      document.getElementById('ev-post-channel').checked = false; 
       
       if (ev.regType === 'internal' || ev.regType === 'no' || ev.regType === 'нет') {
          document.getElementById('ev-regtype').value = (ev.regType === 'нет' ? 'no' : ev.regType);
