@@ -99,11 +99,12 @@
         <button class="action-btn" onclick="sendBotCommand('Рейтинг')">🏆 Весь рейтинг</button>
         <button class="action-btn" onclick="window.Telegram.WebApp.openLink('https://forms.yandex.ru/u/6a82ad2c49af47f4fb6ba82d')">👨‍🏫 Консультация</button>
         
-        <button class="action-btn" onclick="toggleLinks()" style="grid-column: span 2; background: #e8f4fd; border-color: #2481cc; color: #2481cc;">🔗 Полезные ссылки</button>
+        <button class="action-btn" onclick="toggleLinks()" style="grid-column: span 2; background: #e8f4fd; border-color: #2481cc; color: #2481cc;">🔗 Мы есть тут</button>
         <div id="links-submenu" style="display: none; grid-column: span 2; padding: 12px; background: #f9f9f9; border-radius: 8px; margin-top: -4px;">
-          <a href="https://mgsu.ru/" target="_blank" style="display: block; margin-bottom: 8px; color: #2481cc; text-decoration: none; font-weight: 500;">🔹 Официальный сайт НИУ МГСУ</a>
-          <a href="https://t.me/snomgsu" target="_blank" style="display: block; margin-bottom: 8px; color: #2481cc; text-decoration: none; font-weight: 500;">🔹 Канал СНО</a>
-          <a href="https://vk.com/snomgsu" target="_blank" style="display: block; color: #2481cc; text-decoration: none; font-weight: 500;">🔹 Группа ВКонтакте</a>
+          <a href="https://t.me/snomgsu" target="_blank" style="display: block; margin-bottom: 8px; color: #2481cc; text-decoration: none; font-weight: 500;">🔹 Telegram-канал</a>
+          <a href="https://www.youtube.com/@snouniversity" target="_blank" style="display: block; margin-bottom: 8px; color: #2481cc; text-decoration: none; font-weight: 500;">🔹 YouTube</a>
+          <a href="https://www.tiktok.com/@snouniversity?_r=1&_t=ZP-9BEeogS7KOs" target="_blank" style="display: block; margin-bottom: 8px; color: #2481cc; text-decoration: none; font-weight: 500;">🔹 TikTok</a>
+          <a href="https://vk.com/snomgsu" target="_blank" style="display: block; color: #2481cc; text-decoration: none; font-weight: 500;">🔹 ВКонтакте</a>
         </div>
       </div>
 
@@ -180,6 +181,13 @@
            <label style="font-size: 13px; color: gray;">Внешняя ссылка (с https://)</label>
            <input type="text" id="ev-externallink" placeholder="https://forms.yandex.ru/...">
         </div>
+        
+        <!-- Галочка Отправки в Канал -->
+        <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: bold; color: #2481cc; margin-top: 16px; margin-bottom: 16px; cursor: pointer; background: #e8f4fd; padding: 10px; border-radius: 8px;">
+           <input type="checkbox" id="ev-post-channel" style="width: 18px; height: 18px; margin: 0;">
+           📢 Опубликовать в Telegram-канал
+        </label>
+
         <button type="submit" class="btn-primary" id="ev-submit-btn" style="background: #d32f2f;">Опубликовать</button>
       </form>
     </div>
@@ -274,7 +282,8 @@
       document.getElementById('ev-photo').value = "";
       document.getElementById('ev-desc').value = "";
       document.getElementById('ev-regtype').value = "internal";
-      document.getElementById('ev-exemption').checked = false; // Сброс галочки освобождения
+      document.getElementById('ev-exemption').checked = false;
+      document.getElementById('ev-post-channel').checked = false; // Сброс галочки публикации в канал
       toggleExternalLink();
       showScreen('admin-view');
     }
@@ -290,7 +299,8 @@
       document.getElementById('ev-deadline').value = ev.deadline || "";
       document.getElementById('ev-photo').value = ev.photo || "";
       document.getElementById('ev-desc').value = ev.desc || "";
-      document.getElementById('ev-exemption').checked = (ev.exemption === "true"); // Установка галочки
+      document.getElementById('ev-exemption').checked = (ev.exemption === "true"); 
+      document.getElementById('ev-post-channel').checked = false; // Оставляем выключенной при редактировании по умолчанию
       
       if (ev.regType === 'internal' || ev.regType === 'no' || ev.regType === 'нет') {
          document.getElementById('ev-regtype').value = (ev.regType === 'нет' ? 'no' : ev.regType);
@@ -368,8 +378,10 @@
       let regType = document.getElementById('ev-regtype').value;
       if (regType === 'external') regType = document.getElementById('ev-externallink').value;
 
+      const postToChannel = document.getElementById('ev-post-channel') ? document.getElementById('ev-post-channel').checked : false;
+
       const action = originalName ? "edit_event" : "create_event";
-      const url = `${APPS_SCRIPT_URL}?action=${action}&adminId=${tg.initDataUnsafe?.user?.id}&originalName=${encodeURIComponent(originalName)}&name=${encodeURIComponent(name)}&datetime=${encodeURIComponent(datetime)}&deadline=${encodeURIComponent(deadline)}&photo=${encodeURIComponent(photo)}&desc=${encodeURIComponent(desc)}&regType=${encodeURIComponent(regType)}&exemption=${exemption}`;
+      const url = `${APPS_SCRIPT_URL}?action=${action}&adminId=${tg.initDataUnsafe?.user?.id}&originalName=${encodeURIComponent(originalName)}&name=${encodeURIComponent(name)}&datetime=${encodeURIComponent(datetime)}&deadline=${encodeURIComponent(deadline)}&photo=${encodeURIComponent(photo)}&desc=${encodeURIComponent(desc)}&regType=${encodeURIComponent(regType)}&exemption=${exemption}&postToChannel=${postToChannel}`;
       
       try {
         await fetch(url);
@@ -404,8 +416,8 @@
     async function loadProfile() {
       const currentUserId = tg.initDataUnsafe?.user?.id;
       const currentUserPhoto = tg.initDataUnsafe?.user?.photo_url;
-      const adminIds = ["1486703011", "789596527", "526927711"]; // Укажите те же ID, что и в Apps Script
-const isAdmin = adminIds.includes(String(currentUserId));
+      const adminIds = ["1486703011", "123456789", "987654321"]; // Ваши ID администраторов
+      const isAdmin = adminIds.includes(String(currentUserId));
       
       try {
         const response = await fetch(APPS_SCRIPT_URL);
@@ -508,7 +520,6 @@ const isAdmin = adminIds.includes(String(currentUserId));
                }
             }
             
-            // КНОПКА СПИСКА УЧАСТНИКОВ ДЛЯ АДМИНА
             const participantCount = ev.participants ? ev.participants.split(',').filter(x => x.trim() !== '').length : 0;
             const adminParticipantsBtnHtml = isAdmin ? `<button class="btn-primary" onclick="event.stopPropagation(); viewParticipants('${ev.name}')" style="background: #607d8b; margin-top: 12px; font-size: 14px;">👀 Список участников (${participantCount})</button>` : '';
             
@@ -521,8 +532,6 @@ const isAdmin = adminIds.includes(String(currentUserId));
             
             const dateHtml = ev.datetime ? `<div class="event-date-badge">📅 ${formatLocalDate(ev.datetime)}</div>` : '';
             const deadlineInfo = (ev.deadline && !isJoined) ? `<div style="font-size: 12px; color: #d32f2f; margin-bottom: 8px; font-weight: bold;">⏳ Дедлайн записи: ${formatLocalDate(ev.deadline)}</div>` : '';
-            
-            // ВЫВОД ОСВОБОЖДЕНИЯ ВНИЗУ
             const exemptionHtml = (ev.exemption === 'true') ? `<div style="margin-top: 12px; font-size: 13px; color: #d32f2f; font-weight: bold; background: #ffebee; padding: 8px 12px; border-radius: 8px; display: inline-block;">🎓 Предоставляется освобождение от занятий</div>` : '';
 
             return `
