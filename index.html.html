@@ -8,7 +8,6 @@
     body { background-color: var(--tg-theme-bg-color, #f4f5f7); color: var(--tg-theme-text-color, #222); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 16px; }
     .card { background: var(--tg-theme-secondary-bg-color, #ffffff); border-radius: 14px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 16px; }
     
-    /* Обновленные стили для бейджа должности */
     .badge { display: inline-block; padding: 6px 12px; background: var(--tg-theme-button-color, #2481cc); color: var(--tg-theme-button-text-color, #ffffff); border-radius: 12px; font-size: 13px; font-weight: bold; margin-top: 6px; width: fit-content;}
     
     .stat-box { margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.08); display: flex; justify-content: space-between; }
@@ -42,7 +41,6 @@
     .event-desc-text { font-size: 14px; color: gray; margin: 0 0 16px 0; line-height: 1.4; white-space: pre-wrap;}
     .event-date-badge { font-size: 13px; color: #2481cc; background: #e8f4fd; padding: 4px 8px; border-radius: 6px; display: inline-block; font-weight: bold; margin-bottom: 8px; }
 
-    /* Стили для нового расположения галочки */
     .coauthor-badge-container { display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: bold; color: #d32f2f; cursor: pointer; background: #ffebee; padding: 4px 8px; border-radius: 12px; border: 1px solid #ffcdd2; height: fit-content; flex-shrink: 0;}
     .profile-header-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; width: 100%;}
   </style>
@@ -66,7 +64,6 @@
       <div style="display: flex; gap: 14px; align-items: flex-start;">
         <div id="avatar"></div>
         <div style="flex-grow: 1; min-width: 0;">
-          <!-- Блок с ФИО и Галочкой на одной линии -->
           <div class="profile-header-top">
             <h3 id="user-name" style="margin: 0; line-height: 1.2; word-break: break-word;"></h3>
             <label class="coauthor-badge-container">
@@ -74,7 +71,6 @@
               Ищу соавтора
             </label>
           </div>
-          <!-- Должность (синяя плашка) внизу -->
           <div id="user-role" class="badge"></div>
         </div>
       </div>
@@ -106,8 +102,7 @@
       <div class="action-grid">
         <button class="action-btn" onclick="showScreen('events-view')">📅 Мероприятия</button>
         <button class="action-btn" onclick="showScreen('coauthors-view')">👥 Поиск соавторов</button>
-        <!-- КНОПКА ЗАМЕНЕНА: Открывает ссылку на гугл диск -->
-        <button class="action-btn" onclick="window.Telegram.WebApp.openLink('https://drive.google.com/drive/folders/1r9E9sJDpxkhqhTRWTfiCDH6ClMnn--8X?usp=drive_link')">📚 Банк статей</button>
+        <button class="action-btn" onclick="window.Telegram.WebApp.openLink('https://drive.google.com/drive/folders/ВАША_ССЫЛКА_ТУТ')">📚 Банк статей</button>
         <button class="action-btn" onclick="window.Telegram.WebApp.openLink('https://forms.yandex.ru/u/6a82ad2c49af47f4fb6ba82d')">👨‍🏫 Консультация</button>
         
         <button class="action-btn" onclick="toggleLinks()" style="grid-column: span 2; background: #e8f4fd; border-color: #2481cc; color: #2481cc;">🔗 Мы есть тут</button>
@@ -442,7 +437,14 @@
           currentUserGlobalName = userProfile['ФИО'] || "Без имени";
           document.getElementById('user-name').innerText = currentUserGlobalName;
           document.getElementById('user-role').innerText = userProfile['Должность'] || "Активист СНО";
-          document.getElementById('user-score').innerText = userProfile['score'] || "0";
+          
+          // --- ИСПРАВЛЕНИЕ ОКРУГЛЕНИЯ БАЛЛОВ ---
+          const parseScore = (val) => parseFloat(String(val).replace(',', '.')) || 0;
+          const rawScore = parseScore(userProfile['score']);
+          // Округляем до двух знаков и убираем лишние нули (например, 17.0600995 станет 17.06)
+          document.getElementById('user-score').innerText = Number(rawScore.toFixed(2));
+          // ------------------------------------
+
           document.getElementById('user-group').innerText = userProfile['Институт/Группа'] || "—";
           currentUserGlobalInterests = userProfile['Научные интересы'] || "";
           
@@ -464,11 +466,11 @@
              ? currentUserGlobalInterests.split(',').map(tag => `<span class="interest-tag">${tag.trim()}</span>`).join('') 
              : '<span style="font-size: 13px; color: gray;">Пока не указаны</span>';
 
-          const parseScore = (val) => parseFloat(String(val).replace(',', '.')) || 0;
           const sortedParticipants = globalParticipantsData.filter(p => p['ФИО'] && parseScore(p['score']) > 0).sort((a, b) => parseScore(b['score']) - parseScore(a['score']));
           document.getElementById('leaderboard-list').innerHTML = sortedParticipants.slice(0, 10).map((user, index) => {
             let rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : index === 2 ? 'rank-3' : '';
-            return `<div class="leaderboard-item"><div style="display: flex; align-items: center;"><div class="rank-badge ${rankClass}">${index + 1}</div><div class="leader-name">${user['ФИО'].split(' ').slice(0, 2).join(' ')}</div></div><div class="leader-score">${user['score']}</div></div>`;
+            let lScore = parseScore(user['score']); // Форматируем баллы в Топ-10 тоже
+            return `<div class="leaderboard-item"><div style="display: flex; align-items: center;"><div class="rank-badge ${rankClass}">${index + 1}</div><div class="leader-name">${user['ФИО'].split(' ').slice(0, 2).join(' ')}</div></div><div class="leader-score">${Number(lScore.toFixed(2))}</div></div>`;
           }).join('');
 
           const myRankIndex = sortedParticipants.findIndex(p => String(p.user_id) === String(currentUserId));
