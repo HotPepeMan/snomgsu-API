@@ -129,7 +129,7 @@
            <input type="text" id="phone-input" placeholder="+7 999 000-00-00">
            <label class="stat-title" style="display: block; margin-top: 12px;">Другие соцсети (скрыты от всех)</label>
            <input type="text" id="socials-input" placeholder="Ссылка на страницу ВК и т.д.">
-           <label class="stat-title" style="display: block; margin-top: 12px;">Свое фото ссылкой (всегда публично)</label>
+           <label class="stat-title" style="display: block; margin-top: 12px;">Свое фото ссылкой</label>
            <input type="text" id="photo-input" placeholder="https://...">
 
            <div style="display: flex; gap: 8px; margin-top: 12px;">
@@ -140,8 +140,8 @@
       </div>
     </div>
 
-    <!-- АНОНСЫ ИЗ КАНАЛА (Выдвижная шторка) -->
-    <details class="card" id="announcements-drawer" style="display: none; cursor: pointer;">
+    <!-- АНОНСЫ ИЗ КАНАЛА (Выдвижная шторка - ВСЕГДА ВИДНА) -->
+    <details class="card" id="announcements-drawer" style="cursor: pointer;">
       <summary style="outline: none;">
          <div class="stat-title" style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 8px;">
            <span>📢 Анонсы из канала</span>
@@ -683,13 +683,14 @@
 
           // АНОНСЫ НА ГЛАВНОЙ ЭКРАНЕ (ШТОРКА)
           if (globalNewsData && globalNewsData.length > 0) {
-             document.getElementById('announcements-drawer').style.display = 'block';
              document.getElementById('home-news-list').innerHTML = globalNewsData.map(n => `
                 <div style="background: var(--tg-theme-bg-color, #f4f5f7); padding: 12px; border-radius: 8px; margin-bottom: 10px; cursor: default;" onclick="event.stopPropagation()">
                    <div style="font-size: 11px; color: gray; margin-bottom: 6px;">${n.date}</div>
                    <div style="font-size: 13.5px; line-height: 1.4; white-space: pre-wrap; color: var(--tg-theme-text-color, #222);">${String(n.text)}</div>
                 </div>
              `).join('');
+          } else {
+             document.getElementById('home-news-list').innerHTML = `<div style="text-align: center; color: gray; padding: 12px; font-size: 14px;">Пока нет анонсов</div>`;
           }
 
           // НОВОСТИ КАНАЛА ДЛЯ ПАНЕЛИ АДМИНА
