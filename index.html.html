@@ -49,13 +49,6 @@
     
     .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 16px;}
     .modal-content { background: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #222); width: 100%; max-width: 400px; border-radius: 14px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-height: 90vh; overflow-y: auto;}
-    
-    /* Стили для карусели новостей */
-    .news-h-card { min-width: 220px; max-width: 260px; background: var(--tg-theme-bg-color, #f4f5f7); border-radius: 10px; padding: 12px; flex-shrink: 0; scroll-snap-align: start; border: 1px solid rgba(0,0,0,0.05); cursor: pointer; }
-    .news-h-date { font-size: 11px; color: gray; margin-bottom: 6px; }
-    .news-h-text { font-size: 13px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; white-space: pre-wrap; }
-    #home-news-list::-webkit-scrollbar { height: 6px; }
-    #home-news-list::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
   </style>
 </head>
 <body>
@@ -152,16 +145,21 @@
       </div>
     </div>
 
-    <!-- АНОНСЫ ИЗ КАНАЛА (НОВЫЙ БЛОК) -->
-    <div class="card" id="announcements-card" style="display: none; padding: 16px 16px 8px 16px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <div class="stat-title" style="margin: 0;">📢 Последние анонсы</div>
-        <a href="https://t.me/snomgsu" target="_blank" style="font-size: 11px; color: var(--tg-theme-button-color, #2481cc); text-decoration: none; font-weight: bold;">Все посты ➔</a>
+    <!-- АНОНСЫ ИЗ КАНАЛА (Выдвижная шторка) -->
+    <details class="card" id="announcements-drawer" style="display: none; cursor: pointer;">
+      <summary style="outline: none;">
+         <div class="stat-title" style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 8px;">
+           <span>📢 Анонсы из канала</span>
+           <span style="color: #2481cc;">Развернуть ▼</span>
+         </div>
+      </summary>
+      <div id="home-news-list" style="margin-top: 12px;">
+         <!-- Сюда подгрузится список постов из ТГ-канала -->
       </div>
-      <div id="home-news-list" style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x mandatory;">
-         <!-- Сюда подгрузится карусель из ТГ-канала -->
+      <div style="margin-top: 12px; text-align: center; border-top: 1px solid rgba(0,0,0,0.08); padding-top: 12px;">
+         <a href="https://t.me/snomgsu" target="_blank" style="font-size: 14px; color: #2481cc; font-weight: bold; text-decoration: none;">Читать в Telegram ➔</a>
       </div>
-    </div>
+    </details>
 
     <!-- Управление -->
     <div class="card">
@@ -569,7 +567,7 @@
     async function loadProfile() {
       const currentUserId = tg.initDataUnsafe?.user?.id;
       const currentUserPhotoTg = tg.initDataUnsafe?.user?.photo_url;
-      const adminIds = ["1486703011", "123456789", "789596527", "526927711"]; // Обновленные ID супер-администраторов
+      const adminIds = ["1486703011", "123456789", "789596527", "526927711"];
       
       try {
         const response = await fetch(APPS_SCRIPT_URL);
@@ -670,13 +668,13 @@
             return `<div class="card event-card" onclick="toggleEvent(this)"><img src="${ev.photo}" class="event-image"><div class="event-body">${statusHtml}<div style="display: flex; justify-content: space-between; align-items: flex-start;"><h3 style="margin: 0; font-size: 18px;">${ev.name}</h3><span style="font-size: 12px; color: #2481cc; background: #e8f4fd; padding: 3px 8px; border-radius: 12px; font-weight: bold; flex-shrink: 0; margin-left: 8px;">👇</span></div><div class="event-details">${(ev.deadline && !isJoined) ? `<div style="font-size: 12px; color: #d32f2f; margin-bottom: 8px; font-weight: bold;">⏳ Дедлайн: ${formatLocalDate(ev.deadline)}</div>` : ''}${ev.desc ? `<p class="event-desc-text">${ev.desc}</p>` : ''}${exemptionHtml}<div style="margin-top: 16px;">${btnHtml}${adminPBtn}${adminEBtn}</div></div></div></div>`;
           }).join('') || "<p style='text-align: center; color: gray;'>Нет мероприятий</p>";
 
-          // АНОНСЫ НА ГЛАВНОЙ ЭКРАНЕ (КАРУСЕЛЬ)
+          // АНОНСЫ НА ГЛАВНОЙ ЭКРАНЕ (ШТОРКА)
           if (globalNewsData && globalNewsData.length > 0) {
-             document.getElementById('announcements-card').style.display = 'block';
-             document.getElementById('home-news-list').innerHTML = globalNewsData.slice(0, 5).map(n => `
-                <div class="news-h-card" onclick="window.Telegram.WebApp.openLink('https://t.me/snomgsu')">
-                   <div class="news-h-date">${n.date}</div>
-                   <div class="news-h-text">${String(n.text).replace(/<[^>]*>?/gm, '')}</div>
+             document.getElementById('announcements-drawer').style.display = 'block';
+             document.getElementById('home-news-list').innerHTML = globalNewsData.map(n => `
+                <div style="background: var(--tg-theme-bg-color, #f4f5f7); padding: 12px; border-radius: 8px; margin-bottom: 10px; cursor: default;" onclick="event.stopPropagation()">
+                   <div style="font-size: 11px; color: gray; margin-bottom: 6px;">${n.date}</div>
+                   <div style="font-size: 13.5px; line-height: 1.4; white-space: pre-wrap; color: var(--tg-theme-text-color, #222);">${String(n.text)}</div>
                 </div>
              `).join('');
           }
