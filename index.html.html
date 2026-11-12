@@ -125,17 +125,12 @@
         <div id="interests-edit-box" style="display: none; margin-top: 8px;">
            <label class="stat-title">Научные интересы</label>
            <input type="text" id="interests-input" placeholder="Например: Экология, BIM">
-           <label class="stat-title" style="display: block; margin-top: 12px;">Контактный телефон</label>
+           <label class="stat-title" style="display: block; margin-top: 12px;">Контактный телефон (скрыт от всех)</label>
            <input type="text" id="phone-input" placeholder="+7 999 000-00-00">
-           <label class="stat-title" style="display: block; margin-top: 12px;">Другие соцсети (ВК и т.д.)</label>
-           <input type="text" id="socials-input" placeholder="Ссылка на страницу">
-           <label class="stat-title" style="display: block; margin-top: 12px;">Ссылка на ваше фото (URL)</label>
+           <label class="stat-title" style="display: block; margin-top: 12px;">Другие соцсети (скрыты от всех)</label>
+           <input type="text" id="socials-input" placeholder="Ссылка на страницу ВК и т.д.">
+           <label class="stat-title" style="display: block; margin-top: 12px;">Свое фото ссылкой (всегда публично)</label>
            <input type="text" id="photo-input" placeholder="https://...">
-           
-           <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #222; margin-top: 12px; cursor: pointer;">
-             <input type="checkbox" id="photo-public-checkbox" style="width: 16px; height: 16px; margin: 0; accent-color: #2481cc;">
-             Сделать фото и контакты публичными
-           </label>
 
            <div style="display: flex; gap: 8px; margin-top: 12px;">
              <button class="btn-primary" onclick="saveInterests()" style="margin-top: 0; padding: 8px; font-size: 13px; flex: 1;">Сохранить</button>
@@ -361,7 +356,6 @@
         document.getElementById('phone-input').value = currentUserProfile['Телефон'] || "";
         document.getElementById('socials-input').value = currentUserProfile['Другие соцсети'] || "";
         document.getElementById('photo-input').value = currentUserProfile['Фото'] || "";
-        document.getElementById('photo-public-checkbox').checked = String(currentUserProfile['Фото публичное']).toLowerCase() === 'true';
       }
     }
 
@@ -380,9 +374,8 @@
       const phone = document.getElementById('phone-input').value;
       const socials = document.getElementById('socials-input').value;
       const photo = document.getElementById('photo-input').value;
-      const isPublic = document.getElementById('photo-public-checkbox').checked;
 
-      const url = `${APPS_SCRIPT_URL}?action=update_profile&userId=${currentUserId}&interests=${encodeURIComponent(interests)}&phone=${encodeURIComponent(phone)}&socials=${encodeURIComponent(socials)}&photo=${encodeURIComponent(photo)}&photoPublic=${isPublic}`;
+      const url = `${APPS_SCRIPT_URL}?action=update_profile&userId=${currentUserId}&interests=${encodeURIComponent(interests)}&phone=${encodeURIComponent(phone)}&socials=${encodeURIComponent(socials)}&photo=${encodeURIComponent(photo)}&photoPublic=true`;
       try { await fetch(url); location.reload(); } catch (e) { alert("Ошибка сохранения"); btn.innerText = "Сохранить"; btn.disabled = false; }
     }
 
@@ -390,27 +383,37 @@
     function showUserDetails(userId) {
       const u = globalParticipantsData.find(p => String(p.user_id) === String(userId));
       if (!u) return;
-      const isPublic = String(u['Фото публичное']).toLowerCase() === 'true';
-      if (!isManagerGlobal && !isPublic) {
-         tg.showAlert("Пользователь скрыл свои детальные контакты."); return;
-      }
+      
+      const isCoauthor = String(u['Ищу соавтора']).toLowerCase() === 'true';
+      
       document.getElementById('um-name').innerText = u['ФИО'];
       document.getElementById('um-role').innerText = u['Должность'] || "Активист СНО";
       document.getElementById('um-group').innerText = u['Институт/Группа'] || "—";
-      document.getElementById('um-phone').innerText = u['Телефон'] || "Не указан";
-      document.getElementById('um-socials').innerText = u['Другие соцсети'] || "Не указаны";
       document.getElementById('um-interests').innerText = u['Научные интересы'] || "Не указаны";
+      
+      // Личные контакты (Телефон и ВК) видны только Руководству
+      if (!isManagerGlobal) {
+          document.getElementById('um-phone').innerText = "Скрыт (только Telegram)";
+          document.getElementById('um-socials').innerText = "Скрыты";
+      } else {
+          document.getElementById('um-phone').innerText = u['Телефон'] || "Не указан";
+          document.getElementById('um-socials').innerText = u['Другие соцсети'] || "Не указаны";
+      }
       
       const photoEl = document.getElementById('um-photo');
       const fallbackEl = document.getElementById('um-avatar-fallback');
-      const finalPhotoSrc = u['Фото'] || (isPublic ? u.photo_url : null);
+      // Фото теперь публично всегда
+      const finalPhotoSrc = u['Фото'] || u['TG Фото'] || null;
 
       if (finalPhotoSrc) { photoEl.src = finalPhotoSrc; photoEl.style.display = 'block'; fallbackEl.style.display = 'none'; }
       else { photoEl.style.display = 'none'; fallbackEl.innerText = u['ФИО'] ? u['ФИО'].charAt(0) : '?'; fallbackEl.style.display = 'flex'; }
       
       const tgBtn = document.getElementById('um-tg-btn');
-      if (u.telegram_raw) { tgBtn.style.display = 'block'; tgBtn.onclick = () => window.Telegram.WebApp.openLink(`https://t.me/${String(u.telegram_raw).replace('@','')}`); }
-      else { tgBtn.style.display = 'none'; }
+      // Telegram кнопка активна, если человек ищет соавтора ИЛИ если смотрит админ
+      if (u.telegram_raw && (isCoauthor || isManagerGlobal)) { 
+          tgBtn.style.display = 'block'; 
+          tgBtn.onclick = () => window.Telegram.WebApp.openLink(`https://t.me/${String(u.telegram_raw).replace('@','')}`); 
+      } else { tgBtn.style.display = 'none'; }
       
       document.getElementById('user-modal').style.display = 'flex';
     }
@@ -425,7 +428,7 @@
       const filtered = globalParticipantsData.filter(p => p['ФИО'] && p['ФИО'].toLowerCase().includes(lowerFilter));
       
       listEl.innerHTML = filtered.map(user => {
-         const photoSrc = user['Фото'] || (String(user['Фото публичное']).toLowerCase() === 'true' ? user.photo_url : null);
+         const photoSrc = user['Фото'] || user['TG Фото'] || null;
          const avatarHtml = photoSrc ? `<img src="${photoSrc}" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; flex-shrink: 0;">` : `<div style="width: 45px; height: 45px; border-radius: 50%; background: #2481cc; color: white; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; flex-shrink: 0;">${user['ФИО'] ? String(user['ФИО']).charAt(0) : '?'}</div>`;
          
          return `<div class="card" style="padding: 14px; margin-bottom: 12px; cursor:pointer; display: flex; gap: 12px; align-items: center;" onclick="showUserDetails('${user.user_id}')">
@@ -586,6 +589,13 @@
           isManagerGlobal = isSuperAdmin || role === "Председатель" || role === "Зам. Председателя" || role === "Руководство";
           canCreateGlobal = isSuperAdmin || role === "Председатель" || role === "Зам. Председателя";
 
+          // --- ФОНОВАЯ СИНХРОНИЗАЦИЯ ФОТО ТЕЛЕГРАМ ---
+          const savedTgPhoto = currentUserProfile['TG Фото'] || "";
+          if (currentUserPhotoTg && currentUserPhotoTg !== savedTgPhoto) {
+             fetch(`${APPS_SCRIPT_URL}?action=sync_tg_photo&userId=${currentUserId}&tgPhoto=${encodeURIComponent(currentUserPhotoTg)}`);
+          }
+          // ------------------------------------------
+
           showScreen('profile-view');
           
           currentUserGlobalName = currentUserProfile['ФИО'] || "Без имени";
@@ -599,7 +609,10 @@
 
           const avatarDiv = document.getElementById('avatar');
           const customPhoto = currentUserProfile['Фото'];
-          if (customPhoto || currentUserPhotoTg) { avatarDiv.style.backgroundImage = `url('${customPhoto || currentUserPhotoTg}')`; avatarDiv.innerHTML = ''; } 
+          // Сначала кастомное, затем только что полученное, затем сохраненное из базы
+          const activePhoto = customPhoto || currentUserPhotoTg || savedTgPhoto;
+          
+          if (activePhoto) { avatarDiv.style.backgroundImage = `url('${activePhoto}')`; avatarDiv.innerHTML = ''; } 
           else { avatarDiv.style.backgroundImage = 'none'; avatarDiv.innerHTML = currentUserGlobalName.charAt(0); }
 
           if (isManagerGlobal) {
@@ -624,7 +637,7 @@
           document.getElementById('coauthors-list').innerHTML = globalParticipantsData
             .filter(p => String(p['Ищу соавтора']).toLowerCase() === 'true' && String(p.user_id) !== String(currentUserId))
             .map(user => {
-               const photoSrc = user['Фото'] || (String(user['Фото публичное']).toLowerCase() === 'true' ? user.photo_url : null);
+               const photoSrc = user['Фото'] || user['TG Фото'] || null;
                const avatarHtml = photoSrc ? `<img src="${photoSrc}" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; flex-shrink: 0;">` : `<div style="width: 45px; height: 45px; border-radius: 50%; background: #2481cc; color: white; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; flex-shrink: 0;">${user['ФИО'] ? String(user['ФИО']).charAt(0) : '?'}</div>`;
                const tagsHtml = (user['Научные интересы'] || '').split(',').map(t => t.trim() ? `<span class="interest-tag" style="background: #e8f4fd; color: #2481cc; margin-bottom: 4px;">${t.trim()}</span>` : '').join('');
                return `<div class="card" style="padding: 14px; margin-bottom: 12px; cursor:pointer;" onclick="showUserDetails('${user.user_id}')">
