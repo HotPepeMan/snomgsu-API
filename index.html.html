@@ -1,364 +1,721 @@
-const BOT_TOKEN = "9064589735:AAHwCBgROSFg8I86_ncoNUzj3UqjSd4X29g"; // <-- ВАШ НОВЫЙ ТОКЕН
-const CHANNEL_ID = "-1004308166293"; 
-const ADMIN_IDS = ["1486703011", "123456789", "789596527", "526927711"];
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body { background-color: var(--tg-theme-bg-color, #f4f5f7); color: var(--tg-theme-text-color, #222); font-family: -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; padding: 16px; padding-bottom: 40px;}
+    .card { background: var(--tg-theme-secondary-bg-color, #ffffff); border-radius: 14px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 16px; }
+    
+    .badge { display: inline-block; padding: 6px 12px; background: var(--tg-theme-button-color, #2481cc); color: var(--tg-theme-button-text-color, #ffffff); border-radius: 12px; font-size: 13px; font-weight: bold; margin-top: 6px; width: fit-content;}
+    
+    .stat-box { margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.08); display: flex; justify-content: space-between; }
+    .stat-title { font-size: 11px; color: gray; text-transform: uppercase;}
+    .stat-value { font-size: 20px; font-weight: bold; margin-top: 4px;}
+    
+    input, textarea, select { width: 100%; padding: 12px; margin-top: 8px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 14px; font-family: inherit;}
+    textarea { resize: vertical; min-height: 80px; }
+    
+    .btn-primary { width: 100%; padding: 12px; margin-top: 12px; background: var(--tg-theme-button-color, #2481cc); color: var(--tg-theme-button-text-color, #ffffff); border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
+    .btn-primary:disabled { opacity: 0.6; }
+    .leaderboard-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.05); }
+    .leaderboard-item:last-child { border-bottom: none; }
+    .rank-badge { width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; margin-right: 12px; background: #eee; color: #555; }
+    .rank-1 { background: #FFD700; color: #b8860b; font-size: 14px;} 
+    .rank-2 { background: #E3E4E5; color: #777; font-size: 14px;} 
+    .rank-3 { background: #cd7f32; color: #fff; font-size: 14px;} 
+    .leader-name { font-size: 14px; font-weight: 500; }
+    .leader-score { font-size: 14px; font-weight: bold; color: var(--tg-theme-button-color, #2481cc); }
+    .interest-tag { display: inline-block; background: var(--tg-theme-hint-color, #e0e0e0); color: var(--tg-theme-text-color, #000); padding: 6px 12px; border-radius: 16px; font-size: 13px; margin: 0 6px 6px 0; opacity: 0.9; }
+    .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .action-btn { background: var(--tg-theme-secondary-bg-color, #f4f5f7); color: var(--tg-theme-text-color, #222); border: 1px solid var(--tg-theme-hint-color, #ccc); padding: 12px 8px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; text-align: center; }
+    #avatar { width: 60px; height: 60px; border-radius: 50%; background-color: var(--tg-theme-button-color, #2481cc); color: white; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; background-size: cover; background-position: center; flex-shrink: 0;}
+    
+    .event-card { padding: 0; overflow: hidden; margin-bottom: 12px; cursor: pointer; transition: 0.2s;}
+    .event-image { width: 100%; height: 120px; object-fit: cover; background: #ccc; transition: 0.3s; }
+    .event-body { padding: 14px; }
+    .event-details { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid #eee; }
+    .event-card.expanded .event-details { display: block; }
+    .event-card.expanded .event-image { height: 180px; }
+    .event-desc-text { font-size: 14px; color: gray; margin: 0 0 16px 0; line-height: 1.4; white-space: pre-wrap;}
+    .event-date-badge { font-size: 13px; color: #2481cc; background: #e8f4fd; padding: 4px 8px; border-radius: 6px; display: inline-flex; align-items: center; font-weight: bold; margin-bottom: 8px; margin-right: 6px;}
 
-// МАГИЧЕСКАЯ ФУНКЦИЯ ДЛЯ ПРИВЯЗКИ БОТА К КОДУ
-function setupWebhook() {
-  const url = ScriptApp.getService().getUrl();
-  const res = UrlFetchApp.fetch(`https://api.telegram.org/bot${BOT_TOKEN}/setWebhook?url=${url}`);
-  Logger.log("Ответ от Telegram: " + res.getContentText());
-  Logger.log("Ваша ссылка для Webhook: " + url);
-}
+    .coauthor-badge-container { display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: bold; color: #d32f2f; cursor: pointer; background: #ffebee; padding: 4px 8px; border-radius: 12px; border: 1px solid #ffcdd2; height: fit-content; flex-shrink: 0;}
+    .profile-header-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; width: 100%;}
+    
+    details summary::-webkit-details-marker { display:none; }
+    details > summary { list-style: none; }
+    
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 16px;}
+    .modal-content { background: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #222); width: 100%; max-width: 400px; border-radius: 14px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-height: 90vh; overflow-y: auto;}
+  </style>
+</head>
+<body>
 
-function doPost(e) {
-  try {
-    const payload = JSON.parse(e.postData.contents);
-    const ss = SpreadsheetApp.openById("14PJ8W0V0TZGV3U-rxCUXroud46gcGJ02kaD-kPdvzyU");
-    const props = PropertiesService.getScriptProperties();
+  <div id="loading" style="text-align: center; margin-top: 50px;">Загрузка данных...</div>
 
-    // 1. ОБРАБОТКА ТЕКСТОВЫХ КОМАНД БОТА (ПОШАГОВЫЙ ВИЗАРД)
-    if (payload.message && payload.message.text) {
-      const text = payload.message.text;
-      const chatId = payload.message.chat.id;
-      const userId = String(payload.message.from.id);
+  <!-- Регистрация -->
+  <div id="registration-view" class="card" style="display: none; text-align: center;">
+    <h3 style="margin-top: 0;">Вас нет в базе 🔍</h3>
+    <form onsubmit="registerUser(event)" style="text-align: left;">
+      <input type="text" id="name-input" placeholder="Например: Иванов Иван Иванович" required>
+      <label style="display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: gray; margin-top: 16px; cursor: pointer;">
+        <input type="checkbox" required style="width: 16px; height: 16px; margin: 2px 0 0 0; accent-color: #2481cc;">
+        Я даю согласие на обработку моих персональных данных
+      </label>
+      <button type="submit" class="btn-primary" id="reg-btn">Привязать профиль</button>
+    </form>
+  </div>
 
-      if (text === "/newevent" || text === "/cancel") {
-        if (!ADMIN_IDS.includes(userId)) {
-          UrlFetchApp.fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent("⛔️ У вас нет прав для создания мероприятий.")}`);
-          return ContentService.createTextOutput("ok");
-        }
+  <!-- Модальное окно детального профиля -->
+  <div id="user-modal" class="modal-overlay" onclick="closeUserModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+         <div style="display: flex; gap: 14px; align-items: center;">
+           <img id="um-photo" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; background: #ccc; display: none;">
+           <div id="um-avatar-fallback" style="width: 60px; height: 60px; border-radius: 50%; background-color: #2481cc; color: white; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold;"></div>
+           <div>
+             <h3 id="um-name" style="margin: 0; font-size: 16px;"></h3>
+             <div id="um-role" style="font-size: 13px; color: gray; margin-top: 2px;"></div>
+           </div>
+         </div>
+         <button onclick="closeUserModal(event)" style="background: none; border: none; font-size: 20px; color: gray; cursor: pointer;">✕</button>
+      </div>
+      <div style="margin-top: 16px; font-size: 14px;">
+         <div style="margin-bottom: 8px;"><strong>Группа:</strong> <span id="um-group"></span></div>
+         <div style="margin-bottom: 8px;"><strong>Телефон:</strong> <span id="um-phone"></span></div>
+         <div style="margin-bottom: 8px;"><strong>Соцсети:</strong> <span id="um-socials"></span></div>
+         <div style="margin-bottom: 8px;"><strong>Интересы:</strong> <span id="um-interests"></span></div>
+      </div>
+      <button class="btn-primary" id="um-tg-btn" style="margin-top: 16px;">Написать в Telegram</button>
+    </div>
+  </div>
 
-        if (text === "/cancel") {
-          props.deleteProperty('draft_' + userId);
-          UrlFetchApp.fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent("❌ Создание мероприятия отменено.")}`);
-          return ContentService.createTextOutput("ok");
-        }
-
-        if (text === "/newevent") {
-          props.setProperty('draft_' + userId, JSON.stringify({step: 1}));
-          const msg = "📝 <b>Шаг 1 из 3</b>\n\nВведите <b>Название</b> мероприятия:\n\n<i>(или отправьте /cancel для отмены)</i>";
-          UrlFetchApp.fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${chatId}&parse_mode=HTML&text=${encodeURIComponent(msg)}`);
-          return ContentService.createTextOutput("ok");
-        }
-      }
-
-      // Если есть активный черновик
-      let draftStr = props.getProperty('draft_' + userId);
-      if (draftStr && !text.startsWith("/")) {
-        let draft = JSON.parse(draftStr);
+  <!-- Профиль -->
+  <div id="profile-view" style="display: none;">
+    <div class="card">
+      <div style="display: flex; gap: 14px; align-items: flex-start;">
+        <div id="avatar"></div>
+        <div style="flex-grow: 1; min-width: 0;">
+          <div class="profile-header-top">
+            <h3 id="user-name" style="margin: 0; line-height: 1.2; word-break: break-word;"></h3>
+            <label class="coauthor-badge-container">
+              <input type="checkbox" id="coauthor-checkbox" onchange="toggleCoauthor(this)" style="width: 14px; height: 14px; margin: 0; accent-color: #d32f2f;">
+              Ищу соавтора
+            </label>
+          </div>
+          <div id="user-role" class="badge"></div>
+        </div>
+      </div>
+      
+      <div class="stat-box">
+        <div><div class="stat-title">Рейтинг</div><div id="user-score" class="stat-value">0</div></div>
+        <div style="text-align: right;"><div class="stat-title">Группа</div><div id="user-group" class="stat-value" style="font-size: 16px;">—</div></div>
+      </div>
+      
+      <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.08);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <div class="stat-title" style="margin: 0;">Настройки профиля</div>
+          <button onclick="editInterests()" id="edit-interests-btn" style="background: transparent; border: none; color: #2481cc; font-size: 12px; font-weight: bold; cursor: pointer; padding: 0;">✏️ Изменить</button>
+        </div>
         
-        if (draft.step === 1) {
-          draft.name = text;
-          draft.step = 2;
-          props.setProperty('draft_' + userId, JSON.stringify(draft));
-          const msg = "📅 <b>Шаг 2 из 3</b>\n\nВведите <b>Дату и время начала</b> в формате <code>ГГГГ-ММ-ДД ЧЧ:ММ</code>\n(Например: <code>2026-11-20 18:00</code>)\n\n<i>Если дата пока неизвестна, отправьте минус <code>-</code></i>";
-          UrlFetchApp.fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${chatId}&parse_mode=HTML&text=${encodeURIComponent(msg)}`);
-        } 
-        else if (draft.step === 2) {
-          draft.datetime = text.trim() === "-" ? "" : text.trim().replace(" ", "T");
-          draft.step = 3;
-          props.setProperty('draft_' + userId, JSON.stringify(draft));
-          const msg = "💬 <b>Шаг 3 из 3</b>\n\nОтправьте полное <b>Описание</b> мероприятия:";
-          UrlFetchApp.fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${chatId}&parse_mode=HTML&text=${encodeURIComponent(msg)}`);
-        } 
-        else if (draft.step === 3) {
-          draft.desc = text;
-          props.setProperty('draft_' + userId, JSON.stringify(draft));
-          
-          let preview = `📢 <b>ПРЕДПРОСМОТР</b>\n\n`;
-          preview += `<b>Название:</b> ${draft.name}\n`;
-          if (draft.datetime) preview += `<b>Начало:</b> ${draft.datetime.replace('T', ' ')}\n`;
-          preview += `\n<b>Описание:</b>\n${draft.desc}\n\n<i>Всё верно? Если да, жмите Опубликовать.</i>`;
-          
-          const kb = {
-            inline_keyboard: [
-              [ {text: "✅ Опубликовать", callback_data: "draft_publish"} ],
-              [ {text: "❌ Отмена", callback_data: "draft_cancel"} ]
-            ]
-          };
-          
-          UrlFetchApp.fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-            method: 'post', contentType: 'application/json',
-            payload: JSON.stringify({chat_id: chatId, text: preview, parse_mode: 'HTML', reply_markup: kb})
-          });
-        }
-        return ContentService.createTextOutput("ok");
+        <div id="interests-list"></div>
+        
+        <div id="interests-edit-box" style="display: none; margin-top: 8px;">
+           <label class="stat-title">Научные интересы</label>
+           <input type="text" id="interests-input" placeholder="Например: Экология, BIM">
+           <label class="stat-title" style="display: block; margin-top: 12px;">Контактный телефон (скрыт от всех)</label>
+           <input type="text" id="phone-input" placeholder="+7 999 000-00-00">
+           <label class="stat-title" style="display: block; margin-top: 12px;">Другие соцсети (скрыты от всех)</label>
+           <input type="text" id="socials-input" placeholder="Ссылка на страницу ВК и т.д.">
+           <label class="stat-title" style="display: block; margin-top: 12px;">Свое фото ссылкой</label>
+           <input type="text" id="photo-input" placeholder="https://...">
+
+           <div style="display: flex; gap: 8px; margin-top: 12px;">
+             <button class="btn-primary" onclick="saveInterests()" style="margin-top: 0; padding: 8px; font-size: 13px; flex: 1;">Сохранить</button>
+             <button class="action-btn" onclick="cancelEditInterests()" style="margin-top: 0; padding: 8px; font-size: 13px; flex: 1;">Отмена</button>
+           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- АНОНСЫ ИЗ КАНАЛА (Выдвижная шторка - ВСЕГДА ВИДНА) -->
+    <details class="card" id="announcements-drawer" style="cursor: pointer;">
+      <summary style="outline: none;">
+         <div class="stat-title" style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 8px;">
+           <span>📢 Анонсы из канала</span>
+           <span style="color: #2481cc;">Развернуть ▼</span>
+         </div>
+      </summary>
+      <div id="home-news-list" style="margin-top: 12px;">
+         <!-- Сюда подгрузится список постов из ТГ-канала -->
+      </div>
+      <div style="margin-top: 12px; text-align: center; border-top: 1px solid rgba(0,0,0,0.08); padding-top: 12px;">
+         <a href="https://t.me/snomgsu" target="_blank" style="font-size: 14px; color: #2481cc; font-weight: bold; text-decoration: none;">Читать в Telegram ➔</a>
+      </div>
+    </details>
+
+    <!-- Управление -->
+    <div class="card">
+      <div class="stat-title" style="margin-bottom: 12px;">Управление</div>
+      <div class="action-grid">
+        <button class="action-btn" onclick="showScreen('events-view')">📅 Мероприятия</button>
+        <button class="action-btn" onclick="showScreen('coauthors-view')">👥 Поиск соавторов</button>
+        <button class="action-btn" onclick="window.Telegram.WebApp.openLink('https://drive.google.com/drive/folders/ВАША_ССЫЛКА_ТУТ')">📚 Банк статей</button>
+        <button class="action-btn" onclick="window.Telegram.WebApp.openLink('https://forms.yandex.ru/u/6a82ad2c49af47f4fb6ba82d')">👨‍🏫 Консультация</button>
+        
+        <button class="action-btn" onclick="toggleLinks()" style="grid-column: span 2; background: #e8f4fd; border-color: #2481cc; color: #2481cc;">🔗 Мы есть тут</button>
+        <div id="links-submenu" style="display: none; grid-column: span 2; padding: 12px; background: #f9f9f9; border-radius: 8px; margin-top: -4px;">
+          <a href="https://t.me/snomgsu" target="_blank" style="display: block; margin-bottom: 8px; color: #2481cc; text-decoration: none; font-weight: 500;">🔹 Telegram-канал</a>
+          <a href="https://www.youtube.com/@snouniversity" target="_blank" style="display: block; margin-bottom: 8px; color: #2481cc; text-decoration: none; font-weight: 500;">🔹 YouTube</a>
+          <a href="https://www.tiktok.com/@snouniversity?_r=1&_t=ZP-9BEeogS7KOs" target="_blank" style="display: block; margin-bottom: 8px; color: #2481cc; text-decoration: none; font-weight: 500;">🔹 TikTok</a>
+          <a href="https://vk.com/snomgsu" target="_blank" style="display: block; color: #2481cc; text-decoration: none; font-weight: 500;">🔹 ВКонтакте</a>
+        </div>
+      </div>
+
+      <!-- СКРЫТАЯ КНОПКА ПАНЕЛИ УПРАВЛЕНИЯ -->
+      <div id="admin-panel" style="display: none; margin-top: 10px;">
+        <button class="action-btn" style="width: 100%; background: #fff3e0; color: #e65100; border-color: #ffe0b2;" onclick="showScreen('admin-dashboard-view')">⚙️ Панель управления (Руководство)</button>
+      </div>
+    </div>
+
+    <!-- Лидерборд (Выдвижная шторка) -->
+    <details class="card" open style="cursor: pointer;">
+      <summary style="outline: none;">
+         <div class="stat-title" style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 8px;">
+           <span>Общий рейтинг СНО (Топ-10)</span>
+           <span style="color: #2481cc;">Свернуть/Развернуть ▼</span>
+         </div>
+      </summary>
+      <div id="leaderboard-list" style="margin-top: 12px;"></div>
+      <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.08); text-align: center; font-size: 14px;">
+        Ваше текущее место: <strong id="my-rank" style="color: var(--tg-theme-button-color, #2481cc); font-size: 16px;">—</strong>
+      </div>
+    </details>
+  </div>
+
+  <!-- ЭКРАН: Главная панель Администратора -->
+  <div id="admin-dashboard-view" style="display: none;">
+    <div style="margin-bottom: 16px;">
+      <button onclick="showScreen('profile-view')" style="background: transparent; border: none; color: var(--tg-theme-button-color, #2481cc); font-size: 16px; font-weight: bold; cursor: pointer; padding: 0;">⬅ Назад в профиль</button>
+    </div>
+    <div class="stat-title" style="margin-bottom: 12px; margin-left: 4px;">Панель Администратора</div>
+    <div class="card">
+      <button id="admin-create-btn" class="action-btn" style="width: 100%; background: #ffebee; color: #d32f2f; border-color: #ef9a9a; margin-bottom: 10px;" onclick="openAdminForCreate()">👑 Создать мероприятие</button>
+      <button id="admin-news-btn" class="action-btn" style="width: 100%; background: #e8f4fd; color: #2481cc; border-color: #bbdefb; margin-bottom: 10px;" onclick="showScreen('news-view')">📥 Посты из канала (В мероприятия)</button>
+      <button class="action-btn" style="width: 100%; background: #f3e5f5; color: #8e24aa; border-color: #e1bee7;" onclick="renderAllParticipants()">👥 База всех участников СНО</button>
+    </div>
+  </div>
+
+  <!-- ЭКРАН: Все участники СНО (Поиск) -->
+  <div id="all-participants-view" style="display: none;">
+    <div style="margin-bottom: 16px;">
+      <button onclick="showScreen('admin-dashboard-view')" style="background: transparent; border: none; color: var(--tg-theme-button-color, #2481cc); font-size: 16px; font-weight: bold; cursor: pointer; padding: 0;">⬅ Назад в панель</button>
+    </div>
+    <div class="stat-title" style="margin-bottom: 12px; margin-left: 4px;">База участников СНО</div>
+    <input type="text" id="user-search-input" placeholder="Поиск по ФИО..." onkeyup="filterAllParticipants()" style="margin-bottom: 12px;">
+    <div id="all-participants-list"></div>
+  </div>
+
+  <!-- ЭКРАН: Посты из канала (Конвертация) -->
+  <div id="news-view" style="display: none;">
+    <div style="margin-bottom: 16px;">
+      <button onclick="showScreen('admin-dashboard-view')" style="background: transparent; border: none; color: var(--tg-theme-button-color, #2481cc); font-size: 16px; font-weight: bold; cursor: pointer; padding: 0;">⬅ Назад</button>
+    </div>
+    <div class="stat-title" style="margin-bottom: 12px; margin-left: 4px;">Последние посты из канала</div>
+    <div id="news-list"></div>
+  </div>
+
+  <!-- ЭКРАН: Поиск соавторов -->
+  <div id="coauthors-view" style="display: none;">
+    <div style="margin-bottom: 16px;">
+      <button onclick="showScreen('profile-view')" style="background: transparent; border: none; color: var(--tg-theme-button-color, #2481cc); font-size: 16px; font-weight: bold; cursor: pointer; padding: 0;">⬅ Назад</button>
+    </div>
+    <div class="stat-title" style="margin-bottom: 12px; margin-left: 4px;">Поиск соавторов</div>
+    <div id="coauthors-list"></div>
+  </div>
+  
+  <!-- ЭКРАН: Список участников мероприятия (Для Руководства) -->
+  <div id="event-participants-view" style="display: none;">
+    <div style="margin-bottom: 16px;">
+      <button onclick="showScreen('events-view')" style="background: transparent; border: none; color: var(--tg-theme-button-color, #2481cc); font-size: 16px; font-weight: bold; cursor: pointer; padding: 0;">⬅ Назад к афише</button>
+    </div>
+    <div class="card">
+      <h3 id="ep-title" style="margin-top: 0; font-size: 18px;"></h3>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+         <div style="font-size: 13px; color: gray;">Всего участников: <strong id="ep-count" style="color: #222;">0</strong></div>
+         <button class="badge" onclick="exportCSV()" style="border:none; cursor: pointer; background: #4caf50;">📥 Выгрузить (.CSV)</button>
+      </div>
+      <div id="ep-list" style="margin-top: 12px;"></div>
+    </div>
+  </div>
+
+  <!-- ЭКРАН: Создание/Редактирование мероприятия -->
+  <div id="admin-view" style="display: none;">
+    <div style="margin-bottom: 16px;">
+      <button onclick="showScreen('admin-dashboard-view')" style="background: transparent; border: none; color: var(--tg-theme-button-color, #2481cc); font-size: 16px; font-weight: bold; cursor: pointer; padding: 0;">⬅ Отмена</button>
+    </div>
+    <div class="card">
+      <h3 id="admin-title" style="margin-top: 0;">Новое мероприятие 📝</h3>
+      <form onsubmit="submitNewEvent(event)" style="text-align: left;">
+        <input type="hidden" id="ev-originalname">
+        <label style="font-size: 13px; color: gray;">Название *</label>
+        <input type="text" id="ev-name" required placeholder="Например: Научный Хакатон">
+        <label style="font-size: 13px; color: gray; display: block; margin-top: 12px;">Дата и время НАЧАЛА *</label>
+        <input type="datetime-local" id="ev-datetime" required>
+        <label style="font-size: 13px; color: gray; display: block; margin-top: 12px;">Дата и время ОКОНЧАНИЯ (необязательно)</label>
+        <input type="datetime-local" id="ev-endtime">
+        <label style="font-size: 13px; color: gray; display: block; margin-top: 12px;">Дедлайн регистрации (необязательно)</label>
+        <input type="datetime-local" id="ev-deadline">
+        <label style="font-size: 13px; color: gray; display: block; margin-top: 12px;">Ссылка на картинку (необязательно)</label>
+        <input type="text" id="ev-photo" placeholder="https://... (пусто = стандарт)">
+        <label style="font-size: 13px; color: gray; display: block; margin-top: 12px;">Описание *</label>
+        <textarea id="ev-desc" required placeholder="Опишите подробности..."></textarea>
+        
+        <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: bold; color: #222; margin-top: 16px; cursor: pointer;">
+          <input type="checkbox" id="ev-exemption" style="width: 18px; height: 18px; margin: 0; accent-color: #d32f2f;">
+          Предоставляется освобождение
+        </label>
+        
+        <label style="font-size: 13px; color: gray; display: block; margin-top: 16px;">Тип регистрации *</label>
+        <select id="ev-regtype" onchange="toggleExternalLink()">
+          <option value="internal">Внутренняя (Сбор в таблицу)</option>
+          <option value="no">Регистрация не требуется</option>
+          <option value="external">Внешняя ссылка (Форма и т.д.)</option>
+        </select>
+        <div id="external-link-box" style="display: none; margin-top: 12px;">
+           <label style="font-size: 13px; color: gray;">Внешняя ссылка (с https://)</label>
+           <input type="text" id="ev-externallink" placeholder="https://forms.yandex.ru/...">
+        </div>
+        
+        <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: bold; color: #2481cc; margin-top: 16px; margin-bottom: 16px; cursor: pointer; background: #e8f4fd; padding: 10px; border-radius: 8px;">
+           <input type="checkbox" id="ev-post-channel" style="width: 18px; height: 18px; margin: 0;">
+           📢 Опубликовать в Telegram-канал
+        </label>
+
+        <button type="submit" class="btn-primary" id="ev-submit-btn" style="background: #d32f2f;">Опубликовать</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Афиша -->
+  <div id="events-view" style="display: none;">
+    <div style="margin-bottom: 16px;">
+      <button onclick="showScreen('profile-view')" style="background: transparent; border: none; color: var(--tg-theme-button-color, #2481cc); font-size: 16px; font-weight: bold; cursor: pointer; padding: 0;">⬅ Назад</button>
+    </div>
+    <div class="stat-title" style="margin-bottom: 12px; margin-left: 4px;">Предстоящие события</div>
+    <div id="events-list"></div>
+  </div>
+
+  <script>
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwhcJfMMlv2ZKcgJ1UKICfXsBlDt5cP2DazV3pW1fcqukOdNDJpeEBNfJescD9wKEzUFg/exec";
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+
+    let currentUserGlobalName = ""; 
+    let currentUserProfile = null;
+    let globalEventsData = []; 
+    let globalParticipantsData = []; 
+    let globalNewsData = [];
+    let isManagerGlobal = false;
+    let canCreateGlobal = false;
+    let currentEventForExport = "";
+
+    function showScreen(screenId) {
+      const screens = ['profile-view', 'events-view', 'admin-view', 'coauthors-view', 'event-participants-view', 'news-view', 'admin-dashboard-view', 'all-participants-view'];
+      screens.forEach(id => document.getElementById(id).style.display = 'none');
+      document.getElementById(screenId).style.display = 'block';
+    }
+
+    function sendBotCommand(command) { tg.sendData(command); }
+    function toggleLinks() { const menu = document.getElementById('links-submenu'); menu.style.display = menu.style.display === 'none' ? 'block' : 'none'; }
+    function toggleEvent(element) { element.classList.toggle('expanded'); }
+
+    function formatLocalDate(dateString) {
+      if(!dateString) return "";
+      try { const d = new Date(dateString); if (isNaN(d.getTime())) return dateString; return d.toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(',', ''); } 
+      catch(e) { return dateString; }
+    }
+    
+    function formatNewsDate(dateString) {
+      if(!dateString) return "";
+      try { 
+         const d = new Date(dateString); 
+         if (isNaN(d.getTime())) return dateString; 
+         return d.toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }); 
+      } catch(e) { return dateString; }
+    }
+
+    async function toggleCoauthor(checkbox) {
+      const isChecked = checkbox.checked;
+      const currentUserId = tg.initDataUnsafe?.user?.id;
+      if (!currentUserId) return;
+      checkbox.disabled = true;
+      try { await fetch(`${APPS_SCRIPT_URL}?action=update_profile&userId=${currentUserId}&coauthor=${isChecked}`); checkbox.disabled = false; } 
+      catch (e) { checkbox.checked = !isChecked; checkbox.disabled = false; tg.showAlert("Ошибка сохранения"); }
+    }
+
+    function editInterests() {
+      document.getElementById('interests-list').style.display = 'none';
+      document.getElementById('edit-interests-btn').style.display = 'none';
+      document.getElementById('interests-edit-box').style.display = 'block';
+      if(currentUserProfile) {
+        document.getElementById('interests-input').value = currentUserProfile['Научные интересы'] || "";
+        document.getElementById('phone-input').value = currentUserProfile['Телефон'] || "";
+        document.getElementById('socials-input').value = currentUserProfile['Другие соцсети'] || "";
+        document.getElementById('photo-input').value = currentUserProfile['Фото'] || "";
       }
     }
 
-    // 2. ОБРАБОТКА КНОПОК ПОД СООБЩЕНИЯМИ
-    if (payload.callback_query) {
-      const cb = payload.callback_query;
-      const userId = String(cb.from.id);
-      const cbData = cb.data; 
+    function cancelEditInterests() {
+      document.getElementById('interests-list').style.display = 'block';
+      document.getElementById('edit-interests-btn').style.display = 'block';
+      document.getElementById('interests-edit-box').style.display = 'none';
+    }
 
-      if (cbData === "draft_cancel") {
-        props.deleteProperty('draft_' + userId);
-        UrlFetchApp.fetch(`https://api.telegram.org/bot${BOT_TOKEN}/editMessageText`, {
-          method: 'post', contentType: 'application/json',
-          payload: JSON.stringify({chat_id: cb.message.chat.id, message_id: cb.message.message_id, text: "❌ Публикация отменена."})
-        });
-        return ContentService.createTextOutput("ok");
+    async function saveInterests() {
+      const currentUserId = tg.initDataUnsafe?.user?.id;
+      if (!currentUserId) return;
+      const btn = document.querySelector('#interests-edit-box .btn-primary');
+      btn.innerText = "Сохранение..."; btn.disabled = true;
+      const interests = document.getElementById('interests-input').value;
+      const phone = document.getElementById('phone-input').value;
+      const socials = document.getElementById('socials-input').value;
+      const photo = document.getElementById('photo-input').value;
+
+      const url = `${APPS_SCRIPT_URL}?action=update_profile&userId=${currentUserId}&interests=${encodeURIComponent(interests)}&phone=${encodeURIComponent(phone)}&socials=${encodeURIComponent(socials)}&photo=${encodeURIComponent(photo)}&photoPublic=true`;
+      try { await fetch(url); location.reload(); } catch (e) { alert("Ошибка сохранения"); btn.innerText = "Сохранить"; btn.disabled = false; }
+    }
+
+    // --- МОДАЛЬНОЕ ОКНО ПРОФИЛЯ ---
+    function showUserDetails(userId) {
+      const u = globalParticipantsData.find(p => String(p.user_id) === String(userId));
+      if (!u) return;
+      
+      const isCoauthor = String(u['Ищу соавтора']).toLowerCase() === 'true';
+      
+      document.getElementById('um-name').innerText = u['ФИО'];
+      document.getElementById('um-role').innerText = u['Должность'] || "Активист СНО";
+      document.getElementById('um-group').innerText = u['Институт/Группа'] || "—";
+      document.getElementById('um-interests').innerText = u['Научные интересы'] || "Не указаны";
+      
+      if (!isManagerGlobal) {
+          document.getElementById('um-phone').innerText = "Скрыт (только Telegram)";
+          document.getElementById('um-socials').innerText = "Скрыты";
+      } else {
+          document.getElementById('um-phone').innerText = u['Телефон'] || "Не указан";
+          document.getElementById('um-socials').innerText = u['Другие соцсети'] || "Не указаны";
       }
+      
+      const photoEl = document.getElementById('um-photo');
+      const fallbackEl = document.getElementById('um-avatar-fallback');
+      const finalPhotoSrc = u['Фото'] || u['TG Фото'] || null;
 
-      if (cbData === "draft_publish") {
-        let draftStr = props.getProperty('draft_' + userId);
-        if (draftStr) {
-          let draft = JSON.parse(draftStr);
-          const eventSheet = ss.getSheetByName("Events");
-          eventSheet.appendRow([
-            draft.name, "", "https://images.unsplash.com/photo-1543269865-cbf427effbad?q=80&w=600&auto=format&fit=crop", 
-            draft.desc, "internal", draft.datetime, "", "false", ""
-          ]);
-          
-          let text = `📢 Новое мероприятие: ${draft.name}\n\n${draft.desc}\n`;
-          if (draft.datetime) text += `\n📅 Начало: ${draft.datetime.replace('T', ' ')}`;
-          
-          const shortName = draft.name.substring(0, 25);
-          const kb = { inline_keyboard: [[ { text: "📝 Зарегистрироваться", callback_data: "join_" + shortName } ]] };
-          
-          UrlFetchApp.fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-            method: 'post', contentType: 'application/json',
-            payload: JSON.stringify({chat_id: CHANNEL_ID, text: text, reply_markup: kb})
-          });
-          
-          props.deleteProperty('draft_' + userId);
-          UrlFetchApp.fetch(`https://api.telegram.org/bot${BOT_TOKEN}/editMessageText`, {
-            method: 'post', contentType: 'application/json',
-            payload: JSON.stringify({chat_id: cb.message.chat.id, message_id: cb.message.message_id, text: "✅ Мероприятие успешно опубликовано в канал и добавлено в базу данных!"})
-          });
-        }
-        return ContentService.createTextOutput("ok");
+      if (finalPhotoSrc) { photoEl.src = finalPhotoSrc; photoEl.style.display = 'block'; fallbackEl.style.display = 'none'; }
+      else { photoEl.style.display = 'none'; fallbackEl.innerText = u['ФИО'] ? u['ФИО'].charAt(0) : '?'; fallbackEl.style.display = 'flex'; }
+      
+      const tgBtn = document.getElementById('um-tg-btn');
+      if (u.telegram_raw && (isCoauthor || isManagerGlobal)) { 
+          tgBtn.style.display = 'block'; 
+          tgBtn.onclick = () => window.Telegram.WebApp.openLink(`https://t.me/${String(u.telegram_raw).replace('@','')}`); 
+      } else { tgBtn.style.display = 'none'; }
+      
+      document.getElementById('user-modal').style.display = 'flex';
+    }
+    function closeUserModal(e) { document.getElementById('user-modal').style.display = 'none'; }
+
+    // --- РЕНДЕР ВСЕХ УЧАСТНИКОВ (ДЛЯ АДМИНКИ) ---
+    function renderAllParticipants(filterText = "") {
+      showScreen('all-participants-view');
+      const listEl = document.getElementById('all-participants-list');
+      const lowerFilter = filterText.toLowerCase();
+      
+      const filtered = globalParticipantsData.filter(p => p['ФИО'] && p['ФИО'].toLowerCase().includes(lowerFilter));
+      
+      listEl.innerHTML = filtered.map(user => {
+         const photoSrc = user['Фото'] || user['TG Фото'] || null;
+         const avatarHtml = photoSrc ? `<img src="${photoSrc}" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; flex-shrink: 0;">` : `<div style="width: 45px; height: 45px; border-radius: 50%; background: #2481cc; color: white; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; flex-shrink: 0;">${user['ФИО'] ? String(user['ФИО']).charAt(0) : '?'}</div>`;
+         
+         return `<div class="card" style="padding: 14px; margin-bottom: 12px; cursor:pointer; display: flex; gap: 12px; align-items: center;" onclick="showUserDetails('${user.user_id}')">
+             ${avatarHtml}
+             <div>
+               <div style="font-weight: bold; font-size: 14px;">${user['ФИО']}</div>
+               <div style="font-size: 12px; color: gray; margin-top: 2px;">${user['Институт/Группа'] || '—'} • ${user['Должность'] || 'Активист СНО'}</div>
+             </div>
+           </div>`;
+      }).join('') || `<div style="text-align: center; color: gray; padding: 20px;">Пользователь не найден</div>`;
+    }
+    function filterAllParticipants() { renderAllParticipants(document.getElementById('user-search-input').value); }
+
+    // --- ФОРМЫ АДМИНА ---
+    function openAdminForCreate(presetDesc = "") {
+      document.getElementById('admin-title').innerText = "Новое мероприятие 📝";
+      document.getElementById('ev-submit-btn').innerText = "Опубликовать в приложении";
+      document.getElementById('ev-originalname').value = "";
+      document.getElementById('ev-name').value = "";
+      document.getElementById('ev-datetime').value = "";
+      document.getElementById('ev-endtime').value = "";
+      document.getElementById('ev-deadline').value = "";
+      document.getElementById('ev-photo').value = "";
+      document.getElementById('ev-desc').value = presetDesc;
+      document.getElementById('ev-regtype').value = "internal";
+      document.getElementById('ev-exemption').checked = false;
+      document.getElementById('ev-post-channel').checked = false;
+      toggleExternalLink();
+      showScreen('admin-view');
+    }
+
+    function openAdminForEdit(eventName) {
+      const ev = globalEventsData.find(e => e.name === eventName);
+      if(!ev) return;
+      document.getElementById('admin-title').innerText = "Редактирование ✏️";
+      document.getElementById('ev-submit-btn').innerText = "Сохранить изменения";
+      document.getElementById('ev-originalname').value = ev.name;
+      document.getElementById('ev-name').value = ev.name;
+      document.getElementById('ev-datetime').value = ev.datetime || "";
+      document.getElementById('ev-endtime').value = ev.endtime || "";
+      document.getElementById('ev-deadline').value = ev.deadline || "";
+      document.getElementById('ev-photo').value = ev.photo || "";
+      document.getElementById('ev-desc').value = ev.desc || "";
+      document.getElementById('ev-exemption').checked = (ev.exemption === "true"); 
+      document.getElementById('ev-post-channel').checked = false; 
+      if (ev.regType === 'internal' || ev.regType === 'no' || ev.regType === 'нет') { document.getElementById('ev-regtype').value = (ev.regType === 'нет' ? 'no' : ev.regType); } 
+      else { document.getElementById('ev-regtype').value = "external"; document.getElementById('ev-externallink').value = ev.regType; }
+      toggleExternalLink();
+      showScreen('admin-view');
+    }
+    function toggleExternalLink() { document.getElementById('external-link-box').style.display = (document.getElementById('ev-regtype').value === 'external') ? 'block' : 'none'; }
+
+    // --- ПРОСМОТР СПИСКА УЧАСТНИКОВ МЕРОПРИЯТИЯ ---
+    function viewParticipants(eventName) {
+      const ev = globalEventsData.find(e => e.name === eventName);
+      if (!ev) return;
+      currentEventForExport = ev.name;
+      document.getElementById('ep-title').innerText = ev.name;
+      const ids = ev.participants ? ev.participants.split(',').map(id => id.trim()).filter(id => id !== "") : [];
+      document.getElementById('ep-count').innerText = ids.length;
+      
+      if (ids.length === 0) { document.getElementById('ep-list').innerHTML = "<div style='color: gray; font-size: 14px; text-align: center; margin-top: 20px;'>Пока никто не зарегистрировался.</div>"; } 
+      else {
+         let listHtml = "";
+         ids.forEach((id, index) => {
+            const user = globalParticipantsData.find(p => String(p.user_id) === String(id));
+            const name = user ? user['ФИО'] : `Неизвестный ID: ${id}`;
+            const group = user ? user['Институт/Группа'] : '—';
+            listHtml += `
+              <div style="padding: 10px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="showUserDetails('${id}')">
+                <div>
+                  <div style="font-size: 14px; font-weight: 500;">${index + 1}. ${name}</div>
+                  <div style="font-size: 12px; color: gray; margin-top: 2px;">${group}</div>
+                </div>
+                <span style="color: #ccc;">❯</span>
+              </div>
+            `;
+         });
+         document.getElementById('ep-list').innerHTML = listHtml;
       }
+      showScreen('event-participants-view');
+    }
 
-      if (cbData.startsWith("join_")) {
-        const shortName = cbData.replace("join_", "");
-        const pSheet = ss.getSheetByName("Participants");
-        const pData = pSheet.getDataRange().getValues();
-        let isRegistered = false;
-        for (let i = 1; i < pData.length; i++) { if (String(pData[i][0]) === userId) { isRegistered = true; break; } }
+    function exportCSV() {
+      const ev = globalEventsData.find(e => e.name === currentEventForExport);
+      if (!ev) return;
+      const ids = ev.participants ? ev.participants.split(',').map(id => id.trim()).filter(id => id !== "") : [];
+      let csv = "data:text/csv;charset=utf-8,\uFEFFФИО;Группа;Телефон;Telegram;Другие соцсети\n";
+      ids.forEach(id => {
+         const u = globalParticipantsData.find(p => String(p.user_id) === String(id));
+         if(u) csv += `"${u['ФИО']}";"${u['Институт/Группа']}";"${u['Телефон'] || ''}";"${u.telegram_raw || ''}";"${u['Другие соцсети'] || ''}"\n`;
+      });
+      const link = document.createElement("a");
+      link.setAttribute("href", encodeURI(csv));
+      link.setAttribute("download", `Участники_${currentEventForExport}.csv`);
+      document.body.appendChild(link); link.click(); link.remove();
+    }
+
+    async function deleteEvent(eventName) {
+      tg.showConfirm(`Удалить мероприятие «${eventName}»?`, async (confirm) => {
+        if(confirm) { try { await fetch(`${APPS_SCRIPT_URL}?action=delete_event&adminId=${tg.initDataUnsafe?.user?.id}&eventName=${encodeURIComponent(eventName)}`); location.reload(); } catch (e) { alert("Ошибка"); } }
+      });
+    }
+
+    async function submitNewEvent(event) {
+      event.preventDefault();
+      const btn = document.getElementById('ev-submit-btn'); btn.innerText = "Загрузка..."; btn.disabled = true;
+      const originalName = document.getElementById('ev-originalname').value; 
+      const name = document.getElementById('ev-name').value;
+      const datetime = document.getElementById('ev-datetime').value;
+      const endtime = document.getElementById('ev-endtime').value;
+      const deadline = document.getElementById('ev-deadline').value;
+      const photo = document.getElementById('ev-photo').value;
+      const desc = document.getElementById('ev-desc').value;
+      const exemption = document.getElementById('ev-exemption').checked;
+      let regType = document.getElementById('ev-regtype').value;
+      if (regType === 'external') regType = document.getElementById('ev-externallink').value;
+      const postToChannel = document.getElementById('ev-post-channel') ? document.getElementById('ev-post-channel').checked : false;
+
+      const action = originalName ? "edit_event" : "create_event";
+      const url = `${APPS_SCRIPT_URL}?action=${action}&adminId=${tg.initDataUnsafe?.user?.id}&originalName=${encodeURIComponent(originalName)}&name=${encodeURIComponent(name)}&datetime=${encodeURIComponent(datetime)}&endtime=${encodeURIComponent(endtime)}&deadline=${encodeURIComponent(deadline)}&photo=${encodeURIComponent(photo)}&desc=${encodeURIComponent(desc)}&regType=${encodeURIComponent(regType)}&exemption=${exemption}&postToChannel=${postToChannel}`;
+      try { await fetch(url); location.reload(); } catch(e) { alert("Ошибка сети"); btn.innerText = "Опубликовать"; btn.disabled = false; }
+    }
+
+    async function registerForEvent(eventName, btnElement, eventObj) {
+      eventObj.stopPropagation();
+      btnElement.innerText = "Запись..."; btnElement.disabled = true;
+      try { await fetch(`${APPS_SCRIPT_URL}?action=join_event&eventName=${encodeURIComponent(eventName)}&userId=${tg.initDataUnsafe?.user?.id}`); tg.showAlert("✅ Успех!"); location.reload(); } 
+      catch (e) { btnElement.innerText = "Ошибка"; btnElement.disabled = false; }
+    }
+
+    async function leaveEvent(eventName, eventObj) {
+      eventObj.stopPropagation();
+      tg.showConfirm(`Отменить регистрацию на «${eventName}»?`, async (confirm) => {
+        if(confirm) { try { await fetch(`${APPS_SCRIPT_URL}?action=leave_event&eventName=${encodeURIComponent(eventName)}&userId=${tg.initDataUnsafe?.user?.id}`); location.reload(); } catch (e) { alert("Ошибка сети"); } }
+      });
+    }
+
+    async function loadProfile() {
+      const currentUserId = tg.initDataUnsafe?.user?.id;
+      const currentUserPhotoTg = tg.initDataUnsafe?.user?.photo_url;
+      const adminIds = ["1486703011", "123456789", "789596527", "526927711"];
+      
+      try {
+        const response = await fetch(APPS_SCRIPT_URL);
+        const data = await response.json();
+        globalParticipantsData = data.participants || [];
+        globalEventsData = data.events || [];
+        globalNewsData = data.news || [];
+        currentUserProfile = globalParticipantsData.find(item => String(item.user_id) === String(currentUserId));
         
-        let responseText = "";
-        if (!isRegistered) { 
-           responseText = "❌ Вы не в базе СНО! Откройте приложение (Mini App) и привяжите профиль."; 
-        } else {
-          const eventSheet = ss.getSheetByName("Events");
-          const eData = eventSheet.getDataRange().getValues();
-          let eventFound = false;
-          for (let i = 1; i < eData.length; i++) {
-            if (String(eData[i][0]).startsWith(shortName)) {
-              eventFound = true;
-              let currentParts = String(eData[i][1] || "");
-              if (!currentParts.includes(userId)) {
-                eventSheet.getRange(i + 1, 2).setValue(currentParts ? currentParts + "," + userId : userId);
-                responseText = "✅ Вы успешно зарегистрированы!";
-              } else { responseText = "Вы уже записаны на это мероприятие."; }
-              break;
+        document.getElementById('loading').style.display = 'none';
+
+        if (currentUserProfile) {
+          const role = currentUserProfile['Должность'] || "Активист СНО";
+          const isSuperAdmin = adminIds.includes(String(currentUserId));
+          isManagerGlobal = isSuperAdmin || role === "Председатель" || role === "Зам. Председателя" || role === "Руководство";
+          canCreateGlobal = isSuperAdmin || role === "Председатель" || role === "Зам. Председателя";
+
+          // --- ФОНОВАЯ СИНХРОНИЗАЦИЯ ФОТО ТЕЛЕГРАМ ---
+          const savedTgPhoto = currentUserProfile['TG Фото'] || "";
+          if (currentUserPhotoTg && currentUserPhotoTg !== savedTgPhoto) {
+             fetch(`${APPS_SCRIPT_URL}?action=sync_tg_photo&userId=${currentUserId}&tgPhoto=${encodeURIComponent(currentUserPhotoTg)}`);
+          }
+          // ------------------------------------------
+
+          showScreen('profile-view');
+          
+          currentUserGlobalName = currentUserProfile['ФИО'] || "Без имени";
+          document.getElementById('user-name').innerText = currentUserGlobalName;
+          document.getElementById('user-role').innerText = role;
+          
+          const rawScore = parseFloat(String(currentUserProfile['score']).replace(',', '.')) || 0;
+          document.getElementById('user-score').innerText = Number(rawScore.toFixed(2));
+          document.getElementById('user-group').innerText = currentUserProfile['Институт/Группа'] || "—";
+          document.getElementById('coauthor-checkbox').checked = String(currentUserProfile['Ищу соавтора']).toLowerCase() === 'true';
+
+          const avatarDiv = document.getElementById('avatar');
+          const customPhoto = currentUserProfile['Фото'];
+          const activePhoto = customPhoto || currentUserPhotoTg || savedTgPhoto;
+          
+          if (activePhoto) { avatarDiv.style.backgroundImage = `url('${activePhoto}')`; avatarDiv.innerHTML = ''; } 
+          else { avatarDiv.style.backgroundImage = 'none'; avatarDiv.innerHTML = currentUserGlobalName.charAt(0); }
+
+          if (isManagerGlobal) {
+            document.getElementById('admin-panel').style.display = 'block';
+            if (!canCreateGlobal) { 
+               document.getElementById('admin-create-btn').style.display = 'none'; 
+               document.getElementById('admin-news-btn').style.display = 'none'; 
             }
           }
-          if (!eventFound) responseText = "⚠️ Мероприятие закрыто или удалено.";
-        }
-        UrlFetchApp.fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery?callback_query_id=${cb.id}&text=${encodeURIComponent(responseText)}&show_alert=true`);
-      }
-      return ContentService.createTextOutput("ok");
+
+          document.getElementById('interests-list').innerHTML = (currentUserProfile['Научные интересы']) ? currentUserProfile['Научные интересы'].split(',').map(tag => `<span class="interest-tag">${tag.trim()}</span>`).join('') : '<span style="font-size: 13px; color: gray;">Пока не указаны</span>';
+
+          const sortedParticipants = globalParticipantsData.filter(p => p['ФИО'] && (parseFloat(String(p['score']).replace(',','.')) || 0) > 0).sort((a, b) => (parseFloat(String(b['score']).replace(',','.')) || 0) - (parseFloat(String(a['score']).replace(',','.')) || 0));
+          document.getElementById('leaderboard-list').innerHTML = sortedParticipants.slice(0, 10).map((user, index) => {
+            let rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : index === 2 ? 'rank-3' : '';
+            return `<div class="leaderboard-item"><div style="display: flex; align-items: center;"><div class="rank-badge ${rankClass}">${index + 1}</div><div class="leader-name">${user['ФИО'].split(' ').slice(0, 2).join(' ')}</div></div><div class="leader-score">${Number((parseFloat(String(user['score']).replace(',','.')) || 0).toFixed(2))}</div></div>`;
+          }).join('');
+          const myRankIndex = sortedParticipants.findIndex(p => String(p.user_id) === String(currentUserId));
+          document.getElementById('my-rank').innerText = myRankIndex !== -1 ? myRankIndex + 1 : "Пока без рейтинга (0 баллов)";
+
+          // СОАВТОРЫ
+          document.getElementById('coauthors-list').innerHTML = globalParticipantsData
+            .filter(p => String(p['Ищу соавтора']).toLowerCase() === 'true' && String(p.user_id) !== String(currentUserId))
+            .map(user => {
+               const photoSrc = user['Фото'] || user['TG Фото'] || null;
+               const avatarHtml = photoSrc ? `<img src="${photoSrc}" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; flex-shrink: 0;">` : `<div style="width: 45px; height: 45px; border-radius: 50%; background: #2481cc; color: white; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; flex-shrink: 0;">${user['ФИО'] ? String(user['ФИО']).charAt(0) : '?'}</div>`;
+               const tagsHtml = (user['Научные интересы'] || '').split(',').map(t => t.trim() ? `<span class="interest-tag" style="background: #e8f4fd; color: #2481cc; margin-bottom: 4px;">${t.trim()}</span>` : '').join('');
+               return `<div class="card" style="padding: 14px; margin-bottom: 12px; cursor:pointer;" onclick="showUserDetails('${user.user_id}')">
+                   <div style="display: flex; gap: 12px; align-items: center;">${avatarHtml}<div><div style="font-weight: bold; font-size: 15px;">${user['ФИО']}</div><div style="font-size: 12px; color: gray; margin-top: 2px;">${user['Институт/Группа'] || 'СНО'}</div></div></div>
+                   <div style="margin-top: 12px;"><div style="font-size: 11px; color: gray; text-transform: uppercase; margin-bottom: 6px;">Научные интересы:</div>${tagsHtml || '<span style="font-size: 13px; color: gray;">Не указаны</span>'}</div>
+                 </div>`;
+            }).join('') || `<div style="text-align: center; color: gray; padding: 20px;">Никто не ищет соавторов</div>`;
+
+          // АФИША И МЕРОПРИЯТИЯ
+          const now = new Date();
+          document.getElementById('events-list').innerHTML = globalEventsData.map(ev => {
+            const isJoined = ev.participants && String(ev.participants).includes(String(currentUserId));
+            let btnHtml = ""; let statusHtml = "";
+            
+            const startD = ev.datetime ? new Date(ev.datetime) : null;
+            const endD = ev.endtime ? new Date(ev.endtime) : null;
+            const dlD = ev.deadline ? new Date(ev.deadline) : null;
+            let isClosed = false;
+
+            if (startD) {
+               if (endD && now > endD) { statusHtml = `<span class="event-date-badge" style="background:#9e9e9e; color:#fff;">🏁 Прошло</span>`; isClosed = true; } 
+               else if (now >= startD && (!endD || now <= endD)) { statusHtml = `<span class="event-date-badge" style="background:#4caf50; color:#fff;">🔥 В процессе</span>`; } 
+               else { statusHtml = `<span class="event-date-badge">📅 ${formatLocalDate(ev.datetime)}</span>`; }
+            }
+            if (dlD && now > dlD) isClosed = true;
+            
+            let regType = String(ev.regType).trim().toLowerCase();
+            if (regType === 'no' || regType === 'нет') { btnHtml = `<div style="text-align: center; color: gray; font-size: 13px; font-weight: bold; margin-top: 8px;">Регистрация не требуется</div>`; } 
+            else if (regType.startsWith('http')) { btnHtml = `<button class="btn-primary" onclick="event.stopPropagation(); window.Telegram.WebApp.openLink('${ev.regType}')" style="margin-top: 0; background: #333;">Внешняя регистрация ➔</button>`; } 
+            else {
+               if (isJoined) { btnHtml = `<button class="btn-primary" style="background: #4CAF50; margin-top: 0; pointer-events: none;">✅ Вы записаны</button><div style="text-align: center; margin-top: 10px;"><span onclick="leaveEvent('${ev.name}', event)" style="color: #d32f2f; font-size: 13px; font-weight: bold; cursor: pointer; text-decoration: underline;">❌ Отменить запись</span></div>`; } 
+               else if (isClosed) { btnHtml = `<button class="btn-primary" style="background: #9e9e9e; margin-top: 0;" disabled>⏳ Регистрация закрыта</button>`; } 
+               else { btnHtml = `<button class="btn-primary" onclick="registerForEvent('${ev.name}', this, event)" style="margin-top: 0;">Зарегистрироваться</button>`; }
+            }
+            
+            const pCount = ev.participants ? ev.participants.split(',').filter(x => x.trim() !== '').length : 0;
+            const adminPBtn = isManagerGlobal ? `<button class="btn-primary" onclick="event.stopPropagation(); viewParticipants('${ev.name}')" style="background: #607d8b; margin-top: 12px; font-size: 14px;">👀 Список участников (${pCount})</button>` : '';
+            const adminEBtn = canCreateGlobal ? `<div style="display: flex; gap: 8px; margin-top: 8px;"><button class="btn-primary" onclick="event.stopPropagation(); openAdminForEdit('${ev.name}')" style="background: #ff9800; margin-top: 0; flex: 1; padding: 10px; font-size: 14px;">✏️ Изменить</button><button class="btn-primary" onclick="event.stopPropagation(); deleteEvent('${ev.name}')" style="background: #d32f2f; margin-top: 0; flex: 1; padding: 10px; font-size: 14px;">🗑️ Удалить</button></div>` : '';
+            const exemptionHtml = (ev.exemption === 'true') ? `<div style="margin-top: 12px; font-size: 13px; color: #d32f2f; font-weight: bold; background: #ffebee; padding: 8px 12px; border-radius: 8px; display: inline-block;">🎓 Освобождение от занятий</div>` : '';
+
+            return `<div class="card event-card" onclick="toggleEvent(this)"><img src="${ev.photo}" class="event-image"><div class="event-body">${statusHtml}<div style="display: flex; justify-content: space-between; align-items: flex-start;"><h3 style="margin: 0; font-size: 18px;">${ev.name}</h3><span style="font-size: 12px; color: #2481cc; background: #e8f4fd; padding: 3px 8px; border-radius: 12px; font-weight: bold; flex-shrink: 0; margin-left: 8px;">👇</span></div><div class="event-details">${(ev.deadline && !isJoined) ? `<div style="font-size: 12px; color: #d32f2f; margin-bottom: 8px; font-weight: bold;">⏳ Дедлайн: ${formatLocalDate(ev.deadline)}</div>` : ''}${ev.desc ? `<p class="event-desc-text">${ev.desc}</p>` : ''}${exemptionHtml}<div style="margin-top: 16px;">${btnHtml}${adminPBtn}${adminEBtn}</div></div></div></div>`;
+          }).join('') || "<p style='text-align: center; color: gray;'>Нет мероприятий</p>";
+
+          // АНОНСЫ НА ГЛАВНОЙ ЭКРАНЕ (ШТОРКА) - С КРАСИВОЙ ДАТОЙ
+          if (globalNewsData && globalNewsData.length > 0) {
+             document.getElementById('announcements-drawer').style.display = 'block';
+             document.getElementById('home-news-list').innerHTML = globalNewsData.map(n => `
+                <div style="background: var(--tg-theme-bg-color, #f4f5f7); padding: 12px; border-radius: 8px; margin-bottom: 10px; cursor: default;" onclick="event.stopPropagation()">
+                   <div style="font-size: 11px; color: gray; margin-bottom: 6px; font-weight: bold;">${formatNewsDate(n.date)}</div>
+                   <div style="font-size: 13.5px; line-height: 1.4; white-space: pre-wrap; color: var(--tg-theme-text-color, #222);">${String(n.text)}</div>
+                </div>
+             `).join('');
+          } else {
+             document.getElementById('home-news-list').innerHTML = `<div style="text-align: center; color: gray; padding: 12px; font-size: 14px;">Пока нет анонсов</div>`;
+          }
+
+          // НОВОСТИ КАНАЛА ДЛЯ ПАНЕЛИ АДМИНА
+          document.getElementById('news-list').innerHTML = globalNewsData.map((n, i) => {
+             return `<div class="card" style="padding: 14px; margin-bottom: 12px;"><div style="font-size: 12px; color: gray; margin-bottom: 8px; font-weight: bold;">${formatNewsDate(n.date)}</div><div style="font-size: 14px; margin-bottom: 12px; line-height: 1.4;">${String(n.text).substring(0, 150)}...</div><button class="action-btn" style="width: 100%; background: #e8f4fd; color: #2481cc; border-color: #bbdefb;" onclick="openAdminForCreate(\`${String(n.text).replace(/`/g, '')}\`)">Сделать мероприятием</button></div>`;
+          }).join('') || "<p style='text-align: center; color: gray;'>Нет новостей</p>";
+
+        } else { document.getElementById('registration-view').style.display = 'block'; }
+      } catch (error) { document.getElementById('loading').innerText = 'Ошибка соединения.'; }
     }
 
-    // 3. ОБРАБОТКА НОВЫХ ПОСТОВ ИЗ КАНАЛА
-    if (payload.channel_post) {
-      const sheet = ss.getSheetByName("News");
-      const post = payload.channel_post;
-      if (!post.text && !post.caption) return ContentService.createTextOutput("ok");
-      
-      const msgId = String(post.message_id);
-      const data = sheet.getDataRange().getValues();
-      let isDuplicate = false;
-      for (let i = 1; i < Math.min(data.length, 20); i++) {
-         if (String(data[i][2]) === msgId) { isDuplicate = true; break; }
-      }
-      
-      if (!isDuplicate) {
-        const text = post.text || post.caption || "Без текста";
-        const date = new Date(post.date * 1000).toISOString();
-        sheet.insertRowAfter(1);
-        sheet.getRange(2, 1, 1, 3).setValues([[date, text, msgId]]);
-      }
+    async function registerUser(event) {
+      event.preventDefault();
+      const nameInput = document.getElementById('name-input').value;
+      const btn = document.getElementById('reg-btn');
+      btn.innerText = "Регистрация..."; btn.disabled = true;
+      try { const response = await fetch(`${APPS_SCRIPT_URL}?action=register&userId=${tg.initDataUnsafe?.user?.id}&fullName=${encodeURIComponent(nameInput)}`); const result = await response.json(); if (result.status === "success") location.reload(); else { alert(result.message); btn.innerText = "Привязать профиль"; btn.disabled = false; } } 
+      catch (e) { alert("Ошибка сети"); btn.disabled = false; }
     }
-    return ContentService.createTextOutput("ok");
-  } catch (err) { return ContentService.createTextOutput("ok"); }
-}
-
-function doGet(e) {
-  const params = (e && e.parameter) ? e.parameter : {};
-  const action = params.action;
-  const ss = SpreadsheetApp.openById("14PJ8W0V0TZGV3U-rxCUXroud46gcGJ02kaD-kPdvzyU");
-  
-  if (action === "create_event") {
-    const eventSheet = ss.getSheetByName("Events");
-    eventSheet.appendRow([
-      params.name, "", params.photo || "https://images.unsplash.com/photo-1543269865-cbf427effbad?q=80&w=600&auto=format&fit=crop", 
-      params.desc || "", params.regType || "internal", params.datetime || "", params.deadline || "", params.exemption || "false", params.endtime || ""
-    ]);
-
-    if (params.postToChannel === "true" && params.regType === "internal") {
-      let text = `📢 Новое мероприятие: ${params.name}\n\n${params.desc ? params.desc + '\n\n' : ''}`;
-      if (params.datetime) text += `📅 Начало: ${params.datetime.replace('T', ' ')}\n`;
-      if (params.deadline) text += `⏳ Дедлайн записи: ${params.deadline.replace('T', ' ')}\n`;
-      const shortName = params.name.substring(0, 25);
-      const keyboard = { inline_keyboard: [[ { text: "📝 Зарегистрироваться", callback_data: "join_" + shortName } ]] };
-      const payload = { chat_id: CHANNEL_ID, reply_markup: keyboard };
-      
-      let endpoint = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
-      if (params.photo && params.photo.startsWith("http")) { 
-          endpoint = `https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`; 
-          payload.photo = params.photo; 
-          payload.caption = text; 
-      } else { 
-          payload.text = text; 
-      }
-      
-      try { UrlFetchApp.fetch(endpoint, { method: "post", contentType: "application/json", payload: JSON.stringify(payload) }); } catch(err) {}
-    }
-    return ContentService.createTextOutput(JSON.stringify({status: "success"})).setMimeType(ContentService.MimeType.JSON);
-  }
-
-  if (action === "edit_event") {
-    const eventSheet = ss.getSheetByName("Events");
-    const eventsData = eventSheet.getDataRange().getValues();
-    for (let i = 1; i < eventsData.length; i++) {
-      if (eventsData[i][0] === params.originalName) {
-        eventSheet.getRange(i + 1, 1).setValue(params.name); 
-        eventSheet.getRange(i + 1, 3).setValue(params.photo || "https://images.unsplash.com/photo-1543269865-cbf427effbad?q=80&w=600&auto=format&fit=crop");
-        eventSheet.getRange(i + 1, 4).setValue(params.desc || "");
-        eventSheet.getRange(i + 1, 5).setValue(params.regType || "internal");
-        eventSheet.getRange(i + 1, 6).setValue(params.datetime || "");
-        eventSheet.getRange(i + 1, 7).setValue(params.deadline || ""); 
-        eventSheet.getRange(i + 1, 8).setValue(params.exemption || "false"); 
-        eventSheet.getRange(i + 1, 9).setValue(params.endtime || ""); 
-        return ContentService.createTextOutput(JSON.stringify({status: "success"})).setMimeType(ContentService.MimeType.JSON);
-      }
-    }
-    return ContentService.createTextOutput(JSON.stringify({status: "error"})).setMimeType(ContentService.MimeType.JSON);
-  }
-
-  if (action === "delete_event") {
-    const eventSheet = ss.getSheetByName("Events");
-    const eventsData = eventSheet.getDataRange().getValues();
-    for (let i = 1; i < eventsData.length; i++) {
-      if (eventsData[i][0] === params.eventName) {
-        eventSheet.deleteRow(i + 1);
-        return ContentService.createTextOutput(JSON.stringify({status: "success"})).setMimeType(ContentService.MimeType.JSON);
-      }
-    }
-    return ContentService.createTextOutput(JSON.stringify({status: "error"})).setMimeType(ContentService.MimeType.JSON);
-  }
-
-  if (action === "update_profile") {
-    const pSheet = ss.getSheetByName("Participants");
-    const data = pSheet.getDataRange().getValues();
-    const headers = data[0];
-    let rowIndex = -1;
-    for (let i = 1; i < data.length; i++) { if (String(data[i][0]).trim() === String(params.userId).trim()) { rowIndex = i + 1; break; } }
-    
-    if (rowIndex !== -1) {
-      const updateField = (colName, val) => {
-        const colIndex = headers.indexOf(colName) + 1;
-        if (colIndex > 0 && val !== undefined) pSheet.getRange(rowIndex, colIndex).setValue(val);
-      };
-      updateField("Научные интересы", params.interests);
-      if (params.coauthor !== undefined) updateField("Ищу соавтора", params.coauthor === "true");
-      updateField("Телефон", params.phone);
-      updateField("Другие соцсети", params.socials);
-      updateField("Фото", params.photo);
-      if (params.photoPublic !== undefined) updateField("Фото публичное", params.photoPublic === "true");
-      return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
-    } else { return ContentService.createTextOutput(JSON.stringify({ status: "error" })).setMimeType(ContentService.MimeType.JSON); }
-  }
-
-  if (action === "sync_tg_photo") {
-    const pSheet = ss.getSheetByName("Participants");
-    const data = pSheet.getDataRange().getValues();
-    const headers = data[0];
-    let rowIndex = -1;
-    for (let i = 1; i < data.length; i++) { 
-        if (String(data[i][0]).trim() === String(params.userId).trim()) { 
-            rowIndex = i + 1; break; 
-        } 
-    }
-    if (rowIndex !== -1) {
-        let colIndex = headers.indexOf("TG Фото") + 1;
-        if (colIndex === 0) {
-            colIndex = headers.length + 1;
-            pSheet.getRange(1, colIndex).setValue("TG Фото");
-        }
-        pSheet.getRange(rowIndex, colIndex).setValue(params.tgPhoto);
-        return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
-    }
-    return ContentService.createTextOutput(JSON.stringify({ status: "error" })).setMimeType(ContentService.MimeType.JSON);
-  }
-
-  if (action === "register") {
-    const sheet = ss.getSheetByName("Participants");
-    const data = sheet.getDataRange().getValues();
-    let rowIndex = -1;
-    for (let i = 1; i < data.length; i++) { if (String(data[i][1]).trim().toLowerCase() === String(params.fullName).trim().toLowerCase()) { rowIndex = i + 1; break; } }
-    if (rowIndex !== -1) {
-      sheet.getRange(rowIndex, 1).setValue(params.userId);
-      sheet.getRange(rowIndex, 5).setValue(params.telegram || "");
-      return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
-    } else { return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "ФИО не найдено" })).setMimeType(ContentService.MimeType.JSON); }
-  }
-
-  if (action === "join_event" || action === "leave_event") {
-     const eventSheet = ss.getSheetByName("Events");
-     const eventsData = eventSheet.getDataRange().getValues();
-     for (let i = 1; i < eventsData.length; i++) {
-       if (eventsData[i][0] === params.eventName) {
-         let currentParticipants = String(eventsData[i][1] || "");
-         let uid = String(params.userId);
-         if (action === "join_event" && !currentParticipants.includes(uid)) {
-           eventSheet.getRange(i + 1, 2).setValue(currentParticipants ? currentParticipants + "," + uid : uid);
-         } else if (action === "leave_event") {
-           let parts = currentParticipants.split(",").map(p => p.trim()).filter(p => p !== "" && p !== uid);
-           eventSheet.getRange(i + 1, 2).setValue(parts.join(","));
-         }
-         return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
-       }
-     }
-     return ContentService.createTextOutput(JSON.stringify({ status: "error" })).setMimeType(ContentService.MimeType.JSON);
-  }
-
-  const pSheet = ss.getSheetByName("Participants");
-  const pData = pSheet.getDataRange().getValues();
-  const pHeaders = pData[0];
-  const participants = pData.slice(1).map(row => { let obj = {}; pHeaders.forEach((h, i) => obj[h] = row[i]); obj.telegram_raw = row[4]; return obj; });
-
-  const eSheet = ss.getSheetByName("Events");
-  let events = [];
-  if(eSheet) {
-    const eData = eSheet.getDataRange().getValues();
-    events = eData.slice(1).map(row => ({ 
-      name: row[0], participants: String(row[1] || ""), 
-      photo: row[2] || "https://images.unsplash.com/photo-1543269865-cbf427effbad?q=80&w=600&auto=format&fit=crop", 
-      desc: row[3] || "", regType: row[4] || "internal", datetime: row[5] || "", deadline: row[6] || "", exemption: String(row[7] || "false"), endtime: row[8] || ""
-    }));
-  }
-
-  const nSheet = ss.getSheetByName("News");
-  let news = [];
-  if (nSheet) {
-    const nData = nSheet.getDataRange().getValues();
-    const validRows = nData.slice(1).filter(row => String(row[0]).trim() !== "" && String(row[1]).trim() !== "");
-    const uniqueNews = [];
-    const seenText = new Set();
-    for (let i = 0; i < validRows.length; i++) {
-       const text = String(validRows[i][1]).trim();
-       if (!seenText.has(text)) {
-           seenText.add(text);
-           uniqueNews.push({ date: validRows[i][0], text: text, msgId: validRows[i][2] });
-       }
-    }
-    news = uniqueNews.slice(0, 15);
-  }
-
-  return ContentService.createTextOutput(JSON.stringify({ participants: participants, events: events, news: news })).setMimeType(ContentService.MimeType.JSON);
-}
+    document.addEventListener('DOMContentLoaded', loadProfile);
+  </script>
+</body>
+</html>
