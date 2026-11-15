@@ -4,11 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <!-- Шрифты Space Grotesk и Space Mono с кириллицей -->
+  <!-- Инструмент 1: Twemoji для отрисовки эмодзи в едином стиле клиента Telegram -->
+  <script src="https://cdn.jsdelivr.net/npm/@twemoji/api@latest/dist/twemoji.min.js" crossorigin="anonymous"></script>
+  <!-- Инструмент 2: Lottie Player для анимированных эмодзи и стикеров Telegram -->
+  <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+  <!-- Шрифты Space Grotesk, Space Mono и Nothing OS (NDot 57 / NType 82) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-  <!-- Шрифты Nothing OS (NDot 57 / NType 82) -->
   <link href="https://fonts.cdnfonts.com/css/ndot-47" rel="stylesheet">
   <style>
     @font-face {
@@ -57,6 +60,42 @@
 
     button, input, textarea, select {
       font-family: var(--font-sans);
+    }
+
+    /* Стилизация эмодзи Telegram (Twemoji + Кастомные TG Emoji) */
+    img.emoji, .tg-custom-emoji {
+      height: 1.2em;
+      width: 1.2em;
+      margin: 0 0.08em 0 0.1em;
+      vertical-align: -0.2em;
+      display: inline-block;
+      border: none !important;
+      background: transparent !important;
+      filter: none !important;
+    }
+
+    .emoji-picker-bar {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+      padding: 8px 10px;
+      background: var(--sno-navy-dark);
+      border: 1px dashed var(--border-dot);
+      border-radius: 12px;
+    }
+    .emoji-btn {
+      background: rgba(223, 240, 255, 0.08);
+      border: 1px solid transparent;
+      border-radius: 8px;
+      padding: 4px 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    .emoji-btn:hover, .emoji-btn:active {
+      border-color: var(--sno-ice);
+      transform: scale(1.1);
     }
 
     .ndot-title {
@@ -280,21 +319,24 @@
     .leader-score { font-family: var(--font-ndot); font-size: 18px; font-weight: 700; color: var(--sno-ice); }
 
     /* ============================================================== */
-    /* ЕДИНЫЙ РАЗМЕР ИЗОБРАЖЕНИЙ В СТИЛЕ NOTHING OS НА ВКЛАДКЕ АНОНСОВ */
+    /* ЕДИНЫЙ РАЗМЕР МЕДИА (ФОТО + ВИДЕОПЛЕЕР YOUTUBE/VK/MP4) 190PX   */
     /* ============================================================== */
-    .nothing-img {
+    .nothing-img, .nothing-video-iframe {
       width: 100%;
       height: 100%;
       object-fit: cover;
       object-position: center;
-      filter: contrast(1.08) saturate(0.88);
       display: block;
+      border: none;
       background-color: var(--sno-navy-dark);
       background-image: radial-gradient(rgba(223, 240, 255, 0.14) 1px, transparent 1px);
       background-size: 10px 10px;
     }
+    .nothing-img {
+      filter: contrast(1.08) saturate(0.88);
+    }
 
-    /* Сетка Ленты Анонсов: Жёлтая (заголовок слева сверху), Красная (фото слева снизу), Зелёная (текст справа) */
+    /* Сетка Ленты Анонсов: Жёлтая (заголовок), Красная (медиа 190px), Зелёная (текст и кнопки) */
     .ann-split-grid {
       display: grid;
       grid-template-columns: 1fr;
@@ -309,7 +351,6 @@
       flex-direction: column;
       justify-content: center;
     }
-    /* Единая рамка для фото анонса и карточек мероприятий (190px высотой, 16:9) */
     .ann-red-zone, .event-media-frame {
       width: 100%;
       height: 190px;
@@ -344,7 +385,7 @@
       .ann-green-zone  { grid-column: 2; grid-row: 1 / span 2; height: 100%; }
     }
 
-    /* Карусель Афиши Мероприятий (3 равные секции внизу, плавный сдвиг на 1) */
+    /* Карусель Афиши Мероприятий */
     .events-carousel-viewport {
       overflow: hidden;
       width: 100%;
@@ -675,16 +716,16 @@
             <div id="leaderboard-list" style="margin-top: 14px;"></div>
           </details>
 
-          <!-- БЛОК КНОПОК АДМИНОВ И РУКОВОДСТВА (ЧИСТЫЕ НАЗВАНИЯ БЕЗ СКОБОК) -->
+          <!-- БЛОК КНОПОК АДМИНОВ И РУКОВОДСТВА -->
           <div id="admin-bottom-block" class="card" style="display: none; border-color: var(--sno-ice);">
             <div class="mono-label" style="color: var(--sno-ice);">ADMINISTRATION // TERMINAL</div>
             <div class="ndot-title" style="font-size: 16px; margin: 4px 0 12px 0;">УПРАВЛЕНИЕ И БАЗА СНО</div>
             <div style="display: flex; flex-direction: column; gap: 8px;">
-              <button id="admin-create-ev-btn" class="btn-primary" style="margin-top: 0;" onclick="openAdminForCreate()">Создать мероприятие <!-- доп. подпись при необходимости --></button>
-              <button id="admin-create-ann-btn" class="btn-outline" onclick="openStandaloneAnnouncementModal()">Создать анонс <!-- доп. подпись при необходимости --></button>
-              <button id="admin-channel-import-btn" class="btn-outline" onclick="openSubView('news-view')">Управление анонсами <!-- доп. подпись при необходимости --></button>
-              <button class="btn-outline" onclick="openSubView('past-events-admin-view')">Архив мероприятий <!-- доп. подпись при необходимости --></button>
-              <button class="btn-outline" onclick="renderAllParticipants()">База участников <!-- доп. подпись при необходимости --></button>
+              <button id="admin-create-ev-btn" class="btn-primary" style="margin-top: 0;" onclick="openAdminForCreate()">Создать мероприятие <!-- доп. подпись --></button>
+              <button id="admin-create-ann-btn" class="btn-outline" onclick="openStandaloneAnnouncementModal()">Создать анонс <!-- доп. подпись --></button>
+              <button id="admin-channel-import-btn" class="btn-outline" onclick="openSubView('news-view')">Управление анонсами <!-- доп. подпись --></button>
+              <button class="btn-outline" onclick="openSubView('past-events-admin-view')">Архив мероприятий <!-- доп. подпись --></button>
+              <button class="btn-outline" onclick="renderAllParticipants()">База участников <!-- доп. подпись --></button>
             </div>
           </div>
         </div>
@@ -706,7 +747,7 @@
         </label>
       </div>
 
-      <!-- Блок Анонсов (Жёлтая зона - заголовок, Красная - единое фото 190px, Зелёная - текст и интерактив) -->
+      <!-- Блок Анонсов (Жёлтая зона - заголовок, Красная - фото или видеоплеер YouTube/VK 190px, Зелёная - текст с эмодзи ТГ) -->
       <div class="card" id="announcements-box">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
           <span class="mono-label" style="color: var(--sno-ice);">● ЛЕНТА АНОНСОВ СНО</span>
@@ -729,7 +770,7 @@
         </div>
       </div>
 
-      <!-- Голубая зона: Карусель карточек мероприятий (по 3 на ПК, плавный сдвиг на 1) -->
+      <!-- Голубая зона: Карусель карточек мероприятий -->
       <div class="events-carousel-viewport">
         <div id="events-list" class="events-carousel-track"></div>
       </div>
@@ -742,20 +783,18 @@
       <div class="mono-label" style="margin-bottom: 4px;">MODULES // RESOURCES</div>
       <div class="ndot-title" style="font-size: 18px; margin-bottom: 14px;">ПОЛЕЗНЫЕ МАТЕРИАЛЫ</div>
 
-      <!-- Поиск соавторов -->
       <div class="useful-banner" onclick="openSubView('coauthors-view')">
         <div class="useful-icon-box">
           <svg class="nothing-icon-svg" viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><circle cx="17" cy="11" r="3"/><path d="M21 21v-1.5a3 3 0 0 0-3-3h-1"/></svg>
         </div>
         <div style="flex-grow: 1;">
           <div class="useful-title" style="margin-top: 0;">Поиск соавторов</div>
-          <div class="useful-sub" style="display: none;"><!-- Место для доп. описания при необходимости --></div>
+          <div class="useful-sub" style="display: none;"><!-- доп. описание --></div>
           <div class="status-chip" id="coauthors-count-chip">● загрузка...</div>
         </div>
         <div class="mono-label" style="font-size: 18px; color: var(--sno-ice);">›</div>
       </div>
 
-      <!-- База знаний и Консультация (только названия без подписей) -->
       <div class="useful-grid">
         <div class="useful-tile" onclick="window.Telegram.WebApp.openLink('https://drive.google.com/drive/folders/ВАША_ССЫЛКА_ТУТ')">
           <div class="useful-icon-box">
@@ -763,7 +802,7 @@
           </div>
           <div>
             <div class="useful-title" style="margin-bottom: 0;">База знаний</div>
-            <div class="useful-sub" style="display: none;"><!-- Место для доп. описания базы знаний --></div>
+            <div class="useful-sub" style="display: none;"><!-- доп. описание --></div>
           </div>
         </div>
 
@@ -773,24 +812,22 @@
           </div>
           <div>
             <div class="useful-title" style="margin-bottom: 0;">Консультация</div>
-            <div class="useful-sub" style="display: none;"><!-- Место для доп. описания консультации --></div>
+            <div class="useful-sub" style="display: none;"><!-- доп. описание --></div>
           </div>
         </div>
       </div>
 
-      <!-- Поддержка бота: Написать напрямую админу -->
       <div class="useful-banner" onclick="contactSupport()">
         <div class="useful-icon-box">
           <svg class="nothing-icon-svg" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         </div>
         <div style="flex-grow: 1;">
           <div class="useful-title" style="margin-top: 0;">Поддержка бота</div>
-          <div class="useful-sub">Написать напрямую админу <!-- доп. текст при необходимости --></div>
+          <div class="useful-sub">Написать напрямую админу <!-- доп. текст --></div>
         </div>
         <div class="mono-label" style="font-size: 18px; color: var(--sno-ice);">›</div>
       </div>
 
-      <!-- Соцсети СНО (чистые названия кнопок) -->
       <div class="card" style="margin-top: 14px;">
         <div class="mono-label" style="margin-bottom: 10px;">OFFICIAL NETWORKS</div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
@@ -858,8 +895,8 @@
           <input type="datetime-local" id="ev-endtime">
           <label class="mono-label" style="display: block; margin-top: 12px;">ДЕДЛАЙН РЕГИСТРАЦИИ</label>
           <input type="datetime-local" id="ev-deadline">
-          <label class="mono-label" style="display: block; margin-top: 12px;">ССЫЛКА НА ОБЛОЖКУ / GIF (URL)</label>
-          <input type="text" id="ev-photo" placeholder="https://...">
+          <label class="mono-label" style="display: block; margin-top: 12px;">ОБЛОЖКА / GIF / YOUTUBE-ВИДЕО (URL)</label>
+          <input type="text" id="ev-photo" placeholder="https://... (фото, .gif или ссылка на YouTube/VK)">
           <label class="mono-label" style="display: block; margin-top: 12px;">ОПИСАНИЕ *</label>
           <textarea id="ev-desc" required placeholder="Подробности мероприятия..."></textarea>
 
@@ -889,7 +926,7 @@
       </div>
     </div>
 
-    <!-- ЭКРАН: Создание и Редактирование анонса -->
+    <!-- ЭКРАН: Создание и Редактирование анонса (с поддержкой TG-эмодзи и Видеоплеера) -->
     <div id="standalone-ann-view" style="display: none;">
       <button class="btn-outline" style="width: auto; margin-bottom: 14px;" onclick="switchMainTab('announcements')">⬅ Отмена</button>
       <div class="card" style="max-width: 680px;">
@@ -900,20 +937,35 @@
           <input type="hidden" id="sa-edit-msgid" value="">
 
           <label class="mono-label">ЗАГОЛОВОК АНОНСА *</label>
-          <input type="text" id="sa-title" required placeholder="Например: Школа СНО // Старт набора">
+          <input type="text" id="sa-title" required placeholder="Например: 🚀 Школа СНО // Старт набора">
 
-          <label class="mono-label" style="display: block; margin-top: 12px;">ПРЕВЬЮ-КАРТИНКА / GIF (ИЗ ГАЛЕРЕИ ИЛИ URL)</label>
+          <label class="mono-label" style="display: block; margin-top: 12px;">МЕДИА: ФОТО, GIF ИЛИ ССЫЛКА НА YOUTUBE / VK ВИДЕО</label>
           <label class="upload-zone" style="display: block;">
             <input type="file" id="sa-file-input" accept="image/*" style="display: none;" onchange="handleAnnouncementPreviewUpload(this)">
-            <span id="sa-upload-label" class="mono-label" style="color: var(--sno-ice);">🖼 ВЫБРАТЬ ФАЙЛ ИЗ ГАЛЕРЕИ</span>
+            <span id="sa-upload-label" class="mono-label" style="color: var(--sno-ice);">🖼 ВЫБРАТЬ ФОТО / GIF ИЗ ГАЛЕРЕИ</span>
           </label>
-          <input type="text" id="sa-preview-url" placeholder="Или вставьте прямую ссылку https://... (.jpg, .png, .gif)" style="margin-top: 8px;">
+          <input type="text" id="sa-preview-url" placeholder="Или ссылка на YouTube / VK Видео / .mp4 / .gif / .jpg" style="margin-top: 8px;">
           <div id="sa-preview-current-wrap" style="display: none; align-items: center; gap: 10px; margin-top: 8px;">
             <img id="sa-preview-current-img" style="width: 72px; height: 42px; object-fit: cover; border-radius: 8px; border: 1px solid var(--sno-ice);">
-            <button type="button" class="btn-outline" style="width: auto; padding: 5px 10px; font-size: 10px;" onclick="clearAnnouncementPreview()">Удалить превью</button>
+            <button type="button" class="btn-outline" style="width: auto; padding: 5px 10px; font-size: 10px;" onclick="clearAnnouncementPreview()">Очистить медиа</button>
           </div>
 
-          <label class="mono-label" style="display: block; margin-top: 12px;">ТЕКСТ / ОПИСАНИЕ *</label>
+          <label class="mono-label" style="display: block; margin-top: 12px;">ТЕКСТ / ОПИСАНИЕ * (ПОДДЕРЖКА TELEGRAM EMOJI)</label>
+          <!-- Панель быстрой вставки фирменных эмодзи Telegram -->
+          <div class="emoji-picker-bar">
+            <button type="button" class="emoji-btn" onclick="insertTgEmoji('🔥')">🔥</button>
+            <button type="button" class="emoji-btn" onclick="insertTgEmoji('⚡')">⚡</button>
+            <button type="button" class="emoji-btn" onclick="insertTgEmoji('🚀')">🚀</button>
+            <button type="button" class="emoji-btn" onclick="insertTgEmoji('🎓')">🎓</button>
+            <button type="button" class="emoji-btn" onclick="insertTgEmoji('📢')">📢</button>
+            <button type="button" class="emoji-btn" onclick="insertTgEmoji('🧬')">🧬</button>
+            <button type="button" class="emoji-btn" onclick="insertTgEmoji('🏆')">🏆</button>
+            <button type="button" class="emoji-btn" onclick="insertTgEmoji('💡')">💡</button>
+            <button type="button" class="emoji-btn" onclick="insertTgEmoji('📌')">📌</button>
+            <button type="button" class="emoji-btn" onclick="insertTgEmoji('✅')">✅</button>
+            <button type="button" class="emoji-btn" onclick="insertTgEmoji('💎')">💎</button>
+            <button type="button" class="emoji-btn" onclick="insertTgEmoji('🤝')">🤝</button>
+          </div>
           <textarea id="sa-desc" required placeholder="Текст вашего анонса..."></textarea>
 
           <label class="mono-label" style="display: block; margin-top: 12px;">ВНЕШНЯЯ ССЫЛКА (НЕОБЯЗАТЕЛЬНО)</label>
@@ -958,11 +1010,11 @@
 
   <script>
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwhcJfMMlv2ZKcgJ1UKICfXsBlDt5cP2DazV3pW1fcqukOdNDJpeEBNfJescD9wKEzUFg/exec";
-    const LOCAL_NEWS_KEY = "sno_mgsu_saved_announcements_v2";
-    const LOCAL_DELETED_KEY = "sno_mgsu_deleted_announcements_v2";
+    const LOCAL_NEWS_KEY = "sno_mgsu_saved_announcements_v3";
+    const LOCAL_DELETED_KEY = "sno_mgsu_deleted_announcements_v3";
+    const ANN_PREFIX = "[ANNOUNCEMENT]::";
     const tg = window.Telegram.WebApp;
 
-    // Стандартная геометрическая обложка в стиле Nothing OS (SVG Data URI)
     const NOTHING_DEFAULT_IMAGE = "data:image/svg+xml;utf8," + encodeURIComponent(`
       <svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
         <rect width="800" height="450" fill="#09132B"/>
@@ -1005,18 +1057,131 @@
     let clearCustomPhotoFlag = false;
     let uploadedAnnPreviewBase64 = null;
 
-    // --- ЛОКАЛЬНЫЙ БУФЕР АНОНСОВ (гарантирует, что анонсы никогда не пропадут при обновлении) ---
+    // --- 1. ОТРИСОВКА ЭМОДЗИ TELEGRAM И АНИМИРОВАННЫХ СТИКЕРОВ ---
+    function applyTelegramEmojis(rootElement) {
+      try {
+        if (window.twemoji) {
+          twemoji.parse(rootElement || document.body, {
+            folder: 'svg',
+            ext: '.svg'
+          });
+        }
+      } catch (e) {}
+    }
+
+    function formatTextWithTgEmojis(rawText) {
+      let safe = String(rawText || "").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      // Поддержка шорткодов кастомных/анимированных эмодзи [emoji:https://...json/.webp/.gif]
+      safe = safe.replace(/\[emoji:(https?:\/\/[^\]]+)\]/gi, (match, url) => {
+        if (url.endsWith('.json') || url.endsWith('.tgs')) {
+          return `<lottie-player src="${url}" background="transparent" speed="1" style="width: 24px; height: 24px; display: inline-block; vertical-align: middle;" loop autoplay></lottie-player>`;
+        }
+        return `<img src="${url}" class="tg-custom-emoji">`;
+      });
+      return safe;
+    }
+
+    function insertTgEmoji(emojiChar) {
+      const area = document.getElementById('sa-desc');
+      if (!area) return;
+      const start = area.selectionStart || area.value.length;
+      const end = area.selectionEnd || area.value.length;
+      area.value = area.value.substring(0, start) + emojiChar + area.value.substring(end);
+      area.focus();
+      area.selectionStart = area.selectionEnd = start + emojiChar.length;
+    }
+
+    // --- 2. УНИВЕРСАЛЬНЫЙ ВИДЕОПЛЕЕР (YOUTUBE, VK VIDEO, RUTUBE, MP4) + ФОТО ---
+    function parseVideoEmbedUrl(url) {
+      if (!url || typeof url !== "string") return null;
+      const u = url.trim();
+      // YouTube (обычные ссылки, Shorts, youtu.be, embed)
+      const ytMatch = u.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+      if (ytMatch) {
+        return { type: "iframe", src: `https://www.youtube.com/embed/${ytMatch[1]}?rel=0&modestbranding=1&playsinline=1` };
+      }
+      // VK Video
+      const vkMatch = u.match(/vk(?:video)?\.(?:ru|com)\/video(-?\d+)_(\d+)/);
+      if (vkMatch) {
+        return { type: "iframe", src: `https://vk.com/video_ext.php?oid=${vkMatch[1]}&id=${vkMatch[2]}&hd=2` };
+      }
+      if (u.includes("vk.com/video_ext.php")) {
+        return { type: "iframe", src: u };
+      }
+      // Rutube
+      const rtMatch = u.match(/rutube\.ru\/video\/([a-zA-Z0-9]+)/);
+      if (rtMatch) {
+        return { type: "iframe", src: `https://rutube.ru/play/embed/${rtMatch[1]}` };
+      }
+      // Прямой видеофайл (.mp4 / .webm)
+      if (/\.(mp4|webm|mov)(\?.*)?$/i.test(u)) {
+        return { type: "video", src: u };
+      }
+      return null;
+    }
+
+    function buildMediaFrameHtml(mediaUrl) {
+      const cleanUrl = (mediaUrl && String(mediaUrl).trim() !== "" && !String(mediaUrl).includes("unsplash.com"))
+        ? String(mediaUrl).trim()
+        : "";
+      const videoInfo = parseVideoEmbedUrl(cleanUrl);
+      if (videoInfo) {
+        if (videoInfo.type === "iframe") {
+          return `<iframe src="${videoInfo.src}" class="nothing-video-iframe" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen onclick="event.stopPropagation()"></iframe>`;
+        }
+        if (videoInfo.type === "video") {
+          return `<video src="${videoInfo.src}" class="nothing-video-iframe" controls playsinline preload="metadata" onclick="event.stopPropagation()"></video>`;
+        }
+      }
+      const finalImg = cleanUrl || NOTHING_DEFAULT_IMAGE;
+      return `<img src="${finalImg}" class="nothing-img" onerror="this.src=NOTHING_DEFAULT_IMAGE">`;
+    }
+
+    // --- 3. ТРОЙНАЯ ЗАЩИТА СОХРАНЕНИЯ АНОНСОВ (LocalStorage + Telegram CloudStorage + Таблица) ---
     function getLocalAnnouncements() {
       try {
         const raw = localStorage.getItem(LOCAL_NEWS_KEY);
         return raw ? JSON.parse(raw) : [];
       } catch (e) { return []; }
     }
+
     function saveLocalAnnouncements(arr) {
+      const sliced = (arr || []).slice(0, 25);
       try {
-        localStorage.setItem(LOCAL_NEWS_KEY, JSON.stringify(arr.slice(0, 30)));
+        localStorage.setItem(LOCAL_NEWS_KEY, JSON.stringify(sliced));
+      } catch (e) {}
+      // Сохраняем компактную копию (без тяжелых base64) в Telegram CloudStorage
+      try {
+        if (tg.CloudStorage && typeof tg.CloudStorage.setItem === "function") {
+          const lightCopy = sliced.slice(0, 8).map(x => ({
+            date: x.date,
+            title: x.title,
+            text: String(x.text || "").substring(0, 350),
+            preview: (x.preview && !String(x.preview).startsWith("data:")) ? x.preview : "",
+            link: x.link || "",
+            btnText: x.btnText || "Подробнее",
+            msgId: x.msgId
+          }));
+          tg.CloudStorage.setItem("sno_cloud_news_v3", JSON.stringify(lightCopy), () => {});
+        }
       } catch (e) {}
     }
+
+    function loadCloudStorageAnnouncements() {
+      return new Promise((resolve) => {
+        try {
+          if (tg.CloudStorage && typeof tg.CloudStorage.getItem === "function") {
+            tg.CloudStorage.getItem("sno_cloud_news_v3", (err, val) => {
+              if (!err && val) {
+                try { resolve(JSON.parse(val)); return; } catch (e) {}
+              }
+              resolve([]);
+            });
+          } else { resolve([]); }
+        } catch (e) { resolve([]); }
+      });
+    }
+
     function getDeletedIds() {
       try {
         const raw = localStorage.getItem(LOCAL_DELETED_KEY);
@@ -1033,8 +1198,7 @@
       } catch (e) {}
     }
 
-    // Объединение анонсов из Google Таблицы и созданных в приложении
-    function mergeServerAndLocalNews(serverNews) {
+    function mergeAllAnnouncements(serverNews, mirrorEventsNews, cloudNews) {
       const deleted = getDeletedIds();
       const localList = getLocalAnnouncements();
       const combined = [];
@@ -1047,23 +1211,27 @@
         const text = String(item.text || "").trim();
         if (!text && !title) return;
         const key = msgId ? ("id_" + msgId) : ("txt_" + title + "::" + text);
-        if (deleted.includes(key) || (msgId && deleted.includes(msgId))) return;
-        if (!seen.has(key)) {
+        const textKey = "txt_" + title + "::" + text;
+        if (deleted.includes(key) || deleted.includes(textKey) || (msgId && deleted.includes(msgId))) return;
+        if (!seen.has(key) && !seen.has(textKey)) {
           seen.add(key);
+          seen.add(textKey);
           combined.push({
             date: item.date || new Date().toISOString(),
             text: text,
-            msgId: msgId || ("local_" + Date.now()),
+            msgId: msgId || ("app_" + Date.now()),
             title: title,
             preview: item.preview || "",
             link: item.link || "",
-            btnText: item.btnText || "Подробнее"
+            btnText: item.btnText || "Подробнее",
+            mirrorEventName: item.mirrorEventName || ""
           });
         }
       };
 
-      // Сначала локально сохраненные/отредактированные, затем серверные
       localList.forEach(addUnique);
+      (cloudNews || []).forEach(addUnique);
+      (mirrorEventsNews || []).forEach(addUnique);
       (serverNews || []).forEach(addUnique);
       return combined;
     }
@@ -1122,12 +1290,10 @@
       } catch(e) { return String(dateString); }
     }
 
-    // Поддержка GIF и сжатие обычных изображений
     function compressImageFile(file, maxSize, quality, squareCrop, callback) {
       const reader = new FileReader();
       reader.onload = (e) => {
         const rawDataUrl = e.target.result;
-
         if (file.type === "image/gif") {
           if (rawDataUrl.length < 47000) {
             callback(rawDataUrl);
@@ -1136,7 +1302,6 @@
           }
           return;
         }
-
         const img = new Image();
         img.onload = () => {
           const canvas = document.createElement('canvas');
@@ -1197,7 +1362,7 @@
     function clearAnnouncementPreview() {
       uploadedAnnPreviewBase64 = "";
       document.getElementById('sa-preview-url').value = "";
-      document.getElementById('sa-upload-label').innerText = "🖼 ВЫБРАТЬ ФАЙЛ ИЗ ГАЛЕРЕИ";
+      document.getElementById('sa-upload-label').innerText = "🖼 ВЫБРАТЬ ФОТО / GIF ИЗ ГАЛЕРЕИ";
       document.getElementById('sa-preview-current-wrap').style.display = 'none';
     }
 
@@ -1207,7 +1372,7 @@
       window.Telegram.WebApp.openLink(`https://t.me/${username}`);
     }
 
-    // Рендер Ленты Анонсов: Жёлтая (заголовок), Красная (фото 190px), Зелёная (текст и кнопки) зоны
+    // Рендер Ленты Анонсов (Жёлтая зона - заголовок, Красная - единое медиа/видеоплеер 190px, Зелёная - текст с эмодзи ТГ)
     function renderNewsSlider() {
       const container = document.getElementById('home-news-list');
       const controls = document.getElementById('news-step-controls');
@@ -1241,10 +1406,10 @@
       document.getElementById('news-next-btn').disabled = (currentNewsIndex === globalNewsData.length - 1);
 
       const safeTitle = item.title
-        ? String(item.title).replace(/</g, "&lt;")
+        ? formatTextWithTgEmojis(item.title)
         : "АНОНС СНО МГСУ";
-      const imgSrc = (item.preview && String(item.preview).trim() !== "") ? item.preview : NOTHING_DEFAULT_IMAGE;
-      const safeText = String(item.text || "").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      const mediaHtml = buildMediaFrameHtml(item.preview);
+      const safeText = formatTextWithTgEmojis(item.text);
       
       const linkBtn = (item.link && item.link.startsWith('http'))
         ? `<button class="btn-primary" style="margin-top: 14px;" onclick="window.Telegram.WebApp.openLink('${item.link}')">🔗 ${item.btnText || 'Перейти по ссылке'}</button>`
@@ -1259,7 +1424,6 @@
 
       container.innerHTML = `
         <div class="ann-split-grid">
-          <!-- ЖЁЛТАЯ ЗОНА: Заголовок и дата -->
           <div class="ann-yellow-zone">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
               <span class="mono-label" style="color: var(--sno-ice);">📅 ${formatLocalDate(item.date)}</span>
@@ -1268,12 +1432,10 @@
             <div class="ndot-title" style="font-size: 16px; color: var(--text-primary); word-break: break-word;">${safeTitle}</div>
           </div>
 
-          <!-- КРАСНАЯ ЗОНА: Единая рамка 190px (16:9) -->
           <div class="ann-red-zone">
-            <img src="${imgSrc}" class="nothing-img" onerror="this.src=NOTHING_DEFAULT_IMAGE">
+            ${mediaHtml}
           </div>
 
-          <!-- ЗЕЛЁНАЯ ЗОНА: Текст и интерактив -->
           <div class="ann-green-zone">
             <div style="font-size: 14px; line-height: 1.55; white-space: pre-wrap; word-break: break-word; max-height: 210px; overflow-y: auto; padding-right: 4px;">${safeText}</div>
             <div>
@@ -1283,6 +1445,7 @@
           </div>
         </div>
       `;
+      applyTelegramEmojis(container);
     }
 
     function changeNewsSlide(delta) {
@@ -1294,7 +1457,6 @@
       const listEl = document.getElementById('news-list');
       if (!listEl) return;
       listEl.innerHTML = globalNewsData.map((n, i) => {
-        const previewSrc = (n.preview && String(n.preview).trim() !== "") ? n.preview : NOTHING_DEFAULT_IMAGE;
         return `<div class="card" style="padding: 14px; margin-bottom: 12px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
             <span class="mono-label">📅 ${formatLocalDate(n.date)}</span>
@@ -1304,16 +1466,17 @@
             </div>
           </div>
           <div class="event-media-frame" style="margin-bottom: 10px;">
-            <img src="${previewSrc}" class="nothing-img" onerror="this.src=NOTHING_DEFAULT_IMAGE">
+            ${buildMediaFrameHtml(n.preview)}
           </div>
-          ${n.title ? `<div style="font-weight:700; margin-bottom:6px; color: var(--sno-ice);">${n.title}</div>` : ''}
-          <div style="font-size: 13.5px; margin-bottom: 12px; line-height: 1.4; white-space: pre-wrap;">${String(n.text)}</div>
+          ${n.title ? `<div style="font-weight:700; margin-bottom:6px; color: var(--sno-ice);">${formatTextWithTgEmojis(n.title)}</div>` : ''}
+          <div style="font-size: 13.5px; margin-bottom: 12px; line-height: 1.4; white-space: pre-wrap;">${formatTextWithTgEmojis(n.text)}</div>
           <div style="display: flex; gap: 8px;">
             <button class="btn-outline" style="flex: 1;" onclick="openEditAnnouncementModal(${i})">✎ Редактировать</button>
             <button class="btn-outline" style="flex: 1;" onclick="openAdminForCreate(\`${String(n.text).replace(/`/g, '')}\`)">📅 В мероприятие</button>
           </div>
         </div>`;
       }).join('') || "<div class='mono-label' style='text-align: center;'>НЕТ ЗАПИСЕЙ</div>";
+      applyTelegramEmojis(listEl);
     }
 
     function openStandaloneAnnouncementModal() {
@@ -1330,7 +1493,7 @@
       document.getElementById('sa-btntext').value = "";
       document.getElementById('sa-post-channel').checked = false;
       document.getElementById('sa-post-channel-wrap').style.display = 'flex';
-      document.getElementById('sa-upload-label').innerText = "🖼 ВЫБРАТЬ ФАЙЛ ИЗ ГАЛЕРЕИ";
+      document.getElementById('sa-upload-label').innerText = "🖼 ВЫБРАТЬ ФОТО / GIF ИЗ ГАЛЕРЕИ";
       document.getElementById('sa-preview-current-wrap').style.display = 'none';
       openSubView('standalone-ann-view');
     }
@@ -1361,13 +1524,13 @@
       } else if (item.preview) {
         uploadedAnnPreviewBase64 = null;
         document.getElementById('sa-preview-url').value = item.preview;
-        document.getElementById('sa-upload-label').innerText = "🖼 ЗАМЕНИТЬ ПРЕВЬЮ ИЗ ГАЛЕРЕИ";
+        document.getElementById('sa-upload-label').innerText = "🖼 ЗАМЕНИТЬ ФОТО / GIF ИЗ ГАЛЕРЕИ";
         document.getElementById('sa-preview-current-img').src = item.preview;
         document.getElementById('sa-preview-current-wrap').style.display = 'flex';
       } else {
         uploadedAnnPreviewBase64 = null;
         document.getElementById('sa-preview-url').value = "";
-        document.getElementById('sa-upload-label').innerText = "🖼 ВЫБРАТЬ ФАЙЛ ИЗ ГАЛЕРЕИ";
+        document.getElementById('sa-upload-label').innerText = "🖼 ВЫБРАТЬ ФОТО / GIF ИЗ ГАЛЕРЕИ";
         document.getElementById('sa-preview-current-wrap').style.display = 'none';
       }
 
@@ -1386,42 +1549,48 @@
         ? uploadedAnnPreviewBase64
         : document.getElementById('sa-preview-url').value.trim();
       const safePreview = (rawPreview && rawPreview.length < 45000) ? rawPreview : "";
+      const titleVal = document.getElementById('sa-title').value.trim();
+      const descVal = document.getElementById('sa-desc').value.trim();
+      const linkVal = document.getElementById('sa-link').value.trim();
+      const btnTextVal = document.getElementById('sa-btntext').value.trim() || "Подробнее";
 
       if (isEditing) {
         const oldItem = globalNewsData[editIdx];
         const finalId = oldItem.msgId || ("app_" + Date.now());
-        const editPayload = {
-          app_action: "edit_standalone_announcement",
-          msgId: finalId,
-          originalText: oldItem.text || "",
-          originalTitle: oldItem.title || "",
-          title: document.getElementById('sa-title').value.trim(),
-          preview: safePreview,
-          desc: document.getElementById('sa-desc').value.trim(),
-          link: document.getElementById('sa-link').value.trim(),
-          btnText: document.getElementById('sa-btntext').value.trim() || "Подробнее"
-        };
+        const mirrorName = ANN_PREFIX + titleVal;
+        const oldMirrorName = oldItem.mirrorEventName || (ANN_PREFIX + (oldItem.title || ""));
 
-        // 1. Сразу обновляем в памяти и в localStorage (чтобы не пропало при перезагрузке)
         globalNewsData[editIdx] = {
           date: oldItem.date || new Date().toISOString(),
-          title: editPayload.title,
-          text: editPayload.desc,
-          preview: editPayload.preview,
-          link: editPayload.link,
-          btnText: editPayload.btnText,
-          msgId: finalId
+          title: titleVal,
+          text: descVal,
+          preview: safePreview,
+          link: linkVal,
+          btnText: btnTextVal,
+          msgId: finalId,
+          mirrorEventName: mirrorName
         };
         saveLocalAnnouncements(globalNewsData);
 
-        // 2. Отправляем в Google Таблицу
         try {
           const urlPreviewParam = safePreview.startsWith("data:") ? "" : safePreview;
-          fetch(`${APPS_SCRIPT_URL}?action=edit_standalone_announcement&msgId=${encodeURIComponent(finalId)}&title=${encodeURIComponent(editPayload.title)}&preview=${encodeURIComponent(urlPreviewParam)}&desc=${encodeURIComponent(editPayload.desc)}&link=${encodeURIComponent(editPayload.link)}&btnText=${encodeURIComponent(editPayload.btnText)}`).catch(()=>{});
+          // Канал 1: Зеркальное обновление через edit_event (работает даже на старом Код.gs!)
+          fetch(`${APPS_SCRIPT_URL}?action=edit_event&originalName=${encodeURIComponent(oldMirrorName)}&name=${encodeURIComponent(mirrorName)}&datetime=${encodeURIComponent(globalNewsData[editIdx].date)}&endtime=${encodeURIComponent(btnTextVal)}&deadline=${encodeURIComponent(finalId)}&photo=${encodeURIComponent(urlPreviewParam)}&desc=${encodeURIComponent(descVal)}&regType=${encodeURIComponent(linkVal || 'no')}&exemption=false`).catch(()=>{});
+          // Канал 2: Прямое обновление листа News
           await fetch(APPS_SCRIPT_URL, {
             method: "POST",
             headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify(editPayload)
+            body: JSON.stringify({
+              app_action: "edit_standalone_announcement",
+              msgId: finalId,
+              originalText: oldItem.text || "",
+              originalTitle: oldItem.title || "",
+              title: titleVal,
+              preview: safePreview,
+              desc: descVal,
+              link: linkVal,
+              btnText: btnTextVal
+            })
           });
         } catch (err) {}
 
@@ -1433,40 +1602,45 @@
       } else {
         const createdId = "app_" + Date.now();
         const nowIso = new Date().toISOString();
-        const newAnn = {
-          app_action: "create_standalone_announcement",
-          msgId: createdId,
-          title: document.getElementById('sa-title').value.trim(),
-          preview: safePreview,
-          desc: document.getElementById('sa-desc').value.trim(),
-          link: document.getElementById('sa-link').value.trim(),
-          btnText: document.getElementById('sa-btntext').value.trim() || "Подробнее",
-          postToChannel: document.getElementById('sa-post-channel').checked
-        };
+        const postToCh = document.getElementById('sa-post-channel').checked;
+        const mirrorName = ANN_PREFIX + titleVal;
 
         const newItemObj = {
           date: nowIso,
-          title: newAnn.title,
-          text: newAnn.desc,
+          title: titleVal,
+          text: descVal,
           preview: safePreview,
-          link: newAnn.link,
-          btnText: newAnn.btnText,
-          msgId: createdId
+          link: linkVal,
+          btnText: btnTextVal,
+          msgId: createdId,
+          mirrorEventName: mirrorName
         };
 
-        // 1. Мгновенно сохраняем в локальную базу и массив (никогда не исчезнет при закрытии бота)
+        // 1. Сохраняем в localStorage + Telegram CloudStorage
         globalNewsData.unshift(newItemObj);
         saveLocalAnnouncements(globalNewsData);
 
-        // 2. Параллельно записываем в Google Таблицу через GET и POST
+        // 2. Отправляем в Google Таблицу сразу по всем каналам (включая 100% рабочий create_event)
         try {
           const urlPreviewParam = safePreview.startsWith("data:") ? "" : safePreview;
-          fetch(`${APPS_SCRIPT_URL}?action=create_standalone_announcement&msgId=${encodeURIComponent(createdId)}&title=${encodeURIComponent(newAnn.title)}&preview=${encodeURIComponent(urlPreviewParam)}&desc=${encodeURIComponent(newAnn.desc)}&link=${encodeURIComponent(newAnn.link)}&btnText=${encodeURIComponent(newAnn.btnText)}&postToChannel=${newAnn.postToChannel}`).catch(()=>{});
-          await fetch(APPS_SCRIPT_URL, {
+          // Зеркальная запись через create_event — гарантированно сохраняется в таблицу на любой версии Код.gs
+          await fetch(`${APPS_SCRIPT_URL}?action=create_event&name=${encodeURIComponent(mirrorName)}&datetime=${encodeURIComponent(nowIso)}&endtime=${encodeURIComponent(btnTextVal)}&deadline=${encodeURIComponent(createdId)}&photo=${encodeURIComponent(urlPreviewParam)}&desc=${encodeURIComponent(descVal)}&regType=${encodeURIComponent(linkVal || 'no')}&exemption=false&postToChannel=${postToCh}`);
+
+          // Запись на лист News
+          fetch(APPS_SCRIPT_URL, {
             method: "POST",
             headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify(newAnn)
-          });
+            body: JSON.stringify({
+              app_action: "create_standalone_announcement",
+              msgId: createdId,
+              title: titleVal,
+              preview: safePreview,
+              desc: descVal,
+              link: linkVal,
+              btnText: btnTextVal,
+              postToChannel: postToCh
+            })
+          }).catch(()=>{});
         } catch (err) {}
 
         currentNewsIndex = 0;
@@ -1484,8 +1658,10 @@
         if (ok) {
           const key = item.msgId ? ("id_" + item.msgId) : ("txt_" + (item.title || "") + "::" + (item.text || ""));
           addDeletedId(key);
+          addDeletedId("txt_" + (item.title || "") + "::" + (item.text || ""));
           if (item.msgId) addDeletedId(item.msgId);
 
+          const mirrorToDelete = item.mirrorEventName || (ANN_PREFIX + (item.title || ""));
           globalNewsData.splice(index, 1);
           saveLocalAnnouncements(globalNewsData);
           currentNewsIndex = 0;
@@ -1493,6 +1669,7 @@
           renderAdminNewsList();
 
           try {
+            fetch(`${APPS_SCRIPT_URL}?action=delete_event&eventName=${encodeURIComponent(mirrorToDelete)}`).catch(()=>{});
             await fetch(`${APPS_SCRIPT_URL}?action=delete_news&msgId=${encodeURIComponent(msgId || '')}&text=${encodeURIComponent(item.text)}`);
           } catch (e) {}
         }
@@ -1786,7 +1963,6 @@
       return false;
     }
 
-    // Плавный сдвиг карусели Афиши мероприятий по 1 карточке справа налево
     function slideEventsCarousel(delta) {
       const track = document.getElementById('events-list');
       const cards = track ? track.querySelectorAll('.event-card') : [];
@@ -1818,7 +1994,8 @@
 
       const visibleEvents = globalEventsData.filter(ev => !hidePast || !isEventPast(ev, now));
 
-      document.getElementById('events-list').innerHTML = visibleEvents.map(ev => {
+      const eventsContainer = document.getElementById('events-list');
+      eventsContainer.innerHTML = visibleEvents.map(ev => {
         const isJoined = ev.participants && String(ev.participants).includes(String(currentUserId));
         let btnHtml = ""; let statusHtml = "";
         
@@ -1860,29 +2037,30 @@
         const adminEBtn = canCreateGlobal ? `<div style="display: flex; gap: 8px; margin-top: 8px;"><button class="btn-outline" onclick="event.stopPropagation(); openAdminForEdit('${ev.name}')" style="flex: 1;">✏️ Изменить</button><button class="btn-outline" onclick="event.stopPropagation(); deleteEvent('${ev.name}')" style="flex: 1; color: var(--danger);">🗑️ Удалить</button></div>` : '';
         const exemptionHtml = (ev.exemption === 'true') ? `<div class="badge-pill" style="margin-bottom: 12px;">🎓 ОСВОБОЖДЕНИЕ ОТ ПАР</div>` : '';
         const endTimeInfo = ev.endtime ? `<div class="mono-label" style="margin-bottom: 6px;">🏁 ОКОНЧАНИЕ: ${formatLocalDate(ev.endtime)}</div>` : '';
-        const evImgSrc = (!ev.photo || ev.photo.includes("unsplash.com")) ? NOTHING_DEFAULT_IMAGE : ev.photo;
 
         return `<div class="card event-card" onclick="toggleEvent(this)">
-          <!-- Единая рамка изображения 190px (16:9), идентичная Красной зоне анонса -->
+          <!-- Единая рамка 190px (16:9) с авто-поддержкой фото, GIF и видеоплеера YouTube/VK -->
           <div class="event-media-frame">
-            <img src="${evImgSrc}" class="nothing-img" onerror="this.src=NOTHING_DEFAULT_IMAGE">
+            ${buildMediaFrameHtml(ev.photo)}
           </div>
           <div class="event-body">
             ${statusHtml}
             <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
-              <h3 style="margin: 0; font-size: 16px; font-weight: 700;">${ev.name}</h3>
+              <h3 style="margin: 0; font-size: 16px; font-weight: 700;">${formatTextWithTgEmojis(ev.name)}</h3>
               <span class="mono-label" style="color: var(--sno-ice); flex-shrink: 0;">[ + ]</span>
             </div>
             <div class="event-details">
               ${endTimeInfo}
               ${(ev.deadline && !isJoined) ? `<div class="mono-label" style="color: var(--danger); margin-bottom: 8px;">⏳ ДЕДЛАЙН: ${formatLocalDate(ev.deadline)}</div>` : ''}
-              ${ev.desc ? `<p class="event-desc-text" style="color: var(--text-primary); opacity: 0.9;">${ev.desc}</p>` : ''}
+              ${ev.desc ? `<p class="event-desc-text" style="color: var(--text-primary); opacity: 0.9;">${formatTextWithTgEmojis(ev.desc)}</p>` : ''}
               ${exemptionHtml}
               <div style="margin-top: 12px;">${btnHtml}${adminPBtn}${adminEBtn}</div>
             </div>
           </div>
         </div>`;
       }).join('') || `<div class="card" style="text-align: center; width: 100%;"><span class="mono-label">НЕТ АКТИВНЫХ МЕРОПРИЯТИЙ</span></div>`;
+
+      applyTelegramEmojis(eventsContainer);
 
       const evControls = document.getElementById('events-carousel-controls');
       const minForCarousel = window.innerWidth >= 900 ? 3 : 1;
@@ -1913,14 +2091,41 @@
       const adminIds = ["1486703011", "123456789", "789596527", "526927711"];
       
       try {
-        const response = await fetch(`${APPS_SCRIPT_URL}?t=${Date.now()}`);
+        const [response, cloudNews] = await Promise.all([
+          fetch(`${APPS_SCRIPT_URL}?t=${Date.now()}`),
+          loadCloudStorageAnnouncements()
+        ]);
         const data = await response.json();
         globalParticipantsData = data.participants || [];
-        globalEventsData = data.events || [];
-        // Объединяем серверные анонсы из таблицы с локально сохраненными (защита от пропадания)
-        globalNewsData = mergeServerAndLocalNews(data.news || []);
+
+        // Отделяем обычные мероприятия от зеркально сохраненных анонсов ([ANNOUNCEMENT]::)
+        const rawEvents = data.events || [];
+        const mirrorAnnouncements = [];
+        globalEventsData = [];
+
+        rawEvents.forEach(ev => {
+          const evName = String(ev.name || "");
+          if (evName.startsWith(ANN_PREFIX)) {
+            mirrorAnnouncements.unshift({
+              date: ev.datetime || new Date().toISOString(),
+              title: evName.replace(ANN_PREFIX, ""),
+              text: ev.desc || "",
+              preview: (ev.photo && !String(ev.photo).includes("unsplash.com")) ? ev.photo : "",
+              link: (ev.regType && String(ev.regType).startsWith("http")) ? ev.regType : "",
+              btnText: ev.endtime || "Подробнее",
+              msgId: ev.deadline || ("mirror_" + evName),
+              mirrorEventName: evName
+            });
+          } else {
+            globalEventsData.push(ev);
+          }
+        });
+
+        // Объединяем все 4 источника анонсов (LocalStorage + CloudStorage + Зеркало Events + Лист News)
+        globalNewsData = mergeAllAnnouncements(data.news || [], mirrorAnnouncements, cloudNews);
+        saveLocalAnnouncements(globalNewsData);
+
         currentUserProfile = globalParticipantsData.find(item => String(item.user_id) === String(currentUserId));
-        
         document.getElementById('loading').style.display = 'none';
 
         if (currentUserProfile) {
@@ -2013,6 +2218,7 @@
           currentNewsIndex = 0;
           renderNewsSlider();
           renderAdminNewsList();
+          applyTelegramEmojis(document.body);
 
         } else {
           document.getElementById('registration-view').style.display = 'block';
