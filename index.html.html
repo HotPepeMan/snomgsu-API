@@ -4,8 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Pixelify+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Подключение Space Grotesk и Space Mono с полной поддержкой кириллицы -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <!-- Подключение оригинальных шрифтов Nothing OS (NDot 57 / NType 82) -->
+  <link href="https://fonts.cdnfonts.com/css/ndot-47" rel="stylesheet">
   <style>
+    @font-face {
+      font-family: 'NType82';
+      src: local('NType 82'), local('NType82-Regular');
+      unicode-range: U+0000-00FF;
+    }
+
     :root {
       --sno-navy: #102048;
       --sno-navy-dark: #09132B;
@@ -20,37 +31,87 @@
       --text-muted: #94B2D8;
       --danger: #FF5252;
       --success: #22C55E;
-      --pixel-font: 'Pixelify Sans', 'DotGothic16', monospace;
+
+      /* Фирменный стек шрифтов Nothing OS с ровной кириллицей */
+      --font-sans: 'NType 82', 'NType82', 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'Lettera Mono LL', 'Space Mono', monospace;
+      --font-ndot: 'NDot 57', 'NDot 47', 'Space Mono', monospace;
     }
 
-    /* ЕДИНЫЙ ПИКСЕЛЬНЫЙ ШРИФТ ДЛЯ ВСЕХ ЭЛЕМЕНТОВ */
-    *, *::before, *::after, body, button, input, textarea, select, span, div, p, h1, h2, h3, h4, label, a {
+    *, *::before, *::after {
       box-sizing: border-box;
-      font-family: var(--pixel-font) !important;
       -webkit-tap-highlight-color: transparent;
-      letter-spacing: 0.4px;
     }
 
     body {
       background-color: var(--bg-main);
       background-image: radial-gradient(rgba(223, 240, 255, 0.1) 1px, transparent 1px);
-      background-size: 14px 14px;
+      background-size: 16px 16px;
       color: var(--text-primary);
+      font-family: var(--font-sans);
       margin: 0;
-      padding: 16px 16px 110px 16px;
+      padding: 18px 18px 115px 18px;
       min-height: 100vh;
+      width: 100%;
+      overflow-x: hidden;
     }
 
+    button, input, textarea, select {
+      font-family: var(--font-sans);
+    }
+
+    /* Заголовки NType-82 / Space Mono — абсолютно ровные для кириллицы и латиницы */
     .ndot-title {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      line-height: 1.25;
+    }
+
+    /* Точечный шрифт NDot-57 строго для цифр, баллов и английских индексов */
+    .ndot-num {
+      font-family: var(--font-ndot);
       letter-spacing: 1.5px;
       text-transform: uppercase;
-      font-weight: 700;
     }
+
+    /* Моноширинные технические подписи Lettera Mono LL / Space Mono */
     .mono-label {
+      font-family: var(--font-mono);
       font-size: 11px;
-      letter-spacing: 1px;
+      font-weight: 400;
+      letter-spacing: 0.8px;
       text-transform: uppercase;
       color: var(--text-muted);
+    }
+
+    /* Адаптивный контейнер на весь экран для ПК */
+    .app-shell {
+      width: 100%;
+      max-width: 1440px;
+      margin: 0 auto;
+    }
+
+    @media (min-width: 900px) {
+      body {
+        padding: 28px 40px 120px 40px;
+      }
+      .desktop-two-col {
+        display: grid;
+        grid-template-columns: 420px 1fr;
+        gap: 24px;
+        align-items: start;
+      }
+      .events-grid-desktop {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+        gap: 18px;
+      }
+      .bottom-dock {
+        max-width: 540px;
+        margin: 0 auto;
+      }
     }
 
     /* Карточки Nothing OS × СНО */
@@ -73,6 +134,7 @@
       background: var(--sno-ice);
       color: var(--sno-navy);
       border-radius: 999px;
+      font-family: var(--font-mono);
       font-size: 11px;
       font-weight: 700;
       text-transform: uppercase;
@@ -83,10 +145,11 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
+      font-family: var(--font-mono);
       font-size: 11px;
       font-weight: 700;
       text-transform: uppercase;
-      padding: 6px 10px;
+      padding: 6px 12px;
       border-radius: 999px;
       border: 1px dashed var(--sno-ice);
       color: var(--sno-ice);
@@ -104,6 +167,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      font-family: var(--font-mono);
       font-size: 26px;
       font-weight: 700;
       background-size: cover;
@@ -126,7 +190,8 @@
       text-align: left;
     }
     .stat-val {
-      font-size: 21px;
+      font-family: var(--font-ndot);
+      font-size: 22px;
       font-weight: 700;
       color: var(--sno-ice);
       margin-top: 4px;
@@ -155,9 +220,11 @@
       color: var(--sno-navy);
       border: none;
       border-radius: 999px;
-      font-size: 13px;
+      font-family: var(--font-mono);
+      font-size: 12px;
       font-weight: 700;
       text-transform: uppercase;
+      letter-spacing: 0.6px;
       cursor: pointer;
       transition: 0.15s;
     }
@@ -170,9 +237,11 @@
       color: var(--sno-ice);
       border: 1px solid var(--border-dot);
       border-radius: 999px;
-      font-size: 12px;
-      font-weight: 600;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
       text-transform: uppercase;
+      letter-spacing: 0.5px;
       cursor: pointer;
     }
 
@@ -183,7 +252,9 @@
       border: 1px solid var(--border-dot);
       padding: 5px 12px;
       border-radius: 999px;
+      font-family: var(--font-sans);
       font-size: 12px;
+      font-weight: 500;
       margin: 0 6px 6px 0;
     }
 
@@ -203,6 +274,7 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      font-family: var(--font-mono);
       font-size: 12px;
       font-weight: 700;
       margin-right: 12px;
@@ -213,17 +285,18 @@
     .rank-1 { background: var(--sno-ice); color: var(--sno-navy); border-color: var(--sno-ice); }
     .rank-2 { background: rgba(223, 240, 255, 0.35); color: #fff; }
     .rank-3 { background: rgba(223, 240, 255, 0.2); color: var(--sno-ice); }
-    .leader-name { font-size: 14px; font-weight: 600; }
-    .leader-score { font-size: 17px; font-weight: 700; color: var(--sno-ice); }
+    .leader-name { font-family: var(--font-sans); font-size: 14px; font-weight: 600; }
+    .leader-score { font-family: var(--font-ndot); font-size: 18px; font-weight: 700; color: var(--sno-ice); }
 
     /* Карточки мероприятий и анонсов */
     .event-card { padding: 0; overflow: hidden; margin-bottom: 14px; cursor: pointer; }
-    .event-image { width: 100%; height: 140px; object-fit: cover; background: var(--sno-navy-dark); display: block; border-bottom: 1px solid var(--border-dot); }
+    .event-image { width: 100%; height: 150px; object-fit: cover; background: var(--sno-navy-dark); display: block; border-bottom: 1px solid var(--border-dot); }
     .event-body { padding: 16px; }
     .event-details { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border-dot); }
     .event-card.expanded .event-details { display: block; }
-    .event-card.expanded .event-image { height: 190px; }
+    .event-card.expanded .event-image { height: 200px; }
     .event-date-badge {
+      font-family: var(--font-mono);
       font-size: 11px;
       color: var(--sno-navy);
       background: var(--sno-ice);
@@ -280,8 +353,8 @@
       background: var(--sno-ice);
       color: var(--sno-navy);
     }
-    .useful-title { font-size: 16px; font-weight: 700; margin: 12px 0 4px 0; color: var(--text-primary); }
-    .useful-sub { font-size: 12px; color: var(--text-muted); line-height: 1.35; }
+    .useful-title { font-family: var(--font-sans); font-size: 16px; font-weight: 700; margin: 12px 0 4px 0; color: var(--text-primary); }
+    .useful-sub { font-family: var(--font-sans); font-size: 12px; color: var(--text-muted); line-height: 1.35; }
     .status-chip {
       display: inline-flex;
       align-items: center;
@@ -291,7 +364,8 @@
       border-radius: 999px;
       background: rgba(223, 240, 255, 0.1);
       color: var(--sno-ice);
-      font-size: 11px;
+      font-family: var(--font-mono);
+      font-size: 10px;
     }
 
     /* Нижнее плавающее меню */
@@ -320,6 +394,7 @@
       border: none;
       background: transparent;
       color: #556987;
+      font-family: var(--font-sans);
       font-size: 12px;
       font-weight: 700;
       cursor: pointer;
@@ -354,7 +429,7 @@
       background: var(--bg-card);
       border: 1px solid var(--sno-ice);
       color: var(--text-primary);
-      width: 100%; max-width: 400px;
+      width: 100%; max-width: 440px;
       border-radius: 24px; padding: 22px;
       max-height: 90vh; overflow-y: auto;
     }
@@ -375,362 +450,374 @@
   </style>
 </head>
 <body>
+  <div class="app-shell">
 
-  <div id="loading" class="ndot-title" style="text-align: center; margin-top: 80px; font-size: 18px; color: var(--sno-ice);">
-    SNO // SYSTEM LOADING...
-  </div>
-
-  <!-- ЭКРАН РЕГИСТРАЦИИ -->
-  <div id="registration-view" class="card" style="display: none; text-align: center; margin-top: 24px;">
-    <div class="mono-label">IDENTIFICATION // REQUIRED</div>
-    <h3 class="ndot-title" style="margin: 8px 0 16px 0; font-size: 22px;">ПРИВЯЗКА ПРОФИЛЯ</h3>
-    <form onsubmit="registerUser(event)" style="text-align: left;">
-      <label class="mono-label">ВАШЕ ПОЛНОЕ ФИО</label>
-      <input type="text" id="name-input" placeholder="Иванов Иван Иванович" required>
-      <label style="display: flex; align-items: flex-start; gap: 10px; font-size: 12px; color: var(--text-muted); margin-top: 16px; cursor: pointer;">
-        <input type="checkbox" required style="width: 18px; height: 18px; margin: 0; accent-color: var(--sno-ice);">
-        Я даю согласие на обработку моих персональных данных
-      </label>
-      <button type="submit" class="btn-primary" id="reg-btn" style="margin-top: 18px;">Активировать профиль</button>
-    </form>
-  </div>
-
-  <!-- МОДАЛЬНОЕ ОКНО КАРТОЧКИ УЧАСТНИКА -->
-  <div id="user-modal" class="modal-overlay" onclick="closeUserModal()">
-    <div class="modal-content" onclick="event.stopPropagation()">
-      <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-        <div style="display: flex; gap: 14px; align-items: center;">
-          <img id="um-photo" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--sno-ice); display: none;">
-          <div id="um-avatar-fallback" class="ndot-title" style="width: 60px; height: 60px; border-radius: 50%; background: var(--sno-ice); color: var(--sno-navy); display: flex; align-items: center; justify-content: center; font-size: 24px;"></div>
-          <div>
-            <h3 id="um-name" style="margin: 0; font-size: 16px;"></h3>
-            <div id="um-role" class="mono-label" style="margin-top: 4px; color: var(--sno-ice);"></div>
-          </div>
-        </div>
-        <button onclick="closeUserModal()" style="background: none; border: none; font-size: 20px; color: var(--text-muted); cursor: pointer;">✕</button>
-      </div>
-      <div style="margin-top: 18px; font-size: 13px; border-top: 1px dashed var(--border-dot); padding-top: 14px;">
-        <div style="margin-bottom: 8px;"><span class="mono-label">ГРУППА:</span> <strong id="um-group"></strong></div>
-        <div id="um-phone-row" style="margin-bottom: 8px;"><span class="mono-label">ТЕЛЕФОН (АРХИВ):</span> <strong id="um-phone"></strong></div>
-        <div style="margin-bottom: 8px;"><span class="mono-label">СОЦСЕТИ:</span> <strong id="um-socials"></strong></div>
-        <div style="margin-bottom: 8px;"><span class="mono-label">ИНТЕРЕСЫ:</span> <span id="um-interests"></span></div>
-      </div>
-      <button class="btn-primary" id="um-tg-btn" style="margin-top: 16px;">Связаться в Telegram</button>
-    </div>
-  </div>
-
-  <!-- ======================================================== -->
-  <!-- ВКЛАДКА 1: ГЛАВНАЯ (ПРОФИЛЬ + РЕЙТИНГ + АДМИНКА ВНИЗУ)   -->
-  <!-- ======================================================== -->
-  <div id="tab-home" style="display: none;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 0 4px;">
-      <div class="ndot-title" style="font-size: 18px; color: var(--sno-ice);">SNO // MGSU.OS</div>
-      <div class="mono-label">2026.PIXEL</div>
+    <div id="loading" class="ndot-num" style="text-align: center; margin-top: 80px; font-size: 18px; color: var(--sno-ice);">
+      SNO // SYSTEM LOADING...
     </div>
 
-    <!-- Карточка Профиля -->
-    <div class="card">
-      <div style="display: flex; gap: 14px; align-items: flex-start;">
-        <div id="avatar"></div>
-        <div style="flex-grow: 1; min-width: 0;">
-          <div class="profile-header-top">
-            <h3 id="user-name" style="margin: 0; font-size: 17px; line-height: 1.25; word-break: break-word;"></h3>
-            <label class="coauthor-pill">
-              <input type="checkbox" id="coauthor-checkbox" onchange="toggleCoauthor(this)" style="width: 13px; height: 13px; margin: 0; accent-color: var(--sno-ice);">
-              СОАВТОР
-            </label>
+    <!-- ЭКРАН РЕГИСТРАЦИИ -->
+    <div id="registration-view" class="card" style="display: none; text-align: center; margin-top: 24px; max-width: 480px; margin-left: auto; margin-right: auto;">
+      <div class="mono-label">IDENTIFICATION // REQUIRED</div>
+      <h3 class="ndot-title" style="margin: 8px 0 16px 0; font-size: 20px;">ПРИВЯЗКА ПРОФИЛЯ</h3>
+      <form onsubmit="registerUser(event)" style="text-align: left;">
+        <label class="mono-label">ВАШЕ ПОЛНОЕ ФИО</label>
+        <input type="text" id="name-input" placeholder="Иванов Иван Иванович" required>
+        <label style="display: flex; align-items: flex-start; gap: 10px; font-size: 12px; color: var(--text-muted); margin-top: 16px; cursor: pointer;">
+          <input type="checkbox" required style="width: 18px; height: 18px; margin: 0; accent-color: var(--sno-ice);">
+          Я даю согласие на обработку моих персональных данных
+        </label>
+        <button type="submit" class="btn-primary" id="reg-btn" style="margin-top: 18px;">Активировать профиль</button>
+      </form>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО КАРТОЧКИ УЧАСТНИКА -->
+    <div id="user-modal" class="modal-overlay" onclick="closeUserModal()">
+      <div class="modal-content" onclick="event.stopPropagation()">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div style="display: flex; gap: 14px; align-items: center;">
+            <img id="um-photo" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--sno-ice); display: none;">
+            <div id="um-avatar-fallback" class="ndot-title" style="width: 60px; height: 60px; border-radius: 50%; background: var(--sno-ice); color: var(--sno-navy); display: flex; align-items: center; justify-content: center; font-size: 24px;"></div>
+            <div>
+              <h3 id="um-name" style="margin: 0; font-size: 16px; font-weight: 700;"></h3>
+              <div id="um-role" class="mono-label" style="margin-top: 4px; color: var(--sno-ice);"></div>
+            </div>
           </div>
-          <div id="user-role" class="badge-pill"></div>
+          <button onclick="closeUserModal()" style="background: none; border: none; font-size: 20px; color: var(--text-muted); cursor: pointer;">✕</button>
+        </div>
+        <div style="margin-top: 18px; font-size: 13px; border-top: 1px dashed var(--border-dot); padding-top: 14px;">
+          <div style="margin-bottom: 8px;"><span class="mono-label">ГРУППА:</span> <strong id="um-group"></strong></div>
+          <div id="um-phone-row" style="margin-bottom: 8px;"><span class="mono-label">ТЕЛЕФОН (АРХИВ):</span> <strong id="um-phone"></strong></div>
+          <div style="margin-bottom: 8px;"><span class="mono-label">СОЦСЕТИ:</span> <strong id="um-socials"></strong></div>
+          <div style="margin-bottom: 8px;"><span class="mono-label">ИНТЕРЕСЫ:</span> <span id="um-interests"></span></div>
+        </div>
+        <button class="btn-primary" id="um-tg-btn" style="margin-top: 16px;">Связаться в Telegram</button>
+      </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- ВКЛАДКА 1: ГЛАВНАЯ (ПРОФИЛЬ + РЕЙТИНГ + АДМИНКА ВНИЗУ)   -->
+    <!-- ======================================================== -->
+    <div id="tab-home" style="display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding: 0 4px;">
+        <div class="ndot-num" style="font-size: 18px; color: var(--sno-ice);">SNO // NOTHING.OS</div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <button onclick="forceFullscreen()" style="background: none; border: 1px solid var(--border-dot); color: var(--sno-ice); border-radius: 999px; padding: 4px 10px; font-family: var(--font-mono); font-size: 10px; cursor: pointer;">[ ⛶ ПОЛНЫЙ ЭКРАН ]</button>
+          <div class="mono-label">NTYPE-82</div>
         </div>
       </div>
 
-      <!-- Виджеты показателей: Баллы, Позиция в рейтинге, Группа -->
-      <div class="stat-grid">
-        <div class="stat-widget">
-          <div class="mono-label">БАЛЛЫ</div>
-          <div id="user-score" class="stat-val">0</div>
+      <div class="desktop-two-col">
+        <!-- Левая колонка на ПК: Профиль -->
+        <div>
+          <div class="card">
+            <div style="display: flex; gap: 14px; align-items: flex-start;">
+              <div id="avatar"></div>
+              <div style="flex-grow: 1; min-width: 0;">
+                <div class="profile-header-top">
+                  <h3 id="user-name" style="margin: 0; font-size: 17px; font-weight: 700; line-height: 1.25; word-break: break-word;"></h3>
+                  <label class="coauthor-pill">
+                    <input type="checkbox" id="coauthor-checkbox" onchange="toggleCoauthor(this)" style="width: 13px; height: 13px; margin: 0; accent-color: var(--sno-ice);">
+                    СОАВТОР
+                  </label>
+                </div>
+                <div id="user-role" class="badge-pill"></div>
+              </div>
+            </div>
+
+            <!-- Виджеты показателей: Баллы, Позиция в рейтинге, Группа -->
+            <div class="stat-grid">
+              <div class="stat-widget">
+                <div class="mono-label">БАЛЛЫ</div>
+                <div id="user-score" class="stat-val">0</div>
+              </div>
+              <div class="stat-widget">
+                <div class="mono-label">ПОЗИЦИЯ</div>
+                <div id="my-rank" class="stat-val">#—</div>
+              </div>
+              <div class="stat-widget">
+                <div class="mono-label">ГРУППА</div>
+                <div id="user-group" style="font-family: var(--font-mono); font-weight: 700; font-size: 14px; color: var(--sno-ice); margin-top: 8px;">—</div>
+              </div>
+            </div>
+
+            <!-- Интересы и Настройки профиля -->
+            <div style="margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--border-dot);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <span class="mono-label">НАУЧНЫЕ ИНТЕРЕСЫ И НАСТРОЙКИ</span>
+                <button onclick="editInterests()" id="edit-interests-btn" class="mono-label" style="background: none; border: none; color: var(--sno-ice); cursor: pointer; padding: 0;">[ НАСТРОИТЬ ⚙ ]</button>
+              </div>
+              <div id="interests-list"></div>
+
+              <!-- Форма редактирования профиля -->
+              <div id="interests-edit-box" style="display: none; margin-top: 12px;">
+                <label class="mono-label">НАУЧНЫЕ ИНТЕРЕСЫ (ЧЕРЕЗ ЗАПЯТУЮ)</label>
+                <input type="text" id="interests-input" placeholder="Например: BIM, ЖБК, Геотехника">
+
+                <label class="mono-label" style="display: block; margin-top: 12px;">ДРУГИЕ СОЦСЕТИ (ВК, ПОРТФОЛИО И Т.Д.)</label>
+                <input type="text" id="socials-input" placeholder="https://vk.com/...">
+
+                <label class="mono-label" style="display: block; margin-top: 12px;">ФОТО ПРОФИЛЯ ИЗ ГАЛЕРЕИ УСТРОЙСТВА</label>
+                <label class="upload-zone" style="display: block;">
+                  <input type="file" id="profile-photo-file" accept="image/*" style="display: none;" onchange="handleProfilePhotoUpload(this)">
+                  <span id="profile-upload-label" class="mono-label" style="color: var(--sno-ice);">📷 ВЫБРАТЬ ФОТО ИЗ ГАЛЕРЕИ</span>
+                </label>
+                <div id="profile-photo-preview-wrap" style="display: none; align-items: center; gap: 10px; margin-top: 10px;">
+                  <img id="profile-photo-preview" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 1px solid var(--sno-ice);">
+                  <button type="button" class="btn-outline" style="width: auto; padding: 6px 12px; font-size: 10px;" onclick="resetUploadedProfilePhoto()">Сбросить до фото ТГ</button>
+                </div>
+
+                <div style="display: flex; gap: 8px; margin-top: 16px;">
+                  <button class="btn-primary" id="save-profile-btn" onclick="saveInterests()" style="margin-top: 0; flex: 1;">Сохранить</button>
+                  <button class="btn-outline" onclick="cancelEditInterests()" style="margin-top: 0; flex: 1;">Отмена</button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="stat-widget">
-          <div class="mono-label">ПОЗИЦИЯ</div>
-          <div id="my-rank" class="stat-val">#—</div>
-        </div>
-        <div class="stat-widget">
-          <div class="mono-label">ГРУППА</div>
-          <div id="user-group" class="stat-val" style="font-size: 15px; margin-top: 8px;">—</div>
+
+        <!-- Правая колонка на ПК (или нижняя на смартфоне): Рейтинг + Админка внизу -->
+        <div>
+          <details class="card" open>
+            <summary style="cursor: pointer;">
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+                <div>
+                  <div class="mono-label">LEADERBOARD // TOP ACTIVISTS</div>
+                  <div class="ndot-title" style="font-size: 16px; margin-top: 4px; color: var(--text-primary);">РЕЙТИНГ АКТИВИСТОВ СНО</div>
+                </div>
+                <span class="mono-label" style="color: var(--sno-ice); flex-shrink: 0;">[ СВЕРНУТЬ ▼ ]</span>
+              </div>
+            </summary>
+            <div id="leaderboard-list" style="margin-top: 14px;"></div>
+          </details>
+
+          <!-- БЛОК КНОПОК АДМИНОВ И РУКОВОДСТВА (В САМОМ НИЗУ РЕЙТИНГА) -->
+          <div id="admin-bottom-block" class="card" style="display: none; border-color: var(--sno-ice);">
+            <div class="mono-label" style="color: var(--sno-ice);">ADMINISTRATION // TERMINAL</div>
+            <div class="ndot-title" style="font-size: 16px; margin: 4px 0 12px 0;">УПРАВЛЕНИЕ И БАЗА СНО</div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <button id="admin-create-ev-btn" class="btn-primary" style="margin-top: 0;" onclick="openAdminForCreate()">➕ Создать мероприятие</button>
+              <button id="admin-create-ann-btn" class="btn-outline" onclick="openStandaloneAnnouncementModal()">📣 Создать самостоятельный анонс</button>
+              <button id="admin-channel-import-btn" class="btn-outline" onclick="openSubView('news-view')">📥 Импорт постов из ТГ-канала</button>
+              <button class="btn-outline" onclick="openSubView('past-events-admin-view')">📦 Архив прошедших (Выгрузка CSV)</button>
+              <button class="btn-outline" onclick="renderAllParticipants()">👥 Вся база участников СНО</button>
+            </div>
+          </div>
         </div>
       </div>
+    </div>
 
-      <!-- Интересы и Настройки профиля (Без ввода телефона + Загрузка фото из галереи) -->
-      <div style="margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--border-dot);">
+    <!-- ======================================================== -->
+    <!-- ВКЛАДКА 2: АНОНСЫ И МЕРОПРИЯТИЯ                          -->
+    <!-- ======================================================== -->
+    <div id="tab-announcements" style="display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+        <div>
+          <div class="mono-label">FEED // EVENTS & NEWS</div>
+          <div class="ndot-title" style="font-size: 18px;">АНОНСЫ И СОБЫТИЯ</div>
+        </div>
+        <label class="coauthor-pill" style="cursor: pointer;">
+          <input type="checkbox" id="hide-past-checkbox" checked onchange="renderEventsFeed()" style="width: 13px; height: 13px; margin: 0; accent-color: var(--sno-ice);">
+          СКРЫТЬ ПРОШЕДШИЕ
+        </label>
+      </div>
+
+      <!-- Блок самостоятельных анонсов и постов канала -->
+      <div class="card" id="announcements-box">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-          <span class="mono-label">НАУЧНЫЕ ИНТЕРЕСЫ И НАСТРОЙКИ</span>
-          <button onclick="editInterests()" id="edit-interests-btn" style="background: none; border: none; color: var(--sno-ice); font-size: 11px; cursor: pointer; padding: 0;">[ НАСТРОИТЬ ⚙ ]</button>
-        </div>
-        <div id="interests-list"></div>
-
-        <!-- Форма редактирования профиля -->
-        <div id="interests-edit-box" style="display: none; margin-top: 12px;">
-          <label class="mono-label">НАУЧНЫЕ ИНТЕРЕСЫ (ЧЕРЕЗ ЗАПЯТУЮ)</label>
-          <input type="text" id="interests-input" placeholder="Например: BIM, ЖБК, Геотехника">
-
-          <label class="mono-label" style="display: block; margin-top: 12px;">ДРУГИЕ СОЦСЕТИ (ВК, ПОРТФОЛИО И Т.Д.)</label>
-          <input type="text" id="socials-input" placeholder="https://vk.com/...">
-
-          <label class="mono-label" style="display: block; margin-top: 12px;">ФОТО ПРОФИЛЯ ИЗ ГАЛЕРЕИ УСТРОЙСТВА</label>
-          <label class="upload-zone" style="display: block;">
-            <input type="file" id="profile-photo-file" accept="image/*" style="display: none;" onchange="handleProfilePhotoUpload(this)">
-            <span id="profile-upload-label" class="mono-label" style="color: var(--sno-ice);">📷 ВЫБРАТЬ ФОТО ИЗ ГАЛЕРЕИ</span>
-          </label>
-          <div id="profile-photo-preview-wrap" style="display: none; align-items: center; gap: 10px; margin-top: 10px;">
-            <img id="profile-photo-preview" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 1px solid var(--sno-ice);">
-            <button type="button" class="btn-outline" style="width: auto; padding: 6px 12px; font-size: 10px;" onclick="resetUploadedProfilePhoto()">Сбросить до фото ТГ</button>
-          </div>
-
-          <div style="display: flex; gap: 8px; margin-top: 16px;">
-            <button class="btn-primary" id="save-profile-btn" onclick="saveInterests()" style="margin-top: 0; flex: 1;">Сохранить</button>
-            <button class="btn-outline" onclick="cancelEditInterests()" style="margin-top: 0; flex: 1;">Отмена</button>
+          <span class="mono-label" style="color: var(--sno-ice);">📢 ЛЕНТА АНОНСОВ СНО</span>
+          <div id="news-step-controls" style="display: none; align-items: center; gap: 6px;">
+            <button class="btn-outline" id="news-prev-btn" style="width: auto; padding: 4px 10px; font-size: 10px;" onclick="changeNewsSlide(-1)">◀</button>
+            <span id="news-counter" class="mono-label" style="color: var(--sno-ice);">1/1</span>
+            <button class="btn-outline" id="news-next-btn" style="width: auto; padding: 4px 10px; font-size: 10px;" onclick="changeNewsSlide(1)">▶</button>
           </div>
         </div>
+        <div id="home-news-list"></div>
       </div>
+
+      <!-- Список карточек мероприятий -->
+      <div class="mono-label" style="margin: 16px 0 10px 4px;">АФИША МЕРОПРИЯТИЙ</div>
+      <div id="events-list" class="events-grid-desktop"></div>
     </div>
 
-    <!-- ОБЩИЙ РЕЙТИНГ СНО (Внизу главной страницы, без Гула и Вахитова) -->
-    <details class="card" open>
-      <summary style="cursor: pointer;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
+    <!-- ======================================================== -->
+    <!-- ВКЛАДКА 3: ПОЛЕЗНОЕ                                      -->
+    <!-- ======================================================== -->
+    <div id="tab-useful" style="display: none;">
+      <div class="mono-label" style="margin-bottom: 4px;">MODULES // RESOURCES</div>
+      <div class="ndot-title" style="font-size: 18px; margin-bottom: 14px;">ПОЛЕЗНЫЕ МАТЕРИАЛЫ</div>
+
+      <div class="useful-banner" onclick="openSubView('coauthors-view')">
+        <div class="useful-icon-box">🤝</div>
+        <div style="flex-grow: 1;">
+          <div class="useful-title" style="margin-top: 0;">Поиск соавторов</div>
+          <div class="useful-sub">Найди коллегу из МГСУ для совместной научной статьи или гранта</div>
+          <div class="status-chip" id="coauthors-count-chip">● загрузка...</div>
+        </div>
+        <div class="mono-label" style="font-size: 18px; color: var(--sno-ice);">›</div>
+      </div>
+
+      <div class="useful-grid">
+        <div class="useful-tile" onclick="window.Telegram.WebApp.openLink('https://drive.google.com/drive/folders/ВАША_ССЫЛКА_ТУТ')">
+          <div class="useful-icon-box">📚</div>
           <div>
-            <div class="mono-label">LEADERBOARD // TOP ACTIVISTS</div>
-            <div class="ndot-title" style="font-size: 18px; margin-top: 2px;">РЕЙТИНГ АКТИВИСТОВ СНО</div>
+            <div class="useful-title">База знаний</div>
+            <div class="useful-sub">Банк статей, шаблоны, ГОСТы и гайды СНО</div>
           </div>
-          <span class="mono-label" style="color: var(--sno-ice);">[ СВЕРНУТЬ ▼ ]</span>
         </div>
-      </summary>
-      <div id="leaderboard-list" style="margin-top: 14px;"></div>
-    </details>
 
-    <!-- БЛОК КНОПОК АДМИНОВ И РУКОВОДСТВА (В САМОМ НИЗУ РЕЙТИНГА) -->
-    <div id="admin-bottom-block" class="card" style="display: none; border-color: var(--sno-ice);">
-      <div class="mono-label" style="color: var(--sno-ice);">ADMINISTRATION // TERMINAL</div>
-      <div class="ndot-title" style="font-size: 17px; margin: 4px 0 12px 0;">УПРАВЛЕНИЕ И БАЗА СНО</div>
-      <div style="display: flex; flex-direction: column; gap: 8px;">
-        <button id="admin-create-ev-btn" class="btn-primary" style="margin-top: 0;" onclick="openAdminForCreate()">➕ Создать мероприятие</button>
-        <button id="admin-create-ann-btn" class="btn-outline" onclick="openStandaloneAnnouncementModal()">📣 Создать самостоятельный анонс</button>
-        <button id="admin-channel-import-btn" class="btn-outline" onclick="openSubView('news-view')">📥 Импорт постов из ТГ-канала</button>
-        <button class="btn-outline" onclick="openSubView('past-events-admin-view')">📦 Архив прошедших (Выгрузка CSV)</button>
-        <button class="btn-outline" onclick="renderAllParticipants()">👥 Вся база участников СНО</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ======================================================== -->
-  <!-- ВКЛАДКА 2: АНОНСЫ И МЕРОПРИЯТИЯ                          -->
-  <!-- ======================================================== -->
-  <div id="tab-announcements" style="display: none;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-      <div>
-        <div class="mono-label">FEED // EVENTS & NEWS</div>
-        <div class="ndot-title" style="font-size: 20px;">АНОНСЫ И СОБЫТИЯ</div>
-      </div>
-      <label class="coauthor-pill" style="cursor: pointer;">
-        <input type="checkbox" id="hide-past-checkbox" checked onchange="renderEventsFeed()" style="width: 13px; height: 13px; margin: 0; accent-color: var(--sno-ice);">
-        СКРЫТЬ ПРОШЕДШИЕ
-      </label>
-    </div>
-
-    <!-- Блок самостоятельных анонсов и постов канала -->
-    <div class="card" id="announcements-box">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-        <span class="mono-label" style="color: var(--sno-ice);">📢 ЛЕНТА АНОНСОВ СНО</span>
-        <div id="news-step-controls" style="display: none; align-items: center; gap: 6px;">
-          <button class="btn-outline" id="news-prev-btn" style="width: auto; padding: 4px 10px; font-size: 10px;" onclick="changeNewsSlide(-1)">◀</button>
-          <span id="news-counter" class="mono-label" style="color: var(--sno-ice);">1/1</span>
-          <button class="btn-outline" id="news-next-btn" style="width: auto; padding: 4px 10px; font-size: 10px;" onclick="changeNewsSlide(1)">▶</button>
-        </div>
-      </div>
-      <div id="home-news-list"></div>
-    </div>
-
-    <!-- Список карточек мероприятий -->
-    <div class="mono-label" style="margin: 16px 0 10px 4px;">АФИША МЕРОПРИЯТИЙ</div>
-    <div id="events-list"></div>
-  </div>
-
-  <!-- ======================================================== -->
-  <!-- ВКЛАДКА 3: ПОЛЕЗНОЕ                                      -->
-  <!-- ======================================================== -->
-  <div id="tab-useful" style="display: none;">
-    <div class="mono-label" style="margin-bottom: 4px;">MODULES // RESOURCES</div>
-    <div class="ndot-title" style="font-size: 20px; margin-bottom: 14px;">ПОЛЕЗНЫЕ МАТЕРИАЛЫ</div>
-
-    <div class="useful-banner" onclick="openSubView('coauthors-view')">
-      <div class="useful-icon-box">🤝</div>
-      <div style="flex-grow: 1;">
-        <div class="useful-title" style="margin-top: 0;">Поиск соавторов</div>
-        <div class="useful-sub">Найди коллегу из МГСУ для совместной научной статьи или гранта</div>
-        <div class="status-chip" id="coauthors-count-chip">● загрузка...</div>
-      </div>
-      <div class="mono-label" style="font-size: 18px; color: var(--sno-ice);">›</div>
-    </div>
-
-    <div class="useful-grid">
-      <div class="useful-tile" onclick="window.Telegram.WebApp.openLink('https://drive.google.com/drive/folders/ВАША_ССЫЛКА_ТУТ')">
-        <div class="useful-icon-box">📚</div>
-        <div>
-          <div class="useful-title">База знаний</div>
-          <div class="useful-sub">Банк статей, шаблоны, ГОСТы и гайды СНО</div>
+        <div class="useful-tile" onclick="window.Telegram.WebApp.openLink('https://forms.yandex.ru/u/6a82ad2c49af47f4fb6ba82d')">
+          <div class="useful-icon-box" style="background: #93C5FD;">🎓</div>
+          <div>
+            <div class="useful-title">Консультация</div>
+            <div class="useful-sub">Разбор научных работ и помощь с публикацией</div>
+          </div>
         </div>
       </div>
 
-      <div class="useful-tile" onclick="window.Telegram.WebApp.openLink('https://forms.yandex.ru/u/6a82ad2c49af47f4fb6ba82d')">
-        <div class="useful-icon-box" style="background: #93C5FD;">🎓</div>
-        <div>
-          <div class="useful-title">Консультация</div>
-          <div class="useful-sub">Разбор научных работ и помощь с публикацией</div>
+      <div class="useful-banner" onclick="contactSupport()">
+        <div class="useful-icon-box" style="background: #60A5FA;">💬</div>
+        <div style="flex-grow: 1;">
+          <div class="useful-title" style="margin-top: 0;">Поддержка бота</div>
+          <div class="useful-sub">Написать напрямую Руслану Вахитову по вопросам работы приложения и СНО</div>
+        </div>
+        <div class="mono-label" style="font-size: 18px; color: var(--sno-ice);">›</div>
+      </div>
+
+      <div class="card" style="margin-top: 14px;">
+        <div class="mono-label" style="margin-bottom: 10px;">OFFICIAL NETWORKS // МЫ В СОЦСЕТЯХ</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <button class="btn-outline" onclick="window.Telegram.WebApp.openLink('https://t.me/snomgsu')">Telegram</button>
+          <button class="btn-outline" onclick="window.Telegram.WebApp.openLink('https://vk.com/snomgsu')">ВКонтакте</button>
+          <button class="btn-outline" onclick="window.Telegram.WebApp.openLink('https://www.youtube.com/@snouniversity')">YouTube</button>
+          <button class="btn-outline" onclick="window.Telegram.WebApp.openLink('https://www.tiktok.com/@snouniversity?_r=1&_t=ZP-9BEeogS7KOs')">TikTok</button>
         </div>
       </div>
     </div>
 
-    <div class="useful-banner" onclick="contactSupport()">
-      <div class="useful-icon-box" style="background: #60A5FA;">💬</div>
-      <div style="flex-grow: 1;">
-        <div class="useful-title" style="margin-top: 0;">Поддержка бота</div>
-        <div class="useful-sub">Написать напрямую Руслану Вахитову по вопросам работы приложения и СНО</div>
-      </div>
-      <div class="mono-label" style="font-size: 18px; color: var(--sno-ice);">›</div>
+    <!-- ======================================================== -->
+    <!-- ДОПОЛНИТЕЛЬНЫЕ ЭКРАНЫ                                    -->
+    <!-- ======================================================== -->
+
+    <div id="coauthors-view" style="display: none;">
+      <button class="btn-outline" style="width: auto; margin-bottom: 14px;" onclick="switchMainTab('useful')">⬅ Назад в Полезное</button>
+      <div class="ndot-title" style="font-size: 17px; margin-bottom: 12px;">АКТИВИСТЫ В ПОИСКЕ СОАВТОРА</div>
+      <div id="coauthors-list" class="events-grid-desktop"></div>
     </div>
 
-    <div class="card" style="margin-top: 14px;">
-      <div class="mono-label" style="margin-bottom: 10px;">OFFICIAL NETWORKS // МЫ В СОЦСЕТЯХ</div>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-        <button class="btn-outline" onclick="window.Telegram.WebApp.openLink('https://t.me/snomgsu')">Telegram</button>
-        <button class="btn-outline" onclick="window.Telegram.WebApp.openLink('https://vk.com/snomgsu')">ВКонтакте</button>
-        <button class="btn-outline" onclick="window.Telegram.WebApp.openLink('https://www.youtube.com/@snouniversity')">YouTube</button>
-        <button class="btn-outline" onclick="window.Telegram.WebApp.openLink('https://www.tiktok.com/@snouniversity?_r=1&_t=ZP-9BEeogS7KOs')">TikTok</button>
-      </div>
+    <div id="past-events-admin-view" style="display: none;">
+      <button class="btn-outline" style="width: auto; margin-bottom: 14px;" onclick="switchMainTab('home')">⬅ Назад на Главную</button>
+      <div class="mono-label">ARCHIVE // COMPLETED EVENTS</div>
+      <div class="ndot-title" style="font-size: 17px; margin-bottom: 12px;">АРХИВ ПРОШЕДШИЙ МЕРОПРИЯТИЙ</div>
+      <div id="past-events-admin-list" class="events-grid-desktop"></div>
     </div>
-  </div>
 
-  <!-- ======================================================== -->
-  <!-- ДОПОЛНИТЕЛЬНЫЕ ЭКРАНЫ                                    -->
-  <!-- ======================================================== -->
-
-  <div id="coauthors-view" style="display: none;">
-    <button class="btn-outline" style="width: auto; margin-bottom: 14px;" onclick="switchMainTab('useful')">⬅ Назад в Полезное</button>
-    <div class="ndot-title" style="font-size: 19px; margin-bottom: 12px;">АКТИВИСТЫ В ПОИСКЕ СОАВТОРА</div>
-    <div id="coauthors-list"></div>
-  </div>
-
-  <div id="past-events-admin-view" style="display: none;">
-    <button class="btn-outline" style="width: auto; margin-bottom: 14px;" onclick="switchMainTab('home')">⬅ Назад на Главную</button>
-    <div class="mono-label">ARCHIVE // COMPLETED EVENTS</div>
-    <div class="ndot-title" style="font-size: 19px; margin-bottom: 12px;">АРХИВ ПРОШЕДШИХ МЕРОПРИЯТИЙ</div>
-    <div id="past-events-admin-list"></div>
-  </div>
-
-  <div id="event-participants-view" style="display: none;">
-    <button class="btn-outline" style="width: auto; margin-bottom: 14px;" onclick="switchMainTab('announcements')">⬅ К списку мероприятий</button>
-    <div class="card">
-      <h3 id="ep-title" style="margin-top: 0; font-size: 18px;"></h3>
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <div class="mono-label">УЧАСТНИКОВ: <strong id="ep-count" style="color: var(--sno-ice);">0</strong></div>
-        <button class="badge-pill" onclick="exportCSV()" style="border: none; cursor: pointer; margin-top: 0;">📥 ВЫГРУЗИТЬ .CSV</button>
-      </div>
-      <div id="ep-list" style="margin-top: 12px;"></div>
-    </div>
-  </div>
-
-  <div id="all-participants-view" style="display: none;">
-    <button class="btn-outline" style="width: auto; margin-bottom: 14px;" onclick="switchMainTab('home')">⬅ Назад на Главную</button>
-    <div class="ndot-title" style="font-size: 19px; margin-bottom: 10px;">БАЗА УЧАСТНИКОВ СНО</div>
-    <input type="text" id="user-search-input" placeholder="Поиск по ФИО..." onkeyup="filterAllParticipants()" style="margin-bottom: 14px;">
-    <div id="all-participants-list"></div>
-  </div>
-
-  <div id="news-view" style="display: none;">
-    <button class="btn-outline" style="width: auto; margin-bottom: 14px;" onclick="switchMainTab('home')">⬅ Назад на Главную</button>
-    <div class="ndot-title" style="font-size: 19px; margin-bottom: 12px;">ИМПОРТ ПОСТОВ ИЗ КАНАЛА</div>
-    <div id="news-list"></div>
-  </div>
-
-  <div id="admin-view" style="display: none;">
-    <button class="btn-outline" style="width: auto; margin-bottom: 14px;" onclick="switchMainTab('home')">⬅ Отмена</button>
-    <div class="card">
-      <h3 id="admin-title" class="ndot-title" style="margin-top: 0;">НОВОЕ МЕРОПРИЯТИЕ</h3>
-      <form onsubmit="submitNewEvent(event)">
-        <input type="hidden" id="ev-originalname">
-        <label class="mono-label">НАЗВАНИЕ *</label>
-        <input type="text" id="ev-name" required placeholder="Научный Хакатон">
-        <label class="mono-label" style="display: block; margin-top: 12px;">ДАТА И ВРЕМЯ НАЧАЛА *</label>
-        <input type="datetime-local" id="ev-datetime" required>
-        <label class="mono-label" style="display: block; margin-top: 12px;">ДАТА И ВРЕМЯ ОКОНЧАНИЯ</label>
-        <input type="datetime-local" id="ev-endtime">
-        <label class="mono-label" style="display: block; margin-top: 12px;">ДЕДЛАЙН РЕГИСТРАЦИИ</label>
-        <input type="datetime-local" id="ev-deadline">
-        <label class="mono-label" style="display: block; margin-top: 12px;">ССЫЛКА НА ОБЛОЖКУ (URL)</label>
-        <input type="text" id="ev-photo" placeholder="https://...">
-        <label class="mono-label" style="display: block; margin-top: 12px;">ОПИСАНИЕ *</label>
-        <textarea id="ev-desc" required placeholder="Подробности мероприятия..."></textarea>
-
-        <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; margin-top: 14px; cursor: pointer;">
-          <input type="checkbox" id="ev-exemption" style="width: 18px; height: 18px; margin: 0;">
-          🎓 Предоставляется освобождение от занятий
-        </label>
-
-        <label class="mono-label" style="display: block; margin-top: 14px;">ТИП РЕГИСТРАЦИИ *</label>
-        <select id="ev-regtype" onchange="toggleExternalLink()">
-          <option value="internal">Внутренняя (Сбор в таблицу)</option>
-          <option value="no">Регистрация не требуется</option>
-          <option value="external">Внешняя ссылка (Форма)</option>
-        </select>
-        <div id="external-link-box" style="display: none; margin-top: 10px;">
-          <label class="mono-label">ССЫЛКА НА ФОРМУ</label>
-          <input type="text" id="ev-externallink" placeholder="https://forms.yandex.ru/...">
+    <div id="event-participants-view" style="display: none;">
+      <button class="btn-outline" style="width: auto; margin-bottom: 14px;" onclick="switchMainTab('announcements')">⬅ К списку мероприятий</button>
+      <div class="card">
+        <h3 id="ep-title" style="margin-top: 0; font-size: 18px;"></h3>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div class="mono-label">УЧАСТНИКОВ: <strong id="ep-count" style="color: var(--sno-ice);">0</strong></div>
+          <button class="badge-pill" onclick="exportCSV()" style="border: none; cursor: pointer; margin-top: 0;">📥 ВЫГРУЗИТЬ .CSV</button>
         </div>
-
-        <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; margin: 16px 0; cursor: pointer; background: rgba(223,240,255,0.08); padding: 12px; border-radius: 14px;">
-          <input type="checkbox" id="ev-post-channel" style="width: 18px; height: 18px; margin: 0;">
-          📢 Дублировать в Telegram-канал
-        </label>
-
-        <button type="submit" class="btn-primary" id="ev-submit-btn">Опубликовать</button>
-      </form>
+        <div id="ep-list" style="margin-top: 12px;"></div>
+      </div>
     </div>
-  </div>
 
-  <!-- ЭКРАН: Создание самостоятельного анонса -->
-  <div id="standalone-ann-view" style="display: none;">
-    <button class="btn-outline" style="width: auto; margin-bottom: 14px;" onclick="switchMainTab('home')">⬅ Отмена</button>
-    <div class="card">
-      <div class="mono-label">BROADCAST // NEW POST</div>
-      <h3 class="ndot-title" style="margin: 4px 0 14px 0;">САМОСТОЯТЕЛЬНЫЙ АНОНС</h3>
-      <form onsubmit="submitStandaloneAnnouncement(event)">
-        <label class="mono-label">ЗАГОЛОВОК АНОНСА *</label>
-        <input type="text" id="sa-title" required placeholder="Например: Открыт набор в рабочую группу">
-
-        <label class="mono-label" style="display: block; margin-top: 12px;">ПРЕВЬЮ-КАРТИНКА (ИЗ ГАЛЕРЕИ ИЛИ URL)</label>
-        <label class="upload-zone" style="display: block;">
-          <input type="file" accept="image/*" style="display: none;" onchange="handleAnnouncementPreviewUpload(this)">
-          <span id="sa-upload-label" class="mono-label" style="color: var(--sno-ice);">🖼 ЗАГРУЗИТЬ ПРЕВЬЮ ИЗ ГАЛЕРЕИ</span>
-        </label>
-        <input type="text" id="sa-preview-url" placeholder="Или вставьте прямую ссылку https://..." style="margin-top: 8px;">
-
-        <label class="mono-label" style="display: block; margin-top: 12px;">ТЕКСТ / ОПИСАНИЕ *</label>
-        <textarea id="sa-desc" required placeholder="Текст вашего анонса..."></textarea>
-
-        <label class="mono-label" style="display: block; margin-top: 12px;">ВНЕШНЯЯ ССЫЛКА (НЕОБЯЗАТЕЛЬНО)</label>
-        <input type="text" id="sa-link" placeholder="https://...">
-
-        <label class="mono-label" style="display: block; margin-top: 12px;">ТЕКСТ КНОПКИ ССЫЛКИ</label>
-        <input type="text" id="sa-btntext" placeholder="Перейти к материалу">
-
-        <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; margin: 16px 0; cursor: pointer; background: rgba(223,240,255,0.08); padding: 12px; border-radius: 14px;">
-          <input type="checkbox" id="sa-post-channel" style="width: 18px; height: 18px; margin: 0;">
-          📢 Опубликовать также в Telegram-канале
-        </label>
-
-        <button type="submit" class="btn-primary" id="sa-submit-btn">Опубликовать анонс</button>
-      </form>
+    <div id="all-participants-view" style="display: none;">
+      <button class="btn-outline" style="width: auto; margin-bottom: 14px;" onclick="switchMainTab('home')">⬅ Назад на Главную</button>
+      <div class="ndot-title" style="font-size: 17px; margin-bottom: 10px;">БАЗА УЧАСТНИКОВ СНО</div>
+      <input type="text" id="user-search-input" placeholder="Поиск по ФИО..." onkeyup="filterAllParticipants()" style="margin-bottom: 14px;">
+      <div id="all-participants-list" class="events-grid-desktop"></div>
     </div>
+
+    <div id="news-view" style="display: none;">
+      <button class="btn-outline" style="width: auto; margin-bottom: 14px;" onclick="switchMainTab('home')">⬅ Назад на Главную</button>
+      <div class="ndot-title" style="font-size: 17px; margin-bottom: 12px;">ИМПОРТ ПОСТОВ ИЗ КАНАЛА</div>
+      <div id="news-list" class="events-grid-desktop"></div>
+    </div>
+
+    <div id="admin-view" style="display: none;">
+      <button class="btn-outline" style="width: auto; margin-bottom: 14px;" onclick="switchMainTab('home')">⬅ Отмена</button>
+      <div class="card" style="max-width: 680px;">
+        <h3 id="admin-title" class="ndot-title" style="margin-top: 0;">НОВОЕ МЕРОПРИЯТИЕ</h3>
+        <form onsubmit="submitNewEvent(event)">
+          <input type="hidden" id="ev-originalname">
+          <label class="mono-label">НАЗВАНИЕ *</label>
+          <input type="text" id="ev-name" required placeholder="Научный Хакатон">
+          <label class="mono-label" style="display: block; margin-top: 12px;">ДАТА И ВРЕМЯ НАЧАЛА *</label>
+          <input type="datetime-local" id="ev-datetime" required>
+          <label class="mono-label" style="display: block; margin-top: 12px;">ДАТА И ВРЕМЯ ОКОНЧАНИЯ</label>
+          <input type="datetime-local" id="ev-endtime">
+          <label class="mono-label" style="display: block; margin-top: 12px;">ДЕДЛАЙН РЕГИСТРАЦИИ</label>
+          <input type="datetime-local" id="ev-deadline">
+          <label class="mono-label" style="display: block; margin-top: 12px;">ССЫЛКА НА ОБЛОЖКУ (URL)</label>
+          <input type="text" id="ev-photo" placeholder="https://...">
+          <label class="mono-label" style="display: block; margin-top: 12px;">ОПИСАНИЕ *</label>
+          <textarea id="ev-desc" required placeholder="Подробности мероприятия..."></textarea>
+
+          <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; margin-top: 14px; cursor: pointer;">
+            <input type="checkbox" id="ev-exemption" style="width: 18px; height: 18px; margin: 0;">
+            🎓 Предоставляется освобождение от занятий
+          </label>
+
+          <label class="mono-label" style="display: block; margin-top: 14px;">ТИП РЕГИСТРАЦИИ *</label>
+          <select id="ev-regtype" onchange="toggleExternalLink()">
+            <option value="internal">Внутренняя (Сбор в таблицу)</option>
+            <option value="no">Регистрация не требуется</option>
+            <option value="external">Внешняя ссылка (Форма)</option>
+          </select>
+          <div id="external-link-box" style="display: none; margin-top: 10px;">
+            <label class="mono-label">ССЫЛКА НА ФОРМУ</label>
+            <input type="text" id="ev-externallink" placeholder="https://forms.yandex.ru/...">
+          </div>
+
+          <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; margin: 16px 0; cursor: pointer; background: rgba(223,240,255,0.08); padding: 12px; border-radius: 14px;">
+            <input type="checkbox" id="ev-post-channel" style="width: 18px; height: 18px; margin: 0;">
+            📢 Дублировать в Telegram-канал
+          </label>
+
+          <button type="submit" class="btn-primary" id="ev-submit-btn">Опубликовать</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ЭКРАН: Создание самостоятельного анонса -->
+    <div id="standalone-ann-view" style="display: none;">
+      <button class="btn-outline" style="width: auto; margin-bottom: 14px;" onclick="switchMainTab('home')">⬅ Отмена</button>
+      <div class="card" style="max-width: 680px;">
+        <div class="mono-label">BROADCAST // NEW POST</div>
+        <h3 class="ndot-title" style="margin: 4px 0 14px 0;">САМОСТОЯТЕЛЬНЫЙ АНОНС</h3>
+        <form onsubmit="submitStandaloneAnnouncement(event)">
+          <label class="mono-label">ЗАГОЛОВОК АНОНСА *</label>
+          <input type="text" id="sa-title" required placeholder="Например: Открыт набор в рабочую группу">
+
+          <label class="mono-label" style="display: block; margin-top: 12px;">ПРЕВЬЮ-КАРТИНКА (ИЗ ГАЛЕРЕИ ИЛИ URL)</label>
+          <label class="upload-zone" style="display: block;">
+            <input type="file" accept="image/*" style="display: none;" onchange="handleAnnouncementPreviewUpload(this)">
+            <span id="sa-upload-label" class="mono-label" style="color: var(--sno-ice);">🖼 ЗАГРУЗИТЬ ПРЕВЬЮ ИЗ ГАЛЕРЕИ</span>
+          </label>
+          <input type="text" id="sa-preview-url" placeholder="Или вставьте прямую ссылку https://..." style="margin-top: 8px;">
+
+          <label class="mono-label" style="display: block; margin-top: 12px;">ТЕКСТ / ОПИСАНИЕ *</label>
+          <textarea id="sa-desc" required placeholder="Текст вашего анонса..."></textarea>
+
+          <label class="mono-label" style="display: block; margin-top: 12px;">ВНЕШНЯЯ ССЫЛКА (НЕОБЯЗАТЕЛЬНО)</label>
+          <input type="text" id="sa-link" placeholder="https://...">
+
+          <label class="mono-label" style="display: block; margin-top: 12px;">ТЕКСТ КНОПКИ ССЫЛКИ</label>
+          <input type="text" id="sa-btntext" placeholder="Перейти к материалу">
+
+          <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; margin: 16px 0; cursor: pointer; background: rgba(223,240,255,0.08); padding: 12px; border-radius: 14px;">
+            <input type="checkbox" id="sa-post-channel" style="width: 18px; height: 18px; margin: 0;">
+            📢 Опубликовать также в Telegram-канале
+          </label>
+
+          <button type="submit" class="btn-primary" id="sa-submit-btn">Опубликовать анонс</button>
+        </form>
+      </div>
+    </div>
+
   </div>
 
   <!-- НИЖНЕЕ МЕНЮ -->
@@ -758,7 +845,18 @@
   <script>
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwhcJfMMlv2ZKcgJ1UKICfXsBlDt5cP2DazV3pW1fcqukOdNDJpeEBNfJescD9wKEzUFg/exec";
     const tg = window.Telegram.WebApp;
-    tg.expand();
+
+    // Полноэкранное раскрытие для ПК и смартфонов
+    function forceFullscreen() {
+      try {
+        tg.expand();
+        if (typeof tg.requestFullscreen === "function") {
+          tg.requestFullscreen();
+        }
+      } catch (e) {}
+    }
+    tg.ready();
+    forceFullscreen();
 
     let currentUserGlobalName = ""; 
     let currentUserProfile = null;
@@ -825,7 +923,6 @@
       } catch(e) { return String(dateString); }
     }
 
-    // Сжатие фото из галереи (квадратный кроп для аватарки или пропорциональное превью для анонса)
     function compressImageFile(file, maxSize, quality, squareCrop, callback) {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -862,7 +959,6 @@
         document.getElementById('profile-upload-label').innerText = "✅ ФОТО ЗАГРУЖЕНО (НАЖМИТЕ СОХРАНИТЬ)";
         document.getElementById('profile-photo-preview').src = base64;
         document.getElementById('profile-photo-preview-wrap').style.display = 'flex';
-        // Сразу обновляем аватарку в шапке профиля
         const avatarDiv = document.getElementById('avatar');
         avatarDiv.style.backgroundImage = `url('${base64}')`;
         avatarDiv.innerHTML = '';
@@ -910,7 +1006,7 @@
       document.getElementById('news-next-btn').disabled = (currentNewsIndex === globalNewsData.length - 1);
 
       const safeTitle = item.title ? `<div style="font-size: 16px; font-weight: 700; margin-bottom: 8px; color: var(--sno-ice);">${String(item.title).replace(/</g, "&lt;")}</div>` : '';
-      const previewImg = item.preview ? `<img src="${item.preview}" style="width: 100%; max-height: 200px; object-fit: cover; border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border-dot);">` : '';
+      const previewImg = item.preview ? `<img src="${item.preview}" style="width: 100%; max-height: 220px; object-fit: cover; border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border-dot);">` : '';
       const safeText = String(item.text || "").replace(/</g, "&lt;").replace(/>/g, "&gt;");
       const linkBtn = (item.link && item.link.startsWith('http'))
         ? `<button class="btn-primary" style="margin-top: 12px;" onclick="window.Telegram.WebApp.openLink('${item.link}')">🔗 ${item.btnText || 'Перейти по ссылке'}</button>`
@@ -924,7 +1020,7 @@
           </div>
           ${previewImg}
           ${safeTitle}
-          <div style="font-size: 14px; line-height: 1.45; white-space: pre-wrap; word-break: break-word;">${safeText}</div>
+          <div style="font-size: 14px; line-height: 1.5; white-space: pre-wrap; word-break: break-word;">${safeText}</div>
           ${linkBtn}
         </div>
       `;
@@ -969,7 +1065,6 @@
           headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify(newAnn)
         });
-        // Сразу добавляем анонс в начало ленты и открываем вкладку Анонсов
         globalNewsData.unshift({
           date: new Date().toISOString(),
           title: newAnn.title,
@@ -1057,7 +1152,6 @@
           headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify(payload)
         });
-        // Мгновенно обновляем данные на экране
         currentUserProfile['Научные интересы'] = interestsVal;
         currentUserProfile['Другие соцсети'] = socialsVal;
         if (uploadedProfilePhotoBase64) {
@@ -1339,7 +1433,7 @@
           <div class="event-body">
             ${statusHtml}
             <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
-              <h3 style="margin: 0; font-size: 17px;">${ev.name}</h3>
+              <h3 style="margin: 0; font-size: 17px; font-weight: 700;">${ev.name}</h3>
               <span class="mono-label" style="color: var(--sno-ice); flex-shrink: 0;">[ + ]</span>
             </div>
             <div class="event-details">
@@ -1358,14 +1452,14 @@
         const pCount = ev.participants ? ev.participants.split(',').filter(x => x.trim() !== '').length : 0;
         return `<div class="card">
           <div class="mono-label">🏁 ЗАВЕРШЕНО // ${formatLocalDate(ev.datetime)}</div>
-          <h3 style="margin: 6px 0 12px 0; font-size: 16px;">${ev.name}</h3>
+          <h3 style="margin: 6px 0 12px 0; font-size: 16px; font-weight: 700;">${ev.name}</h3>
           <div class="mono-label" style="margin-bottom: 12px;">ЗАПИСАВШИХСЯ УЧАСТНИКОВ: <strong style="color: var(--sno-ice);">${pCount}</strong></div>
           <div style="display: flex; gap: 8px;">
             <button class="btn-primary" style="margin-top: 0; flex: 1;" onclick="exportCSVForEvent('${ev.name}')">📥 Скачать CSV</button>
             <button class="btn-outline" style="flex: 1;" onclick="viewParticipants('${ev.name}')">👀 Профили (${pCount})</button>
           </div>
         </div>`;
-      }).join('') || `<div class="card" style="text-align: center;"><span class="mono-label">АРХИВ ПРОШЕДШИХ МЕРОПРИЯТИЙ ПУСТ</span></div>`;
+      }).join('') || `<div class="card" style="text-align: center;"><span class="mono-label">АРХИВ ПРОШЕДШИЙ МЕРОПРИЯТИЙ ПУСТ</span></div>`;
     }
 
     async function loadProfile() {
@@ -1477,7 +1571,7 @@
             return `<div class="card" style="padding: 14px; margin-bottom: 12px;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                 <span class="mono-label">📅 ${formatLocalDate(n.date)}</span>
-                <button onclick="deleteNewsItem('${n.msgId || ''}', ${i})" style="background: none; border: none; color: var(--danger); cursor: pointer; font-size: 11px;">[ УДАЛИТЬ ✕ ]</button>
+                <button onclick="deleteNewsItem('${n.msgId || ''}', ${i})" class="mono-label" style="background: none; border: none; color: var(--danger); cursor: pointer;">[ УДАЛИТЬ ✕ ]</button>
               </div>
               ${n.title ? `<div style="font-weight:700; margin-bottom:6px; color: var(--sno-ice);">${n.title}</div>` : ''}
               <div style="font-size: 13.5px; margin-bottom: 12px; line-height: 1.4; white-space: pre-wrap;">${String(n.text)}</div>
