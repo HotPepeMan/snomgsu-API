@@ -4,11 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <!-- Подключение Space Grotesk и Space Mono с полной поддержкой кириллицы -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-  <!-- Подключение оригинальных шрифтов Nothing OS (NDot 57 / NType 82) -->
   <link href="https://fonts.cdnfonts.com/css/ndot-47" rel="stylesheet">
   <style>
     @font-face {
@@ -32,7 +30,6 @@
       --danger: #FF5252;
       --success: #22C55E;
 
-      /* Фирменный стек шрифтов Nothing OS с ровной кириллицей */
       --font-sans: 'NType 82', 'NType82', 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
       --font-mono: 'Lettera Mono LL', 'Space Mono', monospace;
       --font-ndot: 'NDot 57', 'NDot 47', 'Space Mono', monospace;
@@ -60,7 +57,6 @@
       font-family: var(--font-sans);
     }
 
-    /* Заголовки NType-82 / Space Mono — абсолютно ровные для кириллицы и латиницы */
     .ndot-title {
       font-family: var(--font-mono);
       font-weight: 700;
@@ -69,14 +65,12 @@
       line-height: 1.25;
     }
 
-    /* Точечный шрифт NDot-57 строго для цифр, баллов и английских индексов */
     .ndot-num {
       font-family: var(--font-ndot);
       letter-spacing: 1.5px;
       text-transform: uppercase;
     }
 
-    /* Моноширинные технические подписи Lettera Mono LL / Space Mono */
     .mono-label {
       font-family: var(--font-mono);
       font-size: 11px;
@@ -86,7 +80,6 @@
       color: var(--text-muted);
     }
 
-    /* Адаптивный контейнер на весь экран для ПК */
     .app-shell {
       width: 100%;
       max-width: 1440px;
@@ -114,7 +107,6 @@
       }
     }
 
-    /* Карточки Nothing OS × СНО */
     .card {
       background: var(--bg-card);
       border: 1px solid var(--border-dot);
@@ -125,7 +117,6 @@
       position: relative;
     }
 
-    /* Виджеты и пилюли */
     .badge-pill {
       display: inline-flex;
       align-items: center;
@@ -197,7 +188,6 @@
       margin-top: 4px;
     }
 
-    /* Поля ввода и кнопки */
     input, textarea, select {
       width: 100%;
       padding: 12px 14px;
@@ -258,7 +248,6 @@
       margin: 0 6px 6px 0;
     }
 
-    /* Рейтинг */
     .leaderboard-item {
       display: flex;
       justify-content: space-between;
@@ -288,7 +277,6 @@
     .leader-name { font-family: var(--font-sans); font-size: 14px; font-weight: 600; }
     .leader-score { font-family: var(--font-ndot); font-size: 18px; font-weight: 700; color: var(--sno-ice); }
 
-    /* Карточки мероприятий и анонсов */
     .event-card { padding: 0; overflow: hidden; margin-bottom: 14px; cursor: pointer; }
     .event-image { width: 100%; height: 150px; object-fit: cover; background: var(--sno-navy-dark); display: block; border-bottom: 1px solid var(--border-dot); }
     .event-body { padding: 16px; }
@@ -309,7 +297,6 @@
       margin-right: 6px;
     }
 
-    /* Вкладка "Полезное" */
     .useful-banner {
       background: var(--bg-card);
       border: 1px solid var(--border-dot);
@@ -368,7 +355,6 @@
       font-size: 10px;
     }
 
-    /* Нижнее плавающее меню */
     .bottom-dock {
       position: fixed;
       bottom: 14px;
@@ -417,7 +403,6 @@
     }
     .dock-item svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
 
-    /* Модальное окно */
     .modal-overlay {
       position: fixed; top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(6, 12, 28, 0.78);
@@ -525,7 +510,6 @@
               </div>
             </div>
 
-            <!-- Виджеты показателей: Баллы, Позиция в рейтинге, Группа -->
             <div class="stat-grid">
               <div class="stat-widget">
                 <div class="mono-label">БАЛЛЫ</div>
@@ -598,7 +582,7 @@
             <div style="display: flex; flex-direction: column; gap: 8px;">
               <button id="admin-create-ev-btn" class="btn-primary" style="margin-top: 0;" onclick="openAdminForCreate()">➕ Создать мероприятие</button>
               <button id="admin-create-ann-btn" class="btn-outline" onclick="openStandaloneAnnouncementModal()">📣 Создать самостоятельный анонс</button>
-              <button id="admin-channel-import-btn" class="btn-outline" onclick="openSubView('news-view')">📥 Импорт постов из ТГ-канала</button>
+              <button id="admin-channel-import-btn" class="btn-outline" onclick="openSubView('news-view')">📥 Импорт и ред. постов канала</button>
               <button class="btn-outline" onclick="openSubView('past-events-admin-view')">📦 Архив прошедших (Выгрузка CSV)</button>
               <button class="btn-outline" onclick="renderAllParticipants()">👥 Вся база участников СНО</button>
             </div>
@@ -708,7 +692,7 @@
     <div id="past-events-admin-view" style="display: none;">
       <button class="btn-outline" style="width: auto; margin-bottom: 14px;" onclick="switchMainTab('home')">⬅ Назад на Главную</button>
       <div class="mono-label">ARCHIVE // COMPLETED EVENTS</div>
-      <div class="ndot-title" style="font-size: 17px; margin-bottom: 12px;">АРХИВ ПРОШЕДШИЙ МЕРОПРИЯТИЙ</div>
+      <div class="ndot-title" style="font-size: 17px; margin-bottom: 12px;">АРХИВ ПРОШЕДШИХ МЕРОПРИЯТИЙ</div>
       <div id="past-events-admin-list" class="events-grid-desktop"></div>
     </div>
 
@@ -733,7 +717,7 @@
 
     <div id="news-view" style="display: none;">
       <button class="btn-outline" style="width: auto; margin-bottom: 14px;" onclick="switchMainTab('home')">⬅ Назад на Главную</button>
-      <div class="ndot-title" style="font-size: 17px; margin-bottom: 12px;">ИМПОРТ ПОСТОВ ИЗ КАНАЛА</div>
+      <div class="ndot-title" style="font-size: 17px; margin-bottom: 12px;">УПРАВЛЕНИЕ АНОНСАМИ И ПОСТАМИ КАНАЛА</div>
       <div id="news-list" class="events-grid-desktop"></div>
     </div>
 
@@ -782,22 +766,29 @@
       </div>
     </div>
 
-    <!-- ЭКРАН: Создание самостоятельного анонса -->
+    <!-- ЭКРАН: Создание и Редактирование анонса -->
     <div id="standalone-ann-view" style="display: none;">
-      <button class="btn-outline" style="width: auto; margin-bottom: 14px;" onclick="switchMainTab('home')">⬅ Отмена</button>
+      <button class="btn-outline" style="width: auto; margin-bottom: 14px;" onclick="switchMainTab('announcements')">⬅ Отмена</button>
       <div class="card" style="max-width: 680px;">
-        <div class="mono-label">BROADCAST // NEW POST</div>
-        <h3 class="ndot-title" style="margin: 4px 0 14px 0;">САМОСТОЯТЕЛЬНЫЙ АНОНС</h3>
+        <div class="mono-label" id="sa-Sublabel">BROADCAST // NEW POST</div>
+        <h3 class="ndot-title" id="sa-modal-title" style="margin: 4px 0 14px 0;">САМОСТОЯТЕЛЬНЫЙ АНОНС</h3>
         <form onsubmit="submitStandaloneAnnouncement(event)">
-          <label class="mono-label">ЗАГОЛОВОК АНОНСА *</label>
-          <input type="text" id="sa-title" required placeholder="Например: Открыт набор в рабочую группу">
+          <input type="hidden" id="sa-edit-index" value="-1">
+          <input type="hidden" id="sa-edit-msgid" value="">
+
+          <label class="mono-label">ЗАГОЛОВОК АНОНСА (НЕОБЯЗАТЕЛЬНО ДЛЯ ПОСТОВ ТГ)</label>
+          <input type="text" id="sa-title" placeholder="Например: Открыт набор в рабочую группу">
 
           <label class="mono-label" style="display: block; margin-top: 12px;">ПРЕВЬЮ-КАРТИНКА (ИЗ ГАЛЕРЕИ ИЛИ URL)</label>
           <label class="upload-zone" style="display: block;">
-            <input type="file" accept="image/*" style="display: none;" onchange="handleAnnouncementPreviewUpload(this)">
+            <input type="file" id="sa-file-input" accept="image/*" style="display: none;" onchange="handleAnnouncementPreviewUpload(this)">
             <span id="sa-upload-label" class="mono-label" style="color: var(--sno-ice);">🖼 ЗАГРУЗИТЬ ПРЕВЬЮ ИЗ ГАЛЕРЕИ</span>
           </label>
           <input type="text" id="sa-preview-url" placeholder="Или вставьте прямую ссылку https://..." style="margin-top: 8px;">
+          <div id="sa-preview-current-wrap" style="display: none; align-items: center; gap: 10px; margin-top: 8px;">
+            <img id="sa-preview-current-img" style="width: 64px; height: 42px; object-fit: cover; border-radius: 8px; border: 1px solid var(--sno-ice);">
+            <button type="button" class="btn-outline" style="width: auto; padding: 5px 10px; font-size: 10px;" onclick="clearAnnouncementPreview()">Удалить превью</button>
+          </div>
 
           <label class="mono-label" style="display: block; margin-top: 12px;">ТЕКСТ / ОПИСАНИЕ *</label>
           <textarea id="sa-desc" required placeholder="Текст вашего анонса..."></textarea>
@@ -808,7 +799,7 @@
           <label class="mono-label" style="display: block; margin-top: 12px;">ТЕКСТ КНОПКИ ССЫЛКИ</label>
           <input type="text" id="sa-btntext" placeholder="Перейти к материалу">
 
-          <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; margin: 16px 0; cursor: pointer; background: rgba(223,240,255,0.08); padding: 12px; border-radius: 14px;">
+          <label id="sa-post-channel-wrap" style="display: flex; align-items: center; gap: 10px; font-size: 13px; margin: 16px 0; cursor: pointer; background: rgba(223,240,255,0.08); padding: 12px; border-radius: 14px;">
             <input type="checkbox" id="sa-post-channel" style="width: 18px; height: 18px; margin: 0;">
             📢 Опубликовать также в Telegram-канале
           </label>
@@ -846,7 +837,6 @@
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwhcJfMMlv2ZKcgJ1UKICfXsBlDt5cP2DazV3pW1fcqukOdNDJpeEBNfJescD9wKEzUFg/exec";
     const tg = window.Telegram.WebApp;
 
-    // Полноэкранное раскрытие для ПК и смартфонов
     function forceFullscreen() {
       try {
         tg.expand();
@@ -977,7 +967,16 @@
       compressImageFile(input.files[0], 320, 0.68, false, (base64) => {
         uploadedAnnPreviewBase64 = base64;
         document.getElementById('sa-upload-label').innerText = "✅ ПРЕВЬЮ ЗАГРУЖЕНО ИЗ ГАЛЕРЕИ";
+        document.getElementById('sa-preview-current-img').src = base64;
+        document.getElementById('sa-preview-current-wrap').style.display = 'flex';
       });
+    }
+
+    function clearAnnouncementPreview() {
+      uploadedAnnPreviewBase64 = "";
+      document.getElementById('sa-preview-url').value = "";
+      document.getElementById('sa-upload-label').innerText = "🖼 ЗАГРУЗИТЬ ПРЕВЬЮ ИЗ ГАЛЕРЕИ";
+      document.getElementById('sa-preview-current-wrap').style.display = 'none';
     }
 
     function contactSupport() {
@@ -1012,6 +1011,13 @@
         ? `<button class="btn-primary" style="margin-top: 12px;" onclick="window.Telegram.WebApp.openLink('${item.link}')">🔗 ${item.btnText || 'Перейти по ссылке'}</button>`
         : '';
 
+      const adminActionsHtml = canCreateGlobal ? `
+        <div style="display: flex; gap: 8px; margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--border-dot);">
+          <button class="btn-outline" style="padding: 8px 12px; font-size: 10px; flex: 1;" onclick="openEditAnnouncementModal(${currentNewsIndex})">[ ✎ ИЗМЕНИТЬ ]</button>
+          <button class="btn-outline" style="padding: 8px 12px; font-size: 10px; flex: 1; color: var(--danger);" onclick="deleteNewsItem('${item.msgId || ''}', ${currentNewsIndex})">[ ✕ УДАЛИТЬ ]</button>
+        </div>
+      ` : '';
+
       container.innerHTML = `
         <div style="background: var(--sno-navy-dark); padding: 14px; border-radius: 16px; border: 1px solid var(--border-dot);">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -1022,6 +1028,7 @@
           ${safeTitle}
           <div style="font-size: 14px; line-height: 1.5; white-space: pre-wrap; word-break: break-word;">${safeText}</div>
           ${linkBtn}
+          ${adminActionsHtml}
         </div>
       `;
     }
@@ -1031,56 +1038,172 @@
       renderNewsSlider();
     }
 
+    function renderAdminNewsList() {
+      const listEl = document.getElementById('news-list');
+      if (!listEl) return;
+      listEl.innerHTML = globalNewsData.map((n, i) => {
+        return `<div class="card" style="padding: 14px; margin-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span class="mono-label">📅 ${formatLocalDate(n.date)}</span>
+            <div style="display: flex; gap: 10px;">
+              <button onclick="openEditAnnouncementModal(${i})" class="mono-label" style="background: none; border: none; color: var(--sno-ice); cursor: pointer;">[ ✎ ИЗМЕНИТЬ ]</button>
+              <button onclick="deleteNewsItem('${n.msgId || ''}', ${i})" class="mono-label" style="background: none; border: none; color: var(--danger); cursor: pointer;">[ ✕ УДАЛИТЬ ]</button>
+            </div>
+          </div>
+          ${n.preview ? `<img src="${n.preview}" style="width: 100%; height: 110px; object-fit: cover; border-radius: 10px; margin-bottom: 8px; border: 1px solid var(--border-dot);">` : ''}
+          ${n.title ? `<div style="font-weight:700; margin-bottom:6px; color: var(--sno-ice);">${n.title}</div>` : ''}
+          <div style="font-size: 13.5px; margin-bottom: 12px; line-height: 1.4; white-space: pre-wrap;">${String(n.text)}</div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn-outline" style="flex: 1;" onclick="openEditAnnouncementModal(${i})">✎ Редактировать</button>
+            <button class="btn-outline" style="flex: 1;" onclick="openAdminForCreate(\`${String(n.text).replace(/`/g, '')}\`)">📅 В мероприятие</button>
+          </div>
+        </div>`;
+      }).join('') || "<div class='mono-label' style='text-align: center;'>НЕТ ЗАПИСЕЙ</div>";
+    }
+
     function openStandaloneAnnouncementModal() {
       uploadedAnnPreviewBase64 = null;
+      document.getElementById('sa-edit-index').value = "-1";
+      document.getElementById('sa-edit-msgid').value = "";
+      document.getElementById('sa-Sublabel').innerText = "BROADCAST // NEW POST";
+      document.getElementById('sa-modal-title').innerText = "САМОСТОЯТЕЛЬНЫЙ АНОНС";
+      document.getElementById('sa-submit-btn').innerText = "Опубликовать анонс";
       document.getElementById('sa-title').value = "";
       document.getElementById('sa-preview-url').value = "";
       document.getElementById('sa-desc').value = "";
       document.getElementById('sa-link').value = "";
       document.getElementById('sa-btntext').value = "";
       document.getElementById('sa-post-channel').checked = false;
+      document.getElementById('sa-post-channel-wrap').style.display = 'flex';
       document.getElementById('sa-upload-label').innerText = "🖼 ЗАГРУЗИТЬ ПРЕВЬЮ ИЗ ГАЛЕРЕИ";
+      document.getElementById('sa-preview-current-wrap').style.display = 'none';
+      openSubView('standalone-ann-view');
+    }
+
+    function openEditAnnouncementModal(index) {
+      const item = globalNewsData[index];
+      if (!item) return;
+
+      document.getElementById('sa-edit-index').value = String(index);
+      document.getElementById('sa-edit-msgid').value = item.msgId || "";
+      document.getElementById('sa-Sublabel').innerText = "BROADCAST // EDIT POST";
+      document.getElementById('sa-modal-title').innerText = "РЕДАКТИРОВАНИЕ АНОНСА";
+      document.getElementById('sa-submit-btn').innerText = "Сохранить изменения";
+
+      document.getElementById('sa-title').value = item.title || "";
+      document.getElementById('sa-desc').value = item.text || "";
+      document.getElementById('sa-link').value = item.link || "";
+      document.getElementById('sa-btntext').value = item.btnText || "";
+      document.getElementById('sa-post-channel').checked = false;
+      document.getElementById('sa-post-channel-wrap').style.display = 'none';
+
+      if (item.preview && String(item.preview).startsWith('data:image')) {
+        uploadedAnnPreviewBase64 = item.preview;
+        document.getElementById('sa-preview-url').value = "";
+        document.getElementById('sa-upload-label').innerText = "✅ ТЕКУЩЕЕ ПРЕВЬЮ ИЗ ГАЛЕРЕИ";
+        document.getElementById('sa-preview-current-img').src = item.preview;
+        document.getElementById('sa-preview-current-wrap').style.display = 'flex';
+      } else if (item.preview) {
+        uploadedAnnPreviewBase64 = null;
+        document.getElementById('sa-preview-url').value = item.preview;
+        document.getElementById('sa-upload-label').innerText = "🖼 ЗАМЕНИТЬ ПРЕВЬЮ ИЗ ГАЛЕРЕИ";
+        document.getElementById('sa-preview-current-img').src = item.preview;
+        document.getElementById('sa-preview-current-wrap').style.display = 'flex';
+      } else {
+        uploadedAnnPreviewBase64 = null;
+        document.getElementById('sa-preview-url').value = "";
+        document.getElementById('sa-upload-label').innerText = "🖼 ЗАГРУЗИТЬ ПРЕВЬЮ ИЗ ГАЛЕРЕИ";
+        document.getElementById('sa-preview-current-wrap').style.display = 'none';
+      }
+
       openSubView('standalone-ann-view');
     }
 
     async function submitStandaloneAnnouncement(e) {
       e.preventDefault();
       const btn = document.getElementById('sa-submit-btn');
-      btn.innerText = "Публикация..."; btn.disabled = true;
+      const editIdx = parseInt(document.getElementById('sa-edit-index').value, 10);
+      const isEditing = !isNaN(editIdx) && editIdx >= 0 && globalNewsData[editIdx];
 
-      const previewFinal = uploadedAnnPreviewBase64 || document.getElementById('sa-preview-url').value.trim();
-      const newAnn = {
-        app_action: "create_standalone_announcement",
-        title: document.getElementById('sa-title').value.trim(),
-        preview: previewFinal,
-        desc: document.getElementById('sa-desc').value.trim(),
-        link: document.getElementById('sa-link').value.trim(),
-        btnText: document.getElementById('sa-btntext').value.trim() || "Подробнее",
-        postToChannel: document.getElementById('sa-post-channel').checked
-      };
+      btn.innerText = "Сохранение..."; btn.disabled = true;
 
-      try {
-        await fetch(APPS_SCRIPT_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify(newAnn)
-        });
-        globalNewsData.unshift({
-          date: new Date().toISOString(),
-          title: newAnn.title,
-          text: newAnn.desc,
-          preview: newAnn.preview,
-          link: newAnn.link,
-          btnText: newAnn.btnText,
-          msgId: "app_" + Date.now()
-        });
-        currentNewsIndex = 0;
-        renderNewsSlider();
-        btn.innerText = "Опубликовать анонс"; btn.disabled = false;
-        switchMainTab('announcements');
-      } catch (err) {
-        alert("Ошибка публикации");
-        btn.innerText = "Опубликовать анонс"; btn.disabled = false;
+      const previewFinal = (uploadedAnnPreviewBase64 !== null)
+        ? uploadedAnnPreviewBase64
+        : document.getElementById('sa-preview-url').value.trim();
+
+      if (isEditing) {
+        const oldItem = globalNewsData[editIdx];
+        const editPayload = {
+          app_action: "edit_standalone_announcement",
+          msgId: oldItem.msgId || "",
+          originalText: oldItem.text || "",
+          originalTitle: oldItem.title || "",
+          title: document.getElementById('sa-title').value.trim(),
+          preview: previewFinal,
+          desc: document.getElementById('sa-desc').value.trim(),
+          link: document.getElementById('sa-link').value.trim(),
+          btnText: document.getElementById('sa-btntext').value.trim() || "Подробнее"
+        };
+
+        try {
+          const res = await fetch(APPS_SCRIPT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify(editPayload)
+          });
+          const resJson = await res.json();
+
+          globalNewsData[editIdx].title = editPayload.title;
+          globalNewsData[editIdx].text = editPayload.desc;
+          globalNewsData[editIdx].preview = editPayload.preview;
+          globalNewsData[editIdx].link = editPayload.link;
+          globalNewsData[editIdx].btnText = editPayload.btnText;
+          if (resJson && resJson.id) globalNewsData[editIdx].msgId = resJson.id;
+
+          currentNewsIndex = editIdx;
+          renderNewsSlider();
+          renderAdminNewsList();
+          btn.innerText = "Сохранить изменения"; btn.disabled = false;
+          switchMainTab('announcements');
+        } catch (err) {
+          alert("Ошибка сохранения изменений");
+          btn.innerText = "Сохранить изменения"; btn.disabled = false;
+        }
+      } else {
+        const newAnn = {
+          app_action: "create_standalone_announcement",
+          title: document.getElementById('sa-title').value.trim(),
+          preview: previewFinal,
+          desc: document.getElementById('sa-desc').value.trim(),
+          link: document.getElementById('sa-link').value.trim(),
+          btnText: document.getElementById('sa-btntext').value.trim() || "Подробнее",
+          postToChannel: document.getElementById('sa-post-channel').checked
+        };
+
+        try {
+          await fetch(APPS_SCRIPT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify(newAnn)
+          });
+          globalNewsData.unshift({
+            date: new Date().toISOString(),
+            title: newAnn.title,
+            text: newAnn.desc,
+            preview: newAnn.preview,
+            link: newAnn.link,
+            btnText: newAnn.btnText,
+            msgId: "app_" + Date.now()
+          });
+          currentNewsIndex = 0;
+          renderNewsSlider();
+          renderAdminNewsList();
+          btn.innerText = "Опубликовать анонс"; btn.disabled = false;
+          switchMainTab('announcements');
+        } catch (err) {
+          alert("Ошибка публикации");
+          btn.innerText = "Опубликовать анонс"; btn.disabled = false;
+        }
       }
     }
 
@@ -1459,7 +1582,7 @@
             <button class="btn-outline" style="flex: 1;" onclick="viewParticipants('${ev.name}')">👀 Профили (${pCount})</button>
           </div>
         </div>`;
-      }).join('') || `<div class="card" style="text-align: center;"><span class="mono-label">АРХИВ ПРОШЕДШИЙ МЕРОПРИЯТИЙ ПУСТ</span></div>`;
+      }).join('') || `<div class="card" style="text-align: center;"><span class="mono-label">АРХИВ ПРОШЕДШИХ МЕРОПРИЯТИЙ ПУСТ</span></div>`;
     }
 
     async function loadProfile() {
@@ -1566,18 +1689,7 @@
           renderEventsFeed();
           currentNewsIndex = 0;
           renderNewsSlider();
-
-          document.getElementById('news-list').innerHTML = globalNewsData.map((n, i) => {
-            return `<div class="card" style="padding: 14px; margin-bottom: 12px;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <span class="mono-label">📅 ${formatLocalDate(n.date)}</span>
-                <button onclick="deleteNewsItem('${n.msgId || ''}', ${i})" class="mono-label" style="background: none; border: none; color: var(--danger); cursor: pointer;">[ УДАЛИТЬ ✕ ]</button>
-              </div>
-              ${n.title ? `<div style="font-weight:700; margin-bottom:6px; color: var(--sno-ice);">${n.title}</div>` : ''}
-              <div style="font-size: 13.5px; margin-bottom: 12px; line-height: 1.4; white-space: pre-wrap;">${String(n.text)}</div>
-              <button class="btn-outline" onclick="openAdminForCreate(\`${String(n.text).replace(/`/g, '')}\`)">Сделать мероприятием</button>
-            </div>`;
-          }).join('') || "<div class='mono-label' style='text-align: center;'>НЕТ ЗАПИСЕЙ</div>";
+          renderAdminNewsList();
 
         } else {
           document.getElementById('registration-view').style.display = 'block';
