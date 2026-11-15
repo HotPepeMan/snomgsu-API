@@ -4,9 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Шрифты Space Grotesk и Space Mono с кириллицей -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <!-- Шрифты Nothing OS (NDot 57 / NType 82) -->
   <link href="https://fonts.cdnfonts.com/css/ndot-47" rel="stylesheet">
   <style>
     @font-face {
@@ -98,7 +100,7 @@
       }
       .events-grid-desktop {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
         gap: 18px;
       }
       .bottom-dock {
@@ -277,12 +279,102 @@
     .leader-name { font-family: var(--font-sans); font-size: 14px; font-weight: 600; }
     .leader-score { font-family: var(--font-ndot); font-size: 18px; font-weight: 700; color: var(--sno-ice); }
 
-    .event-card { padding: 0; overflow: hidden; margin-bottom: 14px; cursor: pointer; }
-    .event-image { width: 100%; height: 150px; object-fit: cover; background: var(--sno-navy-dark); display: block; border-bottom: 1px solid var(--border-dot); }
-    .event-body { padding: 16px; }
+    /* ============================================================== */
+    /* ЕДИНЫЙ РАЗМЕР ИЗОБРАЖЕНИЙ В СТИЛЕ NOTHING OS НА ВКЛАДКЕ АНОНСОВ */
+    /* ============================================================== */
+    .nothing-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      filter: contrast(1.08) saturate(0.88);
+      display: block;
+      background-color: var(--sno-navy-dark);
+      background-image: radial-gradient(rgba(223, 240, 255, 0.14) 1px, transparent 1px);
+      background-size: 10px 10px;
+    }
+
+    /* Сетка Ленты Анонсов: Жёлтая (заголовок слева сверху), Красная (фото слева снизу), Зелёная (текст справа) */
+    .ann-split-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+    .ann-yellow-zone {
+      background: var(--sno-navy-dark);
+      border: 1px solid var(--border-dot);
+      border-radius: 16px;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    /* Единая рамка для фото анонса и карточек мероприятий (190px высотой, 16:9) */
+    .ann-red-zone, .event-media-frame {
+      width: 100%;
+      height: 190px;
+      aspect-ratio: 16 / 9;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border-dot);
+      background: var(--sno-navy-dark);
+      position: relative;
+      flex-shrink: 0;
+    }
+    .ann-green-zone {
+      background: var(--sno-navy-dark);
+      border: 1px solid var(--border-dot);
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 190px;
+    }
+
+    @media (min-width: 768px) {
+      .ann-split-grid {
+        grid-template-columns: 360px 1fr;
+        grid-template-rows: auto 190px;
+        gap: 14px;
+        align-items: stretch;
+      }
+      .ann-yellow-zone { grid-column: 1; grid-row: 1; }
+      .ann-red-zone    { grid-column: 1; grid-row: 2; height: 190px; }
+      .ann-green-zone  { grid-column: 2; grid-row: 1 / span 2; height: 100%; }
+    }
+
+    /* Карусель Афиши Мероприятий (3 равные секции внизу, плавный сдвиг на 1) */
+    .events-carousel-viewport {
+      overflow: hidden;
+      width: 100%;
+      position: relative;
+    }
+    .events-carousel-track {
+      display: flex;
+      gap: 16px;
+      transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+      will-change: transform;
+      align-items: stretch;
+    }
+    .events-carousel-track .event-card {
+      flex: 0 0 100%;
+      max-width: 100%;
+      margin-bottom: 0;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+    }
+    @media (min-width: 900px) {
+      .events-carousel-track .event-card {
+        flex: 0 0 calc((100% - 32px) / 3);
+        max-width: calc((100% - 32px) / 3);
+      }
+    }
+
+    .event-body { padding: 12px 4px 4px 4px; flex-grow: 1; }
     .event-details { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border-dot); }
     .event-card.expanded .event-details { display: block; }
-    .event-card.expanded .event-image { height: 200px; }
     .event-date-badge {
       font-family: var(--font-mono);
       font-size: 11px;
@@ -293,10 +385,11 @@
       display: inline-flex;
       align-items: center;
       font-weight: 700;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       margin-right: 6px;
     }
 
+    /* Вкладка "Полезное" */
     .useful-banner {
       background: var(--bg-card);
       border: 1px solid var(--border-dot);
@@ -324,7 +417,7 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      min-height: 142px;
+      min-height: 115px;
       cursor: pointer;
       transition: transform 0.15s;
     }
@@ -335,10 +428,16 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 22px;
       flex-shrink: 0;
       background: var(--sno-ice);
       color: var(--sno-navy);
+    }
+    .nothing-icon-svg {
+      width: 24px;
+      height: 24px;
+      stroke: var(--sno-navy);
+      stroke-width: 2;
+      fill: none;
     }
     .useful-title { font-family: var(--font-sans); font-size: 16px; font-weight: 700; margin: 12px 0 4px 0; color: var(--text-primary); }
     .useful-sub { font-family: var(--font-sans); font-size: 12px; color: var(--text-muted); line-height: 1.35; }
@@ -355,6 +454,7 @@
       font-size: 10px;
     }
 
+    /* Нижнее плавающее меню */
     .bottom-dock {
       position: fixed;
       bottom: 14px;
@@ -472,7 +572,7 @@
         </div>
         <div style="margin-top: 18px; font-size: 13px; border-top: 1px dashed var(--border-dot); padding-top: 14px;">
           <div style="margin-bottom: 8px;"><span class="mono-label">ГРУППА:</span> <strong id="um-group"></strong></div>
-          <div id="um-phone-row" style="margin-bottom: 8px;"><span class="mono-label">ТЕЛЕФОН (АРХИВ):</span> <strong id="um-phone"></strong></div>
+          <div id="um-phone-row" style="margin-bottom: 8px;"><span class="mono-label">ТЕЛЕФОН:</span> <strong id="um-phone"></strong></div>
           <div style="margin-bottom: 8px;"><span class="mono-label">СОЦСЕТИ:</span> <strong id="um-socials"></strong></div>
           <div style="margin-bottom: 8px;"><span class="mono-label">ИНТЕРЕСЫ:</span> <span id="um-interests"></span></div>
         </div>
@@ -485,15 +585,15 @@
     <!-- ======================================================== -->
     <div id="tab-home" style="display: none;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding: 0 4px;">
-        <div class="ndot-num" style="font-size: 18px; color: var(--sno-ice);">SNO // SNOMGSU.OS</div>
+        <div class="ndot-num" style="font-size: 18px; color: var(--sno-ice);">SNO // MGSU.OS</div>
         <div style="display: flex; align-items: center; gap: 10px;">
-          <button onclick="forceFullscreen()" style="background: none; border: 1px solid var(--border-dot); color: var(--sno-ice); border-radius: 999px; padding: 4px 10px; font-family: var(--font-mono); font-size: 10px; cursor: pointer;">[ ⛶ ПОЛНЫЙ ЭКРАН ]</button>
+          <button onclick="forceFullscreen()" style="background: none; border: 1px solid var(--border-dot); color: var(--sno-ice); border-radius: 999px; padding: 4px 10px; font-family: var(--font-mono); font-size: 10px; cursor: pointer;">⛶ ПОЛНЫЙ ЭКРАН</button>
           <div class="mono-label">NTYPE-82</div>
         </div>
       </div>
 
       <div class="desktop-two-col">
-        <!-- Левая колонка на ПК: Профиль -->
+        <!-- Левая колонка: Профиль -->
         <div>
           <div class="card">
             <div style="display: flex; gap: 14px; align-items: flex-start;">
@@ -529,11 +629,10 @@
             <div style="margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--border-dot);">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                 <span class="mono-label">НАУЧНЫЕ ИНТЕРЕСЫ И НАСТРОЙКИ</span>
-                <button onclick="editInterests()" id="edit-interests-btn" class="mono-label" style="background: none; border: none; color: var(--sno-ice); cursor: pointer; padding: 0;">[ НАСТРОИТЬ ⚙ ]</button>
+                <button onclick="editInterests()" id="edit-interests-btn" class="mono-label" style="background: none; border: none; color: var(--sno-ice); cursor: pointer; padding: 0;">НАСТРОИТЬ</button>
               </div>
               <div id="interests-list"></div>
 
-              <!-- Форма редактирования профиля -->
               <div id="interests-edit-box" style="display: none; margin-top: 12px;">
                 <label class="mono-label">НАУЧНЫЕ ИНТЕРЕСЫ (ЧЕРЕЗ ЗАПЯТУЮ)</label>
                 <input type="text" id="interests-input" placeholder="Например: BIM, ЖБК, Геотехника">
@@ -541,11 +640,12 @@
                 <label class="mono-label" style="display: block; margin-top: 12px;">ДРУГИЕ СОЦСЕТИ (ВК, ПОРТФОЛИО И Т.Д.)</label>
                 <input type="text" id="socials-input" placeholder="https://vk.com/...">
 
-                <label class="mono-label" style="display: block; margin-top: 12px;">ФОТО ПРОФИЛЯ ИЗ ГАЛЕРЕИ УСТРОЙСТВА</label>
+                <label class="mono-label" style="display: block; margin-top: 12px;">ФОТО / GIF ПРОФИЛЯ</label>
                 <label class="upload-zone" style="display: block;">
                   <input type="file" id="profile-photo-file" accept="image/*" style="display: none;" onchange="handleProfilePhotoUpload(this)">
-                  <span id="profile-upload-label" class="mono-label" style="color: var(--sno-ice);">📷 ВЫБРАТЬ ФОТО ИЗ ГАЛЕРЕИ</span>
+                  <span id="profile-upload-label" class="mono-label" style="color: var(--sno-ice);">📷 ВЫБРАТЬ ИЗ ГАЛЕРЕИ</span>
                 </label>
+                <input type="text" id="profile-photo-url-input" placeholder="Или прямая ссылка на фото / GIF (https://...)" style="margin-top: 8px;">
                 <div id="profile-photo-preview-wrap" style="display: none; align-items: center; gap: 10px; margin-top: 10px;">
                   <img id="profile-photo-preview" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 1px solid var(--sno-ice);">
                   <button type="button" class="btn-outline" style="width: auto; padding: 6px 12px; font-size: 10px;" onclick="resetUploadedProfilePhoto()">Сбросить до фото ТГ</button>
@@ -560,7 +660,7 @@
           </div>
         </div>
 
-        <!-- Правая колонка на ПК (или нижняя на смартфоне): Рейтинг + Админка внизу -->
+        <!-- Правая колонка: Рейтинг + Админка внизу -->
         <div>
           <details class="card" open>
             <summary style="cursor: pointer;">
@@ -569,22 +669,22 @@
                   <div class="mono-label">LEADERBOARD // TOP ACTIVISTS</div>
                   <div class="ndot-title" style="font-size: 16px; margin-top: 4px; color: var(--text-primary);">РЕЙТИНГ АКТИВИСТОВ СНО</div>
                 </div>
-                <span class="mono-label" style="color: var(--sno-ice); flex-shrink: 0;">[ СВЕРНУТЬ ▼ ]</span>
+                <span class="mono-label" style="color: var(--sno-ice); flex-shrink: 0;">СВЕРНУТЬ</span>
               </div>
             </summary>
             <div id="leaderboard-list" style="margin-top: 14px;"></div>
           </details>
 
-          <!-- БЛОК КНОПОК АДМИНОВ И РУКОВОДСТВА (В САМОМ НИЗУ РЕЙТИНГА) -->
+          <!-- БЛОК КНОПОК АДМИНОВ И РУКОВОДСТВА (ЧИСТЫЕ НАЗВАНИЯ БЕЗ СКОБОК) -->
           <div id="admin-bottom-block" class="card" style="display: none; border-color: var(--sno-ice);">
             <div class="mono-label" style="color: var(--sno-ice);">ADMINISTRATION // TERMINAL</div>
             <div class="ndot-title" style="font-size: 16px; margin: 4px 0 12px 0;">УПРАВЛЕНИЕ И БАЗА СНО</div>
             <div style="display: flex; flex-direction: column; gap: 8px;">
-              <button id="admin-create-ev-btn" class="btn-primary" style="margin-top: 0;" onclick="openAdminForCreate()">➕ Создать мероприятие</button>
-              <button id="admin-create-ann-btn" class="btn-outline" onclick="openStandaloneAnnouncementModal()">📣 Создать самостоятельный анонс</button>
-              <button id="admin-channel-import-btn" class="btn-outline" onclick="openSubView('news-view')">📥 Импорт и ред. постов канала</button>
-              <button class="btn-outline" onclick="openSubView('past-events-admin-view')">📦 Архив прошедших (Выгрузка CSV)</button>
-              <button class="btn-outline" onclick="renderAllParticipants()">👥 Вся база участников СНО</button>
+              <button id="admin-create-ev-btn" class="btn-primary" style="margin-top: 0;" onclick="openAdminForCreate()">Создать мероприятие <!-- доп. подпись при необходимости --></button>
+              <button id="admin-create-ann-btn" class="btn-outline" onclick="openStandaloneAnnouncementModal()">Создать анонс <!-- доп. подпись при необходимости --></button>
+              <button id="admin-channel-import-btn" class="btn-outline" onclick="openSubView('news-view')">Управление анонсами <!-- доп. подпись при необходимости --></button>
+              <button class="btn-outline" onclick="openSubView('past-events-admin-view')">Архив мероприятий <!-- доп. подпись при необходимости --></button>
+              <button class="btn-outline" onclick="renderAllParticipants()">База участников <!-- доп. подпись при необходимости --></button>
             </div>
           </div>
         </div>
@@ -606,10 +706,10 @@
         </label>
       </div>
 
-      <!-- Блок самостоятельных анонсов и постов канала -->
+      <!-- Блок Анонсов (Жёлтая зона - заголовок, Красная - единое фото 190px, Зелёная - текст и интерактив) -->
       <div class="card" id="announcements-box">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-          <span class="mono-label" style="color: var(--sno-ice);">📢 ЛЕНТА АНОНСОВ СНО</span>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <span class="mono-label" style="color: var(--sno-ice);">● ЛЕНТА АНОНСОВ СНО</span>
           <div id="news-step-controls" style="display: none; align-items: center; gap: 6px;">
             <button class="btn-outline" id="news-prev-btn" style="width: auto; padding: 4px 10px; font-size: 10px;" onclick="changeNewsSlide(-1)">◀</button>
             <span id="news-counter" class="mono-label" style="color: var(--sno-ice);">1/1</span>
@@ -619,9 +719,20 @@
         <div id="home-news-list"></div>
       </div>
 
-      <!-- Список карточек мероприятий -->
-      <div class="mono-label" style="margin: 16px 0 10px 4px;">АФИША МЕРОПРИЯТИЙ</div>
-      <div id="events-list" class="events-grid-desktop"></div>
+      <!-- Шапка и стрелки карусели Афиши Мероприятий -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin: 18px 4px 10px 4px;">
+        <div class="mono-label">АФИША МЕРОПРИЯТИЙ</div>
+        <div id="events-carousel-controls" style="display: none; align-items: center; gap: 8px;">
+          <button class="btn-outline" id="ev-prev-btn" style="width: auto; padding: 4px 12px; font-size: 11px;" onclick="slideEventsCarousel(-1)">◀</button>
+          <span id="ev-carousel-counter" class="mono-label" style="color: var(--sno-ice);">1 / 1</span>
+          <button class="btn-outline" id="ev-next-btn" style="width: auto; padding: 4px 12px; font-size: 11px;" onclick="slideEventsCarousel(1)">▶</button>
+        </div>
+      </div>
+
+      <!-- Голубая зона: Карусель карточек мероприятий (по 3 на ПК, плавный сдвиг на 1) -->
+      <div class="events-carousel-viewport">
+        <div id="events-list" class="events-carousel-track"></div>
+      </div>
     </div>
 
     <!-- ======================================================== -->
@@ -631,50 +742,62 @@
       <div class="mono-label" style="margin-bottom: 4px;">MODULES // RESOURCES</div>
       <div class="ndot-title" style="font-size: 18px; margin-bottom: 14px;">ПОЛЕЗНЫЕ МАТЕРИАЛЫ</div>
 
+      <!-- Поиск соавторов -->
       <div class="useful-banner" onclick="openSubView('coauthors-view')">
-        <div class="useful-icon-box">🤝</div>
+        <div class="useful-icon-box">
+          <svg class="nothing-icon-svg" viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><circle cx="17" cy="11" r="3"/><path d="M21 21v-1.5a3 3 0 0 0-3-3h-1"/></svg>
+        </div>
         <div style="flex-grow: 1;">
           <div class="useful-title" style="margin-top: 0;">Поиск соавторов</div>
-          <div class="useful-sub">Найди коллегу из МГСУ для совместной научной статьи или гранта</div>
+          <div class="useful-sub" style="display: none;"><!-- Место для доп. описания при необходимости --></div>
           <div class="status-chip" id="coauthors-count-chip">● загрузка...</div>
         </div>
         <div class="mono-label" style="font-size: 18px; color: var(--sno-ice);">›</div>
       </div>
 
+      <!-- База знаний и Консультация (только названия без подписей) -->
       <div class="useful-grid">
         <div class="useful-tile" onclick="window.Telegram.WebApp.openLink('https://drive.google.com/drive/folders/ВАША_ССЫЛКА_ТУТ')">
-          <div class="useful-icon-box">📚</div>
+          <div class="useful-icon-box">
+            <svg class="nothing-icon-svg" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          </div>
           <div>
-            <div class="useful-title">База знаний</div>
-            <div class="useful-sub">Банк статей, шаблоны, ГОСТы и гайды СНО</div>
+            <div class="useful-title" style="margin-bottom: 0;">База знаний</div>
+            <div class="useful-sub" style="display: none;"><!-- Место для доп. описания базы знаний --></div>
           </div>
         </div>
 
         <div class="useful-tile" onclick="window.Telegram.WebApp.openLink('https://forms.yandex.ru/u/6a82ad2c49af47f4fb6ba82d')">
-          <div class="useful-icon-box" style="background: #93C5FD;">🎓</div>
+          <div class="useful-icon-box">
+            <svg class="nothing-icon-svg" viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+          </div>
           <div>
-            <div class="useful-title">Консультация</div>
-            <div class="useful-sub">Разбор научных работ и помощь с публикацией</div>
+            <div class="useful-title" style="margin-bottom: 0;">Консультация</div>
+            <div class="useful-sub" style="display: none;"><!-- Место для доп. описания консультации --></div>
           </div>
         </div>
       </div>
 
+      <!-- Поддержка бота: Написать напрямую админу -->
       <div class="useful-banner" onclick="contactSupport()">
-        <div class="useful-icon-box" style="background: #60A5FA;">💬</div>
+        <div class="useful-icon-box">
+          <svg class="nothing-icon-svg" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
         <div style="flex-grow: 1;">
           <div class="useful-title" style="margin-top: 0;">Поддержка бота</div>
-          <div class="useful-sub">Написать напрямую Руслану Вахитову по вопросам работы приложения и СНО</div>
+          <div class="useful-sub">Написать напрямую админу <!-- доп. текст при необходимости --></div>
         </div>
         <div class="mono-label" style="font-size: 18px; color: var(--sno-ice);">›</div>
       </div>
 
+      <!-- Соцсети СНО (чистые названия кнопок) -->
       <div class="card" style="margin-top: 14px;">
-        <div class="mono-label" style="margin-bottom: 10px;">OFFICIAL NETWORKS // МЫ В СОЦСЕТЯХ</div>
+        <div class="mono-label" style="margin-bottom: 10px;">OFFICIAL NETWORKS</div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-          <button class="btn-outline" onclick="window.Telegram.WebApp.openLink('https://t.me/snomgsu')">Telegram</button>
-          <button class="btn-outline" onclick="window.Telegram.WebApp.openLink('https://vk.com/snomgsu')">ВКонтакте</button>
-          <button class="btn-outline" onclick="window.Telegram.WebApp.openLink('https://www.youtube.com/@snouniversity')">YouTube</button>
-          <button class="btn-outline" onclick="window.Telegram.WebApp.openLink('https://www.tiktok.com/@snouniversity?_r=1&_t=ZP-9BEeogS7KOs')">TikTok</button>
+          <button class="btn-outline" onclick="window.Telegram.WebApp.openLink('https://t.me/snomgsu')">Telegram <!-- доп. текст --></button>
+          <button class="btn-outline" onclick="window.Telegram.WebApp.openLink('https://vk.com/snomgsu')">ВКонтакте <!-- доп. текст --></button>
+          <button class="btn-outline" onclick="window.Telegram.WebApp.openLink('https://www.youtube.com/@snouniversity')">YouTube <!-- доп. текст --></button>
+          <button class="btn-outline" onclick="window.Telegram.WebApp.openLink('https://www.tiktok.com/@snouniversity?_r=1&_t=ZP-9BEeogS7KOs')">TikTok <!-- доп. текст --></button>
         </div>
       </div>
     </div>
@@ -684,20 +807,20 @@
     <!-- ======================================================== -->
 
     <div id="coauthors-view" style="display: none;">
-      <button class="btn-outline" style="width: auto; margin-bottom: 14px;" onclick="switchMainTab('useful')">⬅ Назад в Полезное</button>
+      <button class="btn-outline" style="width: auto; margin-bottom: 14px;" onclick="switchMainTab('useful')">⬅ Назад</button>
       <div class="ndot-title" style="font-size: 17px; margin-bottom: 12px;">АКТИВИСТЫ В ПОИСКЕ СОАВТОРА</div>
       <div id="coauthors-list" class="events-grid-desktop"></div>
     </div>
 
     <div id="past-events-admin-view" style="display: none;">
-      <button class="btn-outline" style="width: auto; margin-bottom: 14px;" onclick="switchMainTab('home')">⬅ Назад на Главную</button>
+      <button class="btn-outline" style="width: auto; margin-bottom: 14px;" onclick="switchMainTab('home')">⬅ Назад</button>
       <div class="mono-label">ARCHIVE // COMPLETED EVENTS</div>
-      <div class="ndot-title" style="font-size: 17px; margin-bottom: 12px;">АРХИВ ПРОШЕДШИХ МЕРОПРИЯТИЙ</div>
+      <div class="ndot-title" style="font-size: 17px; margin-bottom: 12px;">АРХИВ МЕРОПРИЯТИЙ</div>
       <div id="past-events-admin-list" class="events-grid-desktop"></div>
     </div>
 
     <div id="event-participants-view" style="display: none;">
-      <button class="btn-outline" style="width: auto; margin-bottom: 14px;" onclick="switchMainTab('announcements')">⬅ К списку мероприятий</button>
+      <button class="btn-outline" style="width: auto; margin-bottom: 14px;" onclick="switchMainTab('announcements')">⬅ Назад</button>
       <div class="card">
         <h3 id="ep-title" style="margin-top: 0; font-size: 18px;"></h3>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
@@ -709,15 +832,15 @@
     </div>
 
     <div id="all-participants-view" style="display: none;">
-      <button class="btn-outline" style="width: auto; margin-bottom: 14px;" onclick="switchMainTab('home')">⬅ Назад на Главную</button>
+      <button class="btn-outline" style="width: auto; margin-bottom: 14px;" onclick="switchMainTab('home')">⬅ Назад</button>
       <div class="ndot-title" style="font-size: 17px; margin-bottom: 10px;">БАЗА УЧАСТНИКОВ СНО</div>
       <input type="text" id="user-search-input" placeholder="Поиск по ФИО..." onkeyup="filterAllParticipants()" style="margin-bottom: 14px;">
       <div id="all-participants-list" class="events-grid-desktop"></div>
     </div>
 
     <div id="news-view" style="display: none;">
-      <button class="btn-outline" style="width: auto; margin-bottom: 14px;" onclick="switchMainTab('home')">⬅ Назад на Главную</button>
-      <div class="ndot-title" style="font-size: 17px; margin-bottom: 12px;">УПРАВЛЕНИЕ АНОНСАМИ И ПОСТАМИ КАНАЛА</div>
+      <button class="btn-outline" style="width: auto; margin-bottom: 14px;" onclick="switchMainTab('home')">⬅ Назад</button>
+      <div class="ndot-title" style="font-size: 17px; margin-bottom: 12px;">УПРАВЛЕНИЕ АНОНСАМИ</div>
       <div id="news-list" class="events-grid-desktop"></div>
     </div>
 
@@ -728,14 +851,14 @@
         <form onsubmit="submitNewEvent(event)">
           <input type="hidden" id="ev-originalname">
           <label class="mono-label">НАЗВАНИЕ *</label>
-          <input type="text" id="ev-name" required placeholder="Научный Хакатон">
+          <input type="text" id="ev-name" required placeholder="Школа СНО. День Первый">
           <label class="mono-label" style="display: block; margin-top: 12px;">ДАТА И ВРЕМЯ НАЧАЛА *</label>
           <input type="datetime-local" id="ev-datetime" required>
           <label class="mono-label" style="display: block; margin-top: 12px;">ДАТА И ВРЕМЯ ОКОНЧАНИЯ</label>
           <input type="datetime-local" id="ev-endtime">
           <label class="mono-label" style="display: block; margin-top: 12px;">ДЕДЛАЙН РЕГИСТРАЦИИ</label>
           <input type="datetime-local" id="ev-deadline">
-          <label class="mono-label" style="display: block; margin-top: 12px;">ССЫЛКА НА ОБЛОЖКУ (URL)</label>
+          <label class="mono-label" style="display: block; margin-top: 12px;">ССЫЛКА НА ОБЛОЖКУ / GIF (URL)</label>
           <input type="text" id="ev-photo" placeholder="https://...">
           <label class="mono-label" style="display: block; margin-top: 12px;">ОПИСАНИЕ *</label>
           <textarea id="ev-desc" required placeholder="Подробности мероприятия..."></textarea>
@@ -776,17 +899,17 @@
           <input type="hidden" id="sa-edit-index" value="-1">
           <input type="hidden" id="sa-edit-msgid" value="">
 
-          <label class="mono-label">ЗАГОЛОВОК АНОНСА (НЕОБЯЗАТЕЛЬНО ДЛЯ ПОСТОВ ТГ)</label>
-          <input type="text" id="sa-title" placeholder="Например: Открыт набор в рабочую группу">
+          <label class="mono-label">ЗАГОЛОВОК АНОНСА *</label>
+          <input type="text" id="sa-title" required placeholder="Например: Школа СНО // Старт набора">
 
-          <label class="mono-label" style="display: block; margin-top: 12px;">ПРЕВЬЮ-КАРТИНКА (ИЗ ГАЛЕРЕИ ИЛИ URL)</label>
+          <label class="mono-label" style="display: block; margin-top: 12px;">ПРЕВЬЮ-КАРТИНКА / GIF (ИЗ ГАЛЕРЕИ ИЛИ URL)</label>
           <label class="upload-zone" style="display: block;">
             <input type="file" id="sa-file-input" accept="image/*" style="display: none;" onchange="handleAnnouncementPreviewUpload(this)">
-            <span id="sa-upload-label" class="mono-label" style="color: var(--sno-ice);">🖼 ЗАГРУЗИТЬ ПРЕВЬЮ ИЗ ГАЛЕРЕИ</span>
+            <span id="sa-upload-label" class="mono-label" style="color: var(--sno-ice);">🖼 ВЫБРАТЬ ФАЙЛ ИЗ ГАЛЕРЕИ</span>
           </label>
-          <input type="text" id="sa-preview-url" placeholder="Или вставьте прямую ссылку https://..." style="margin-top: 8px;">
+          <input type="text" id="sa-preview-url" placeholder="Или вставьте прямую ссылку https://... (.jpg, .png, .gif)" style="margin-top: 8px;">
           <div id="sa-preview-current-wrap" style="display: none; align-items: center; gap: 10px; margin-top: 8px;">
-            <img id="sa-preview-current-img" style="width: 64px; height: 42px; object-fit: cover; border-radius: 8px; border: 1px solid var(--sno-ice);">
+            <img id="sa-preview-current-img" style="width: 72px; height: 42px; object-fit: cover; border-radius: 8px; border: 1px solid var(--sno-ice);">
             <button type="button" class="btn-outline" style="width: auto; padding: 5px 10px; font-size: 10px;" onclick="clearAnnouncementPreview()">Удалить превью</button>
           </div>
 
@@ -832,24 +955,27 @@
       <span>Полезное</span>
     </button>
   </nav>
-<script>
+
+  <script>
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwhcJfMMlv2ZKcgJ1UKICfXsBlDt5cP2DazV3pW1fcqukOdNDJpeEBNfJescD9wKEzUFg/exec";
+    const LOCAL_NEWS_KEY = "sno_mgsu_saved_announcements_v2";
+    const LOCAL_DELETED_KEY = "sno_mgsu_deleted_announcements_v2";
     const tg = window.Telegram.WebApp;
 
-    // Стандартный геометрический баннер в стиле Nothing OS (SVG Data URI)
+    // Стандартная геометрическая обложка в стиле Nothing OS (SVG Data URI)
     const NOTHING_DEFAULT_IMAGE = "data:image/svg+xml;utf8," + encodeURIComponent(`
       <svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
         <rect width="800" height="450" fill="#09132B"/>
         <g fill="rgba(223,240,255,0.18)">
-          <circle cx="80" cy="80" r="3"/><circle cx="120" cy="80" r="3"/><circle cx="160" cy="80" r="3"/><circle cx="200" cy="80" r="3"/>
-          <circle cx="80" cy="120" r="3"/><circle cx="120" cy="120" r="3"/><circle cx="160" cy="120" r="3"/><circle cx="200" cy="120" r="3"/>
-          <circle cx="80" cy="160" r="3"/><circle cx="120" cy="160" r="3"/><circle cx="160" cy="160" r="3"/><circle cx="200" cy="160" r="3"/>
+          <circle cx="70" cy="70" r="3"/><circle cx="110" cy="70" r="3"/><circle cx="150" cy="70" r="3"/><circle cx="190" cy="70" r="3"/>
+          <circle cx="70" cy="110" r="3"/><circle cx="110" cy="110" r="3"/><circle cx="150" cy="110" r="3"/><circle cx="190" cy="110" r="3"/>
+          <circle cx="70" cy="150" r="3"/><circle cx="110" cy="150" r="3"/><circle cx="150" cy="150" r="3"/><circle cx="190" cy="150" r="3"/>
         </g>
-        <circle cx="620" cy="225" r="140" fill="none" stroke="rgba(223,240,255,0.22)" stroke-width="1.5" stroke-dasharray="6 6"/>
-        <circle cx="620" cy="225" r="85" fill="none" stroke="#DFF0FF" stroke-width="2"/>
-        <circle cx="535" cy="225" r="7" fill="#FF5252"/>
-        <line x1="60" y1="360" x2="740" y2="360" stroke="rgba(223,240,255,0.2)" stroke-width="1"/>
-        <text x="60" y="395" fill="#DFF0FF" font-family="monospace" font-size="16" letter-spacing="4">SNO // MGSU.SYSTEM</text>
+        <circle cx="580" cy="220" r="135" fill="none" stroke="rgba(223,240,255,0.22)" stroke-width="1.5" stroke-dasharray="6 6"/>
+        <circle cx="580" cy="220" r="82" fill="none" stroke="#DFF0FF" stroke-width="2"/>
+        <circle cx="498" cy="220" r="8" fill="#FF5252"/>
+        <line x1="60" y1="355" x2="740" y2="355" stroke="rgba(223,240,255,0.2)" stroke-width="1"/>
+        <text x="60" y="392" fill="#DFF0FF" font-family="monospace" font-size="16" letter-spacing="4">SNO // MGSU.SYSTEM</text>
       </svg>
     `);
 
@@ -878,6 +1004,69 @@
     let uploadedProfilePhotoBase64 = null;
     let clearCustomPhotoFlag = false;
     let uploadedAnnPreviewBase64 = null;
+
+    // --- ЛОКАЛЬНЫЙ БУФЕР АНОНСОВ (гарантирует, что анонсы никогда не пропадут при обновлении) ---
+    function getLocalAnnouncements() {
+      try {
+        const raw = localStorage.getItem(LOCAL_NEWS_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) { return []; }
+    }
+    function saveLocalAnnouncements(arr) {
+      try {
+        localStorage.setItem(LOCAL_NEWS_KEY, JSON.stringify(arr.slice(0, 30)));
+      } catch (e) {}
+    }
+    function getDeletedIds() {
+      try {
+        const raw = localStorage.getItem(LOCAL_DELETED_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) { return []; }
+    }
+    function addDeletedId(idOrKey) {
+      try {
+        const list = getDeletedIds();
+        if (!list.includes(idOrKey)) {
+          list.push(idOrKey);
+          localStorage.setItem(LOCAL_DELETED_KEY, JSON.stringify(list));
+        }
+      } catch (e) {}
+    }
+
+    // Объединение анонсов из Google Таблицы и созданных в приложении
+    function mergeServerAndLocalNews(serverNews) {
+      const deleted = getDeletedIds();
+      const localList = getLocalAnnouncements();
+      const combined = [];
+      const seen = new Set();
+
+      const addUnique = (item) => {
+        if (!item) return;
+        const msgId = String(item.msgId || "").trim();
+        const title = String(item.title || "").trim();
+        const text = String(item.text || "").trim();
+        if (!text && !title) return;
+        const key = msgId ? ("id_" + msgId) : ("txt_" + title + "::" + text);
+        if (deleted.includes(key) || (msgId && deleted.includes(msgId))) return;
+        if (!seen.has(key)) {
+          seen.add(key);
+          combined.push({
+            date: item.date || new Date().toISOString(),
+            text: text,
+            msgId: msgId || ("local_" + Date.now()),
+            title: title,
+            preview: item.preview || "",
+            link: item.link || "",
+            btnText: item.btnText || "Подробнее"
+          });
+        }
+      };
+
+      // Сначала локально сохраненные/отредактированные, затем серверные
+      localList.forEach(addUnique);
+      (serverNews || []).forEach(addUnique);
+      return combined;
+    }
 
     function isHiddenFromLeaderboard(fio) {
       const lower = String(fio || "").toLowerCase();
@@ -933,9 +1122,21 @@
       } catch(e) { return String(dateString); }
     }
 
+    // Поддержка GIF и сжатие обычных изображений
     function compressImageFile(file, maxSize, quality, squareCrop, callback) {
       const reader = new FileReader();
       reader.onload = (e) => {
+        const rawDataUrl = e.target.result;
+
+        if (file.type === "image/gif") {
+          if (rawDataUrl.length < 47000) {
+            callback(rawDataUrl);
+          } else {
+            tg.showAlert("⚠️ Этот GIF весит больше 35 КБ. Для больших GIF вставьте прямую ссылку https://... в текстовое поле ниже.");
+          }
+          return;
+        }
+
         const img = new Image();
         img.onload = () => {
           const canvas = document.createElement('canvas');
@@ -956,17 +1157,17 @@
           }
           callback(canvas.toDataURL('image/jpeg', quality));
         };
-        img.src = e.target.result;
+        img.src = rawDataUrl;
       };
       reader.readAsDataURL(file);
     }
 
     function handleProfilePhotoUpload(input) {
       if (!input.files || !input.files[0]) return;
-      compressImageFile(input.files[0], 150, 0.7, true, (base64) => {
+      compressImageFile(input.files[0], 140, 0.68, true, (base64) => {
         uploadedProfilePhotoBase64 = base64;
         clearCustomPhotoFlag = false;
-        document.getElementById('profile-upload-label').innerText = "✅ ФОТО ЗАГРУЖЕНО (НАЖМИТЕ СОХРАНИТЬ)";
+        document.getElementById('profile-upload-label').innerText = "✅ ФОТО ГОТОВО (НАЖМИТЕ СОХРАНИТЬ)";
         document.getElementById('profile-photo-preview').src = base64;
         document.getElementById('profile-photo-preview-wrap').style.display = 'flex';
         const avatarDiv = document.getElementById('avatar');
@@ -978,13 +1179,14 @@
     function resetUploadedProfilePhoto() {
       uploadedProfilePhotoBase64 = "";
       clearCustomPhotoFlag = true;
+      document.getElementById('profile-photo-url-input').value = "";
       document.getElementById('profile-upload-label').innerText = "📷 БУДЕТ ИСПОЛЬЗОВАНО ФОТО ИЗ ТГ";
       document.getElementById('profile-photo-preview-wrap').style.display = 'none';
     }
 
     function handleAnnouncementPreviewUpload(input) {
       if (!input.files || !input.files[0]) return;
-      compressImageFile(input.files[0], 260, 0.62, false, (base64) => {
+      compressImageFile(input.files[0], 240, 0.6, false, (base64) => {
         uploadedAnnPreviewBase64 = base64;
         document.getElementById('sa-upload-label').innerText = "✅ ПРЕВЬЮ ЗАГРУЖЕНО ИЗ ГАЛЕРЕИ";
         document.getElementById('sa-preview-current-img').src = base64;
@@ -995,7 +1197,7 @@
     function clearAnnouncementPreview() {
       uploadedAnnPreviewBase64 = "";
       document.getElementById('sa-preview-url').value = "";
-      document.getElementById('sa-upload-label').innerText = "🖼 ЗАГРУЗИТЬ ПРЕВЬЮ ИЗ ГАЛЕРЕИ";
+      document.getElementById('sa-upload-label').innerText = "🖼 ВЫБРАТЬ ФАЙЛ ИЗ ГАЛЕРЕИ";
       document.getElementById('sa-preview-current-wrap').style.display = 'none';
     }
 
@@ -1005,7 +1207,7 @@
       window.Telegram.WebApp.openLink(`https://t.me/${username}`);
     }
 
-    // Рендер Ленты Анонсов: Жёлтая (заголовок), Красная (превью-фото), Зелёная (текст и кнопки) зоны
+    // Рендер Ленты Анонсов: Жёлтая (заголовок), Красная (фото 190px), Зелёная (текст и кнопки) зоны
     function renderNewsSlider() {
       const container = document.getElementById('home-news-list');
       const controls = document.getElementById('news-step-controls');
@@ -1057,20 +1259,23 @@
 
       container.innerHTML = `
         <div class="ann-split-grid">
+          <!-- ЖЁЛТАЯ ЗОНА: Заголовок и дата -->
           <div class="ann-yellow-zone">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
               <span class="mono-label" style="color: var(--sno-ice);">📅 ${formatLocalDate(item.date)}</span>
               ${currentNewsIndex === 0 ? '<span class="badge-pill" style="margin-top:0; padding: 2px 8px; font-size: 9px;">NEW</span>' : ''}
             </div>
             <div class="ndot-title" style="font-size: 16px; color: var(--text-primary); word-break: break-word;">${safeTitle}</div>
           </div>
 
+          <!-- КРАСНАЯ ЗОНА: Единая рамка 190px (16:9) -->
           <div class="ann-red-zone">
             <img src="${imgSrc}" class="nothing-img" onerror="this.src=NOTHING_DEFAULT_IMAGE">
           </div>
 
+          <!-- ЗЕЛЁНАЯ ЗОНА: Текст и интерактив -->
           <div class="ann-green-zone">
-            <div style="font-size: 14px; line-height: 1.55; white-space: pre-wrap; word-break: break-word; max-height: 240px; overflow-y: auto; padding-right: 4px;">${safeText}</div>
+            <div style="font-size: 14px; line-height: 1.55; white-space: pre-wrap; word-break: break-word; max-height: 210px; overflow-y: auto; padding-right: 4px;">${safeText}</div>
             <div>
               ${linkBtn}
               ${adminActionsHtml}
@@ -1098,7 +1303,7 @@
               <button onclick="deleteNewsItem('${n.msgId || ''}', ${i})" class="mono-label" style="background: none; border: none; color: var(--danger); cursor: pointer;">✕ Удалить</button>
             </div>
           </div>
-          <div style="height: 110px; border-radius: 10px; overflow: hidden; margin-bottom: 8px;">
+          <div class="event-media-frame" style="margin-bottom: 10px;">
             <img src="${previewSrc}" class="nothing-img" onerror="this.src=NOTHING_DEFAULT_IMAGE">
           </div>
           ${n.title ? `<div style="font-weight:700; margin-bottom:6px; color: var(--sno-ice);">${n.title}</div>` : ''}
@@ -1125,7 +1330,7 @@
       document.getElementById('sa-btntext').value = "";
       document.getElementById('sa-post-channel').checked = false;
       document.getElementById('sa-post-channel-wrap').style.display = 'flex';
-      document.getElementById('sa-upload-label').innerText = "🖼 ЗАГРУЗИТЬ ПРЕВЬЮ ИЗ ГАЛЕРЕИ";
+      document.getElementById('sa-upload-label').innerText = "🖼 ВЫБРАТЬ ФАЙЛ ИЗ ГАЛЕРЕИ";
       document.getElementById('sa-preview-current-wrap').style.display = 'none';
       openSubView('standalone-ann-view');
     }
@@ -1162,7 +1367,7 @@
       } else {
         uploadedAnnPreviewBase64 = null;
         document.getElementById('sa-preview-url').value = "";
-        document.getElementById('sa-upload-label').innerText = "🖼 ЗАГРУЗИТЬ ПРЕВЬЮ ИЗ ГАЛЕРЕИ";
+        document.getElementById('sa-upload-label').innerText = "🖼 ВЫБРАТЬ ФАЙЛ ИЗ ГАЛЕРЕИ";
         document.getElementById('sa-preview-current-wrap').style.display = 'none';
       }
 
@@ -1184,9 +1389,10 @@
 
       if (isEditing) {
         const oldItem = globalNewsData[editIdx];
+        const finalId = oldItem.msgId || ("app_" + Date.now());
         const editPayload = {
           app_action: "edit_standalone_announcement",
-          msgId: oldItem.msgId || "",
+          msgId: finalId,
           originalText: oldItem.text || "",
           originalTitle: oldItem.title || "",
           title: document.getElementById('sa-title').value.trim(),
@@ -1196,36 +1402,40 @@
           btnText: document.getElementById('sa-btntext').value.trim() || "Подробнее"
         };
 
+        // 1. Сразу обновляем в памяти и в localStorage (чтобы не пропало при перезагрузке)
+        globalNewsData[editIdx] = {
+          date: oldItem.date || new Date().toISOString(),
+          title: editPayload.title,
+          text: editPayload.desc,
+          preview: editPayload.preview,
+          link: editPayload.link,
+          btnText: editPayload.btnText,
+          msgId: finalId
+        };
+        saveLocalAnnouncements(globalNewsData);
+
+        // 2. Отправляем в Google Таблицу
         try {
-          if (!safePreview.startsWith("data:") && editPayload.msgId) {
-            const getEditUrl = `${APPS_SCRIPT_URL}?action=edit_standalone_announcement&msgId=${encodeURIComponent(editPayload.msgId)}&title=${encodeURIComponent(editPayload.title)}&preview=${encodeURIComponent(editPayload.preview)}&desc=${encodeURIComponent(editPayload.desc)}&link=${encodeURIComponent(editPayload.link)}&btnText=${encodeURIComponent(editPayload.btnText)}`;
-            await fetch(getEditUrl);
-          } else {
-            await fetch(APPS_SCRIPT_URL, {
-              method: "POST",
-              headers: { "Content-Type": "text/plain;charset=utf-8" },
-              body: JSON.stringify(editPayload)
-            });
-          }
+          const urlPreviewParam = safePreview.startsWith("data:") ? "" : safePreview;
+          fetch(`${APPS_SCRIPT_URL}?action=edit_standalone_announcement&msgId=${encodeURIComponent(finalId)}&title=${encodeURIComponent(editPayload.title)}&preview=${encodeURIComponent(urlPreviewParam)}&desc=${encodeURIComponent(editPayload.desc)}&link=${encodeURIComponent(editPayload.link)}&btnText=${encodeURIComponent(editPayload.btnText)}`).catch(()=>{});
+          await fetch(APPS_SCRIPT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify(editPayload)
+          });
+        } catch (err) {}
 
-          globalNewsData[editIdx].title = editPayload.title;
-          globalNewsData[editIdx].text = editPayload.desc;
-          globalNewsData[editIdx].preview = editPayload.preview;
-          globalNewsData[editIdx].link = editPayload.link;
-          globalNewsData[editIdx].btnText = editPayload.btnText;
-
-          currentNewsIndex = editIdx;
-          renderNewsSlider();
-          renderAdminNewsList();
-          btn.innerText = "Сохранить изменения"; btn.disabled = false;
-          switchMainTab('announcements');
-        } catch (err) {
-          alert("Ошибка сохранения изменений");
-          btn.innerText = "Сохранить изменения"; btn.disabled = false;
-        }
+        currentNewsIndex = editIdx;
+        renderNewsSlider();
+        renderAdminNewsList();
+        btn.innerText = "Сохранить изменения"; btn.disabled = false;
+        switchMainTab('announcements');
       } else {
+        const createdId = "app_" + Date.now();
+        const nowIso = new Date().toISOString();
         const newAnn = {
           app_action: "create_standalone_announcement",
+          msgId: createdId,
           title: document.getElementById('sa-title').value.trim(),
           preview: safePreview,
           desc: document.getElementById('sa-desc').value.trim(),
@@ -1234,56 +1444,57 @@
           postToChannel: document.getElementById('sa-post-channel').checked
         };
 
-        try {
-          let createdId = "app_" + Date.now();
-          if (!safePreview.startsWith("data:")) {
-            const getUrl = `${APPS_SCRIPT_URL}?action=create_standalone_announcement&title=${encodeURIComponent(newAnn.title)}&preview=${encodeURIComponent(newAnn.preview)}&desc=${encodeURIComponent(newAnn.desc)}&link=${encodeURIComponent(newAnn.link)}&btnText=${encodeURIComponent(newAnn.btnText)}&postToChannel=${newAnn.postToChannel}`;
-            const r = await fetch(getUrl);
-            const rj = await r.json();
-            if (rj && rj.id) createdId = rj.id;
-          } else {
-            const r = await fetch(APPS_SCRIPT_URL, {
-              method: "POST",
-              headers: { "Content-Type": "text/plain;charset=utf-8" },
-              body: JSON.stringify(newAnn)
-            });
-            const rj = await r.json();
-            if (rj && rj.id) createdId = rj.id;
-          }
+        const newItemObj = {
+          date: nowIso,
+          title: newAnn.title,
+          text: newAnn.desc,
+          preview: safePreview,
+          link: newAnn.link,
+          btnText: newAnn.btnText,
+          msgId: createdId
+        };
 
-          globalNewsData.unshift({
-            date: new Date().toISOString(),
-            title: newAnn.title,
-            text: newAnn.desc,
-            preview: safePreview,
-            link: newAnn.link,
-            btnText: newAnn.btnText,
-            msgId: createdId
+        // 1. Мгновенно сохраняем в локальную базу и массив (никогда не исчезнет при закрытии бота)
+        globalNewsData.unshift(newItemObj);
+        saveLocalAnnouncements(globalNewsData);
+
+        // 2. Параллельно записываем в Google Таблицу через GET и POST
+        try {
+          const urlPreviewParam = safePreview.startsWith("data:") ? "" : safePreview;
+          fetch(`${APPS_SCRIPT_URL}?action=create_standalone_announcement&msgId=${encodeURIComponent(createdId)}&title=${encodeURIComponent(newAnn.title)}&preview=${encodeURIComponent(urlPreviewParam)}&desc=${encodeURIComponent(newAnn.desc)}&link=${encodeURIComponent(newAnn.link)}&btnText=${encodeURIComponent(newAnn.btnText)}&postToChannel=${newAnn.postToChannel}`).catch(()=>{});
+          await fetch(APPS_SCRIPT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify(newAnn)
           });
-          currentNewsIndex = 0;
-          renderNewsSlider();
-          renderAdminNewsList();
-          btn.innerText = "Опубликовать анонс"; btn.disabled = false;
-          switchMainTab('announcements');
-        } catch (err) {
-          alert("Ошибка публикации");
-          btn.innerText = "Опубликовать анонс"; btn.disabled = false;
-        }
+        } catch (err) {}
+
+        currentNewsIndex = 0;
+        renderNewsSlider();
+        renderAdminNewsList();
+        btn.innerText = "Опубликовать анонс"; btn.disabled = false;
+        switchMainTab('announcements');
       }
     }
 
     async function deleteNewsItem(msgId, index) {
       const item = globalNewsData[index];
       if (!item) return;
-      tg.showConfirm("Удалить этот анонс из базы приложения?", async (ok) => {
+      tg.showConfirm("Удалить этот анонс?", async (ok) => {
         if (ok) {
+          const key = item.msgId ? ("id_" + item.msgId) : ("txt_" + (item.title || "") + "::" + (item.text || ""));
+          addDeletedId(key);
+          if (item.msgId) addDeletedId(item.msgId);
+
+          globalNewsData.splice(index, 1);
+          saveLocalAnnouncements(globalNewsData);
+          currentNewsIndex = 0;
+          renderNewsSlider();
+          renderAdminNewsList();
+
           try {
             await fetch(`${APPS_SCRIPT_URL}?action=delete_news&msgId=${encodeURIComponent(msgId || '')}&text=${encodeURIComponent(item.text)}`);
-            globalNewsData.splice(index, 1);
-            currentNewsIndex = 0;
-            renderNewsSlider();
-            renderAdminNewsList();
-          } catch (e) { alert("Ошибка удаления"); }
+          } catch (e) {}
         }
       });
     }
@@ -1306,6 +1517,7 @@
       if (currentUserProfile) {
         document.getElementById('interests-input').value = currentUserProfile['Научные интересы'] || "";
         document.getElementById('socials-input').value = currentUserProfile['Другие соцсети'] || "";
+        document.getElementById('profile-photo-url-input').value = (currentUserProfile['Фото'] && String(currentUserProfile['Фото']).startsWith('http')) ? currentUserProfile['Фото'] : "";
         if (currentUserProfile['Фото']) {
           document.getElementById('profile-photo-preview').src = currentUserProfile['Фото'];
           document.getElementById('profile-photo-preview-wrap').style.display = 'flex';
@@ -1327,17 +1539,22 @@
 
       const interestsVal = document.getElementById('interests-input').value;
       const socialsVal = document.getElementById('socials-input').value;
+      const urlPhotoVal = document.getElementById('profile-photo-url-input').value.trim();
+      const finalPhoto = uploadedProfilePhotoBase64 || urlPhotoVal;
 
       const payload = {
         app_action: "update_profile_post",
         userId: currentUserId,
         interests: interestsVal,
         socials: socialsVal,
-        photo: uploadedProfilePhotoBase64 || "",
+        photo: finalPhoto,
         clearPhoto: clearCustomPhotoFlag
       };
 
       try {
+        if (!finalPhoto.startsWith("data:")) {
+          fetch(`${APPS_SCRIPT_URL}?action=update_profile&userId=${currentUserId}&interests=${encodeURIComponent(interestsVal)}&socials=${encodeURIComponent(socialsVal)}&photo=${encodeURIComponent(clearCustomPhotoFlag ? "" : finalPhoto)}`).catch(()=>{});
+        }
         await fetch(APPS_SCRIPT_URL, {
           method: "POST",
           headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -1345,10 +1562,10 @@
         });
         currentUserProfile['Научные интересы'] = interestsVal;
         currentUserProfile['Другие соцсети'] = socialsVal;
-        if (uploadedProfilePhotoBase64) {
-          currentUserProfile['Фото'] = uploadedProfilePhotoBase64;
+        if (finalPhoto) {
+          currentUserProfile['Фото'] = finalPhoto;
           const avatarDiv = document.getElementById('avatar');
-          avatarDiv.style.backgroundImage = `url('${uploadedProfilePhotoBase64}')`;
+          avatarDiv.style.backgroundImage = `url('${finalPhoto}')`;
           avatarDiv.innerHTML = '';
         } else if (clearCustomPhotoFlag) {
           currentUserProfile['Фото'] = "";
@@ -1569,7 +1786,7 @@
       return false;
     }
 
-    // Сдвиг карусели Афиши мероприятий по 1 карточке справа налево
+    // Плавный сдвиг карусели Афиши мероприятий по 1 карточке справа налево
     function slideEventsCarousel(delta) {
       const track = document.getElementById('events-list');
       const cards = track ? track.querySelectorAll('.event-card') : [];
@@ -1646,13 +1863,14 @@
         const evImgSrc = (!ev.photo || ev.photo.includes("unsplash.com")) ? NOTHING_DEFAULT_IMAGE : ev.photo;
 
         return `<div class="card event-card" onclick="toggleEvent(this)">
-          <div style="height: 155px; overflow: hidden;">
-            <img src="${evImgSrc}" class="event-image nothing-img" onerror="this.src=NOTHING_DEFAULT_IMAGE">
+          <!-- Единая рамка изображения 190px (16:9), идентичная Красной зоне анонса -->
+          <div class="event-media-frame">
+            <img src="${evImgSrc}" class="nothing-img" onerror="this.src=NOTHING_DEFAULT_IMAGE">
           </div>
           <div class="event-body">
             ${statusHtml}
             <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
-              <h3 style="margin: 0; font-size: 17px; font-weight: 700;">${ev.name}</h3>
+              <h3 style="margin: 0; font-size: 16px; font-weight: 700;">${ev.name}</h3>
               <span class="mono-label" style="color: var(--sno-ice); flex-shrink: 0;">[ + ]</span>
             </div>
             <div class="event-details">
@@ -1666,7 +1884,6 @@
         </div>`;
       }).join('') || `<div class="card" style="text-align: center; width: 100%;"><span class="mono-label">НЕТ АКТИВНЫХ МЕРОПРИЯТИЙ</span></div>`;
 
-      // Включаем кнопки прокрутки карусели, если мероприятий больше 3 на ПК (или больше 1 на смартфоне)
       const evControls = document.getElementById('events-carousel-controls');
       const minForCarousel = window.innerWidth >= 900 ? 3 : 1;
       if (evControls) {
@@ -1687,7 +1904,7 @@
             <button class="btn-outline" style="flex: 1;" onclick="viewParticipants('${ev.name}')">👀 Профили (${pCount})</button>
           </div>
         </div>`;
-      }).join('') || `<div class="card" style="text-align: center;"><span class="mono-label">АРХИВ ПРОШЕДШИХ МЕРОПРИЯТИЙ ПУСТ</span></div>`;
+      }).join('') || `<div class="card" style="text-align: center;"><span class="mono-label">АРХИВ МЕРОПРИЯТИЙ ПУСТ</span></div>`;
     }
 
     async function loadProfile() {
@@ -1696,12 +1913,12 @@
       const adminIds = ["1486703011", "123456789", "789596527", "526927711"];
       
       try {
-        // Запрос с защитой от кеша браузера Telegram
         const response = await fetch(`${APPS_SCRIPT_URL}?t=${Date.now()}`);
         const data = await response.json();
         globalParticipantsData = data.participants || [];
         globalEventsData = data.events || [];
-        globalNewsData = data.news || [];
+        // Объединяем серверные анонсы из таблицы с локально сохраненными (защита от пропадания)
+        globalNewsData = mergeServerAndLocalNews(data.news || []);
         currentUserProfile = globalParticipantsData.find(item => String(item.user_id) === String(currentUserId));
         
         document.getElementById('loading').style.display = 'none';
@@ -1714,7 +1931,7 @@
 
           const savedTgPhoto = currentUserProfile['TG Фото'] || "";
           if (currentUserPhotoTg && currentUserPhotoTg !== savedTgPhoto) {
-            fetch(`${APPS_SCRIPT_URL}?action=sync_tg_photo&userId=${currentUserId}&tgPhoto=${encodeURIComponent(currentUserPhotoTg)}`);
+            fetch(`${APPS_SCRIPT_URL}?action=sync_tg_photo&userId=${currentUserId}&tgPhoto=${encodeURIComponent(currentUserPhotoTg)}`).catch(()=>{});
           }
 
           document.getElementById('bottom-dock').style.display = 'flex';
