@@ -832,10 +832,26 @@
       <span>Полезное</span>
     </button>
   </nav>
-
-  <script>
+<script>
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwhcJfMMlv2ZKcgJ1UKICfXsBlDt5cP2DazV3pW1fcqukOdNDJpeEBNfJescD9wKEzUFg/exec";
     const tg = window.Telegram.WebApp;
+
+    // Стандартный геометрический баннер в стиле Nothing OS (SVG Data URI)
+    const NOTHING_DEFAULT_IMAGE = "data:image/svg+xml;utf8," + encodeURIComponent(`
+      <svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
+        <rect width="800" height="450" fill="#09132B"/>
+        <g fill="rgba(223,240,255,0.18)">
+          <circle cx="80" cy="80" r="3"/><circle cx="120" cy="80" r="3"/><circle cx="160" cy="80" r="3"/><circle cx="200" cy="80" r="3"/>
+          <circle cx="80" cy="120" r="3"/><circle cx="120" cy="120" r="3"/><circle cx="160" cy="120" r="3"/><circle cx="200" cy="120" r="3"/>
+          <circle cx="80" cy="160" r="3"/><circle cx="120" cy="160" r="3"/><circle cx="160" cy="160" r="3"/><circle cx="200" cy="160" r="3"/>
+        </g>
+        <circle cx="620" cy="225" r="140" fill="none" stroke="rgba(223,240,255,0.22)" stroke-width="1.5" stroke-dasharray="6 6"/>
+        <circle cx="620" cy="225" r="85" fill="none" stroke="#DFF0FF" stroke-width="2"/>
+        <circle cx="535" cy="225" r="7" fill="#FF5252"/>
+        <line x1="60" y1="360" x2="740" y2="360" stroke="rgba(223,240,255,0.2)" stroke-width="1"/>
+        <text x="60" y="395" fill="#DFF0FF" font-family="monospace" font-size="16" letter-spacing="4">SNO // MGSU.SYSTEM</text>
+      </svg>
+    `);
 
     function forceFullscreen() {
       try {
@@ -854,6 +870,7 @@
     let globalParticipantsData = []; 
     let globalNewsData = [];
     let currentNewsIndex = 0;
+    let currentEventsSlide = 0;
     let isManagerGlobal = false;
     let canCreateGlobal = false;
     let currentEventForExport = "";
@@ -882,6 +899,9 @@
       ['home', 'announcements', 'useful'].forEach(t => {
         document.getElementById('dock-' + t).classList.toggle('active', t === tabName);
       });
+      if (tabName === 'announcements') {
+        setTimeout(() => slideEventsCarousel(0), 50);
+      }
       window.scrollTo(0, 0);
     }
 
@@ -943,7 +963,7 @@
 
     function handleProfilePhotoUpload(input) {
       if (!input.files || !input.files[0]) return;
-      compressImageFile(input.files[0], 150, 0.72, true, (base64) => {
+      compressImageFile(input.files[0], 150, 0.7, true, (base64) => {
         uploadedProfilePhotoBase64 = base64;
         clearCustomPhotoFlag = false;
         document.getElementById('profile-upload-label').innerText = "✅ ФОТО ЗАГРУЖЕНО (НАЖМИТЕ СОХРАНИТЬ)";
@@ -964,7 +984,7 @@
 
     function handleAnnouncementPreviewUpload(input) {
       if (!input.files || !input.files[0]) return;
-      compressImageFile(input.files[0], 320, 0.68, false, (base64) => {
+      compressImageFile(input.files[0], 260, 0.62, false, (base64) => {
         uploadedAnnPreviewBase64 = base64;
         document.getElementById('sa-upload-label').innerText = "✅ ПРЕВЬЮ ЗАГРУЖЕНО ИЗ ГАЛЕРЕИ";
         document.getElementById('sa-preview-current-img').src = base64;
@@ -985,13 +1005,27 @@
       window.Telegram.WebApp.openLink(`https://t.me/${username}`);
     }
 
+    // Рендер Ленты Анонсов: Жёлтая (заголовок), Красная (превью-фото), Зелёная (текст и кнопки) зоны
     function renderNewsSlider() {
       const container = document.getElementById('home-news-list');
       const controls = document.getElementById('news-step-controls');
       
       if (!globalNewsData || globalNewsData.length === 0) {
         controls.style.display = 'none';
-        container.innerHTML = `<div class="mono-label" style="text-align: center; padding: 14px;">ПОКА НЕТ ОПУБЛИКОВАННЫХ АНОНСОВ</div>`;
+        container.innerHTML = `
+          <div class="ann-split-grid">
+            <div class="ann-yellow-zone">
+              <div class="mono-label">STATUS // EMPTY</div>
+              <div class="ndot-title" style="font-size: 16px; margin-top: 4px; color: var(--sno-ice);">НЕТ АКТИВНЫХ АНОНСОВ</div>
+            </div>
+            <div class="ann-red-zone">
+              <img src="${NOTHING_DEFAULT_IMAGE}" class="nothing-img">
+            </div>
+            <div class="ann-green-zone">
+              <div class="mono-label" style="margin: auto; text-align: center;">ПОКА НЕТ ОПУБЛИКОВАННЫХ АНОНСОВ</div>
+            </div>
+          </div>
+        `;
         return;
       }
 
@@ -1004,31 +1038,44 @@
       document.getElementById('news-prev-btn').disabled = (currentNewsIndex === 0);
       document.getElementById('news-next-btn').disabled = (currentNewsIndex === globalNewsData.length - 1);
 
-      const safeTitle = item.title ? `<div style="font-size: 16px; font-weight: 700; margin-bottom: 8px; color: var(--sno-ice);">${String(item.title).replace(/</g, "&lt;")}</div>` : '';
-      const previewImg = item.preview ? `<img src="${item.preview}" style="width: 100%; max-height: 220px; object-fit: cover; border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border-dot);">` : '';
+      const safeTitle = item.title
+        ? String(item.title).replace(/</g, "&lt;")
+        : "АНОНС СНО МГСУ";
+      const imgSrc = (item.preview && String(item.preview).trim() !== "") ? item.preview : NOTHING_DEFAULT_IMAGE;
       const safeText = String(item.text || "").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      
       const linkBtn = (item.link && item.link.startsWith('http'))
-        ? `<button class="btn-primary" style="margin-top: 12px;" onclick="window.Telegram.WebApp.openLink('${item.link}')">🔗 ${item.btnText || 'Перейти по ссылке'}</button>`
+        ? `<button class="btn-primary" style="margin-top: 14px;" onclick="window.Telegram.WebApp.openLink('${item.link}')">🔗 ${item.btnText || 'Перейти по ссылке'}</button>`
         : '';
 
       const adminActionsHtml = canCreateGlobal ? `
         <div style="display: flex; gap: 8px; margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--border-dot);">
-          <button class="btn-outline" style="padding: 8px 12px; font-size: 10px; flex: 1;" onclick="openEditAnnouncementModal(${currentNewsIndex})">[ ✎ ИЗМЕНИТЬ ]</button>
-          <button class="btn-outline" style="padding: 8px 12px; font-size: 10px; flex: 1; color: var(--danger);" onclick="deleteNewsItem('${item.msgId || ''}', ${currentNewsIndex})">[ ✕ УДАЛИТЬ ]</button>
+          <button class="btn-outline" style="padding: 8px 12px; font-size: 10px; flex: 1;" onclick="openEditAnnouncementModal(${currentNewsIndex})">✎ Изменить</button>
+          <button class="btn-outline" style="padding: 8px 12px; font-size: 10px; flex: 1; color: var(--danger);" onclick="deleteNewsItem('${item.msgId || ''}', ${currentNewsIndex})">✕ Удалить</button>
         </div>
       ` : '';
 
       container.innerHTML = `
-        <div style="background: var(--sno-navy-dark); padding: 14px; border-radius: 16px; border: 1px solid var(--border-dot);">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <span class="mono-label" style="color: var(--sno-ice);">📅 ${formatLocalDate(item.date)}</span>
-            ${currentNewsIndex === 0 ? '<span class="badge-pill" style="margin-top:0; padding: 2px 8px; font-size: 9px;">NEW</span>' : ''}
+        <div class="ann-split-grid">
+          <div class="ann-yellow-zone">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span class="mono-label" style="color: var(--sno-ice);">📅 ${formatLocalDate(item.date)}</span>
+              ${currentNewsIndex === 0 ? '<span class="badge-pill" style="margin-top:0; padding: 2px 8px; font-size: 9px;">NEW</span>' : ''}
+            </div>
+            <div class="ndot-title" style="font-size: 16px; color: var(--text-primary); word-break: break-word;">${safeTitle}</div>
           </div>
-          ${previewImg}
-          ${safeTitle}
-          <div style="font-size: 14px; line-height: 1.5; white-space: pre-wrap; word-break: break-word;">${safeText}</div>
-          ${linkBtn}
-          ${adminActionsHtml}
+
+          <div class="ann-red-zone">
+            <img src="${imgSrc}" class="nothing-img" onerror="this.src=NOTHING_DEFAULT_IMAGE">
+          </div>
+
+          <div class="ann-green-zone">
+            <div style="font-size: 14px; line-height: 1.55; white-space: pre-wrap; word-break: break-word; max-height: 240px; overflow-y: auto; padding-right: 4px;">${safeText}</div>
+            <div>
+              ${linkBtn}
+              ${adminActionsHtml}
+            </div>
+          </div>
         </div>
       `;
     }
@@ -1042,15 +1089,18 @@
       const listEl = document.getElementById('news-list');
       if (!listEl) return;
       listEl.innerHTML = globalNewsData.map((n, i) => {
+        const previewSrc = (n.preview && String(n.preview).trim() !== "") ? n.preview : NOTHING_DEFAULT_IMAGE;
         return `<div class="card" style="padding: 14px; margin-bottom: 12px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
             <span class="mono-label">📅 ${formatLocalDate(n.date)}</span>
             <div style="display: flex; gap: 10px;">
-              <button onclick="openEditAnnouncementModal(${i})" class="mono-label" style="background: none; border: none; color: var(--sno-ice); cursor: pointer;">[ ✎ ИЗМЕНИТЬ ]</button>
-              <button onclick="deleteNewsItem('${n.msgId || ''}', ${i})" class="mono-label" style="background: none; border: none; color: var(--danger); cursor: pointer;">[ ✕ УДАЛИТЬ ]</button>
+              <button onclick="openEditAnnouncementModal(${i})" class="mono-label" style="background: none; border: none; color: var(--sno-ice); cursor: pointer;">✎ Изменить</button>
+              <button onclick="deleteNewsItem('${n.msgId || ''}', ${i})" class="mono-label" style="background: none; border: none; color: var(--danger); cursor: pointer;">✕ Удалить</button>
             </div>
           </div>
-          ${n.preview ? `<img src="${n.preview}" style="width: 100%; height: 110px; object-fit: cover; border-radius: 10px; margin-bottom: 8px; border: 1px solid var(--border-dot);">` : ''}
+          <div style="height: 110px; border-radius: 10px; overflow: hidden; margin-bottom: 8px;">
+            <img src="${previewSrc}" class="nothing-img" onerror="this.src=NOTHING_DEFAULT_IMAGE">
+          </div>
           ${n.title ? `<div style="font-weight:700; margin-bottom:6px; color: var(--sno-ice);">${n.title}</div>` : ''}
           <div style="font-size: 13.5px; margin-bottom: 12px; line-height: 1.4; white-space: pre-wrap;">${String(n.text)}</div>
           <div style="display: flex; gap: 8px;">
@@ -1127,9 +1177,10 @@
 
       btn.innerText = "Сохранение..."; btn.disabled = true;
 
-      const previewFinal = (uploadedAnnPreviewBase64 !== null)
+      const rawPreview = (uploadedAnnPreviewBase64 !== null)
         ? uploadedAnnPreviewBase64
         : document.getElementById('sa-preview-url').value.trim();
+      const safePreview = (rawPreview && rawPreview.length < 45000) ? rawPreview : "";
 
       if (isEditing) {
         const oldItem = globalNewsData[editIdx];
@@ -1139,26 +1190,29 @@
           originalText: oldItem.text || "",
           originalTitle: oldItem.title || "",
           title: document.getElementById('sa-title').value.trim(),
-          preview: previewFinal,
+          preview: safePreview,
           desc: document.getElementById('sa-desc').value.trim(),
           link: document.getElementById('sa-link').value.trim(),
           btnText: document.getElementById('sa-btntext').value.trim() || "Подробнее"
         };
 
         try {
-          const res = await fetch(APPS_SCRIPT_URL, {
-            method: "POST",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify(editPayload)
-          });
-          const resJson = await res.json();
+          if (!safePreview.startsWith("data:") && editPayload.msgId) {
+            const getEditUrl = `${APPS_SCRIPT_URL}?action=edit_standalone_announcement&msgId=${encodeURIComponent(editPayload.msgId)}&title=${encodeURIComponent(editPayload.title)}&preview=${encodeURIComponent(editPayload.preview)}&desc=${encodeURIComponent(editPayload.desc)}&link=${encodeURIComponent(editPayload.link)}&btnText=${encodeURIComponent(editPayload.btnText)}`;
+            await fetch(getEditUrl);
+          } else {
+            await fetch(APPS_SCRIPT_URL, {
+              method: "POST",
+              headers: { "Content-Type": "text/plain;charset=utf-8" },
+              body: JSON.stringify(editPayload)
+            });
+          }
 
           globalNewsData[editIdx].title = editPayload.title;
           globalNewsData[editIdx].text = editPayload.desc;
           globalNewsData[editIdx].preview = editPayload.preview;
           globalNewsData[editIdx].link = editPayload.link;
           globalNewsData[editIdx].btnText = editPayload.btnText;
-          if (resJson && resJson.id) globalNewsData[editIdx].msgId = resJson.id;
 
           currentNewsIndex = editIdx;
           renderNewsSlider();
@@ -1173,7 +1227,7 @@
         const newAnn = {
           app_action: "create_standalone_announcement",
           title: document.getElementById('sa-title').value.trim(),
-          preview: previewFinal,
+          preview: safePreview,
           desc: document.getElementById('sa-desc').value.trim(),
           link: document.getElementById('sa-link').value.trim(),
           btnText: document.getElementById('sa-btntext').value.trim() || "Подробнее",
@@ -1181,19 +1235,30 @@
         };
 
         try {
-          await fetch(APPS_SCRIPT_URL, {
-            method: "POST",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify(newAnn)
-          });
+          let createdId = "app_" + Date.now();
+          if (!safePreview.startsWith("data:")) {
+            const getUrl = `${APPS_SCRIPT_URL}?action=create_standalone_announcement&title=${encodeURIComponent(newAnn.title)}&preview=${encodeURIComponent(newAnn.preview)}&desc=${encodeURIComponent(newAnn.desc)}&link=${encodeURIComponent(newAnn.link)}&btnText=${encodeURIComponent(newAnn.btnText)}&postToChannel=${newAnn.postToChannel}`;
+            const r = await fetch(getUrl);
+            const rj = await r.json();
+            if (rj && rj.id) createdId = rj.id;
+          } else {
+            const r = await fetch(APPS_SCRIPT_URL, {
+              method: "POST",
+              headers: { "Content-Type": "text/plain;charset=utf-8" },
+              body: JSON.stringify(newAnn)
+            });
+            const rj = await r.json();
+            if (rj && rj.id) createdId = rj.id;
+          }
+
           globalNewsData.unshift({
             date: new Date().toISOString(),
             title: newAnn.title,
             text: newAnn.desc,
-            preview: newAnn.preview,
+            preview: safePreview,
             link: newAnn.link,
             btnText: newAnn.btnText,
-            msgId: "app_" + Date.now()
+            msgId: createdId
           });
           currentNewsIndex = 0;
           renderNewsSlider();
@@ -1214,7 +1279,10 @@
         if (ok) {
           try {
             await fetch(`${APPS_SCRIPT_URL}?action=delete_news&msgId=${encodeURIComponent(msgId || '')}&text=${encodeURIComponent(item.text)}`);
-            location.reload();
+            globalNewsData.splice(index, 1);
+            currentNewsIndex = 0;
+            renderNewsSlider();
+            renderAdminNewsList();
           } catch (e) { alert("Ошибка удаления"); }
         }
       });
@@ -1501,6 +1569,31 @@
       return false;
     }
 
+    // Сдвиг карусели Афиши мероприятий по 1 карточке справа налево
+    function slideEventsCarousel(delta) {
+      const track = document.getElementById('events-list');
+      const cards = track ? track.querySelectorAll('.event-card') : [];
+      const isDesktop = window.innerWidth >= 900;
+      const visibleCount = isDesktop ? 3 : 1;
+      const maxIndex = Math.max(0, cards.length - visibleCount);
+
+      currentEventsSlide = Math.min(Math.max(0, currentEventsSlide + delta), maxIndex);
+
+      if (cards.length > 0) {
+        const cardWidth = cards[0].getBoundingClientRect().width;
+        const gap = 16;
+        track.style.transform = `translateX(-${currentEventsSlide * (cardWidth + gap)}px)`;
+      }
+
+      const prevBtn = document.getElementById('ev-prev-btn');
+      const nextBtn = document.getElementById('ev-next-btn');
+      const counter = document.getElementById('ev-carousel-counter');
+      if (prevBtn) prevBtn.disabled = (currentEventsSlide === 0);
+      if (nextBtn) nextBtn.disabled = (currentEventsSlide >= maxIndex);
+      if (counter) counter.innerText = `${currentEventsSlide + 1} / ${maxIndex + 1}`;
+    }
+    window.addEventListener('resize', () => slideEventsCarousel(0));
+
     function renderEventsFeed() {
       const currentUserId = tg.initDataUnsafe?.user?.id;
       const hidePast = document.getElementById('hide-past-checkbox') ? document.getElementById('hide-past-checkbox').checked : true;
@@ -1537,7 +1630,7 @@
         } else {
           if (isJoined) {
             btnHtml = `<button class="btn-primary" style="background: var(--success); color: #000; margin-top: 0; pointer-events: none;">✅ Вы записаны</button>
-                       ${!past ? `<div style="text-align: center; margin-top: 10px;"><span onclick="leaveEvent('${ev.name}', event)" class="mono-label" style="color: var(--danger); cursor: pointer; text-decoration: underline;">[ ОТМЕНИТЬ ЗАПИСЬ ]</span></div>` : ''}`;
+                       ${!past ? `<div style="text-align: center; margin-top: 10px;"><span onclick="leaveEvent('${ev.name}', event)" class="mono-label" style="color: var(--danger); cursor: pointer; text-decoration: underline;">Отменить запись</span></div>` : ''}`;
           } else if (isClosed) {
             btnHtml = `<button class="btn-outline" style="margin-top: 0;" disabled>⏳ Регистрация закрыта</button>`;
           } else {
@@ -1546,13 +1639,16 @@
         }
         
         const pCount = ev.participants ? ev.participants.split(',').filter(x => x.trim() !== '').length : 0;
-        const adminPBtn = isManagerGlobal ? `<button class="btn-outline" onclick="event.stopPropagation(); viewParticipants('${ev.name}')" style="margin-top: 10px;">👀 Участники и выгрузка CSV (${pCount})</button>` : '';
+        const adminPBtn = isManagerGlobal ? `<button class="btn-outline" onclick="event.stopPropagation(); viewParticipants('${ev.name}')" style="margin-top: 10px;">👀 Участники и CSV (${pCount})</button>` : '';
         const adminEBtn = canCreateGlobal ? `<div style="display: flex; gap: 8px; margin-top: 8px;"><button class="btn-outline" onclick="event.stopPropagation(); openAdminForEdit('${ev.name}')" style="flex: 1;">✏️ Изменить</button><button class="btn-outline" onclick="event.stopPropagation(); deleteEvent('${ev.name}')" style="flex: 1; color: var(--danger);">🗑️ Удалить</button></div>` : '';
         const exemptionHtml = (ev.exemption === 'true') ? `<div class="badge-pill" style="margin-bottom: 12px;">🎓 ОСВОБОЖДЕНИЕ ОТ ПАР</div>` : '';
         const endTimeInfo = ev.endtime ? `<div class="mono-label" style="margin-bottom: 6px;">🏁 ОКОНЧАНИЕ: ${formatLocalDate(ev.endtime)}</div>` : '';
+        const evImgSrc = (!ev.photo || ev.photo.includes("unsplash.com")) ? NOTHING_DEFAULT_IMAGE : ev.photo;
 
         return `<div class="card event-card" onclick="toggleEvent(this)">
-          <img src="${ev.photo}" class="event-image">
+          <div style="height: 155px; overflow: hidden;">
+            <img src="${evImgSrc}" class="event-image nothing-img" onerror="this.src=NOTHING_DEFAULT_IMAGE">
+          </div>
           <div class="event-body">
             ${statusHtml}
             <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
@@ -1568,7 +1664,16 @@
             </div>
           </div>
         </div>`;
-      }).join('') || `<div class="card" style="text-align: center;"><span class="mono-label">НЕТ АКТИВНЫХ МЕРОПРИЯТИЙ</span></div>`;
+      }).join('') || `<div class="card" style="text-align: center; width: 100%;"><span class="mono-label">НЕТ АКТИВНЫХ МЕРОПРИЯТИЙ</span></div>`;
+
+      // Включаем кнопки прокрутки карусели, если мероприятий больше 3 на ПК (или больше 1 на смартфоне)
+      const evControls = document.getElementById('events-carousel-controls');
+      const minForCarousel = window.innerWidth >= 900 ? 3 : 1;
+      if (evControls) {
+        evControls.style.display = visibleEvents.length > minForCarousel ? 'flex' : 'none';
+      }
+      currentEventsSlide = 0;
+      setTimeout(() => slideEventsCarousel(0), 50);
 
       const pastEvents = globalEventsData.filter(ev => isEventPast(ev, now));
       document.getElementById('past-events-admin-list').innerHTML = pastEvents.map(ev => {
@@ -1591,7 +1696,8 @@
       const adminIds = ["1486703011", "123456789", "789596527", "526927711"];
       
       try {
-        const response = await fetch(APPS_SCRIPT_URL);
+        // Запрос с защитой от кеша браузера Telegram
+        const response = await fetch(`${APPS_SCRIPT_URL}?t=${Date.now()}`);
         const data = await response.json();
         globalParticipantsData = data.participants || [];
         globalEventsData = data.events || [];
