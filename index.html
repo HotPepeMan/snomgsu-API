@@ -39,6 +39,7 @@
       --font-mono: 'Lettera Mono LL', 'Space Mono', monospace;
       --font-ndot: 'NDot 57', 'NDot 47', 'Space Mono', monospace;
 
+      /* Безопасный отступ сверху под кнопку "Закрыть" в Telegram */
       --safe-top: calc(var(--tg-safe-area-inset-top, env(safe-area-inset-top, 18px)) + var(--tg-content-safe-area-inset-top, 52px));
     }
 
@@ -47,7 +48,7 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* Фоновые космические обои Nothing OS в единой гамме СНО */
+    /* Космические обои Nothing OS в единой гамме СНО */
     body {
       background-color: var(--bg-main);
       background-image: 
@@ -65,6 +66,25 @@
 
     button, input, textarea, select {
       font-family: var(--font-sans);
+    }
+
+    /* Анимация появления интерфейса (каскадный zoom из космоса за 1 секунду) */
+    @keyframes cosmicIntroZoom {
+      0% {
+        opacity: 0;
+        transform: scale(0.88) translateY(14px);
+        filter: blur(6px);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+        filter: blur(0);
+      }
+    }
+
+    .intro-zoom-item {
+      animation: cosmicIntroZoom 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      opacity: 0;
     }
 
     /* Центрированный экран загрузки с анимированным многоточием */
@@ -761,7 +781,7 @@
     </div>
 
     <!-- ЭКРАН РЕГИСТРАЦИИ + ПРИГЛАШЕНИЕ ВСТУПИТЬ В СНО -->
-    <div id="registration-view" class="card" style="display: none; text-align: center; margin-top: 12px; max-width: 480px; margin-left: auto; margin-right: auto;">
+    <div id="registration-view" class="card intro-zoom-item" style="display: none; text-align: center; margin-top: 12px; max-width: 480px; margin-left: auto; margin-right: auto;">
       <div class="mono-label">IDENTIFICATION // REQUIRED</div>
       <h3 class="ndot-title" style="margin: 8px 0 12px 0; font-size: 20px;">ПРИВЯЗКА ПРОФИЛЯ СНО</h3>
       <p style="font-size: 13px; color: var(--text-muted); margin: 0 0 16px 0; line-height: 1.45;">
@@ -817,7 +837,7 @@
     <!-- ВКЛАДКА 1: ГЛАВНАЯ (ПРОФИЛЬ + РЕЙТИНГ + АДМИНКА ВНИЗУ)   -->
     <!-- ======================================================== -->
     <div id="tab-home" style="display: none;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding: 0 4px;">
+      <div class="intro-zoom-item" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding: 0 4px; animation-delay: 0.05s;">
         <div class="ndot-num" style="font-size: 18px; color: var(--sno-ice);">SNO // MGSU.OS</div>
         <div style="display: flex; align-items: center; gap: 10px;">
           <button onclick="forceFullscreen()" style="background: none; border: 1px solid var(--border-dot); color: var(--sno-ice); border-radius: 999px; padding: 4px 10px; font-family: var(--font-mono); font-size: 10px; cursor: pointer;">⛶ ПОЛНЫЙ ЭКРАН</button>
@@ -826,7 +846,7 @@
       </div>
 
       <div class="desktop-two-col">
-        <div>
+        <div class="intro-zoom-item" style="animation-delay: 0.15s;">
           <div class="card">
             <div style="display: flex; gap: 14px; align-items: flex-start;">
               <div id="avatar"></div>
@@ -891,7 +911,7 @@
           </div>
         </div>
 
-        <div>
+        <div class="intro-zoom-item" style="animation-delay: 0.25s;">
           <details class="card" open>
             <summary style="cursor: pointer;">
               <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px;">
@@ -923,7 +943,7 @@
     <!-- ВКЛАДКА 2: АНОНСЫ И МЕРОПРИЯТИЯ                          -->
     <!-- ======================================================== -->
     <div id="tab-announcements" style="display: none;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+      <div class="intro-zoom-item" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; animation-delay: 0.05s;">
         <div>
           <div class="mono-label">FEED // EVENTS & NEWS</div>
           <div class="ndot-title" style="font-size: 18px;">АНОНСЫ И СОБЫТИЯ</div>
@@ -934,7 +954,7 @@
         </label>
       </div>
 
-      <div class="card" id="announcements-box">
+      <div class="card intro-zoom-item" id="announcements-box" style="animation-delay: 0.15s;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
           <span class="mono-label" style="color: var(--sno-ice);">● ЛЕНТА АНОНСОВ СНО</span>
           <div id="news-step-controls" class="news-top-pill-zone">
@@ -950,7 +970,7 @@
         <div id="home-news-list"></div>
       </div>
 
-      <div style="display: flex; justify-content: space-between; align-items: center; margin: 18px 4px 10px 4px;">
+      <div class="intro-zoom-item" style="display: flex; justify-content: space-between; align-items: center; margin: 18px 4px 10px 4px; animation-delay: 0.2s;">
         <div class="mono-label">АФИША МЕРОПРИЯТИЙ</div>
         <div id="events-carousel-controls" class="news-top-pill-zone">
           <button class="news-top-pill-btn" id="ev-prev-btn" onclick="slideEventsCarousel(-1)">◀</button>
@@ -959,7 +979,7 @@
         </div>
       </div>
 
-      <div class="events-carousel-viewport">
+      <div class="events-carousel-viewport intro-zoom-item" style="animation-delay: 0.25s;">
         <div id="events-list" class="events-carousel-track"></div>
       </div>
     </div>
@@ -968,10 +988,12 @@
     <!-- ВКЛАДКА 3: ПОЛЕЗНОЕ                                      -->
     <!-- ======================================================== -->
     <div id="tab-useful" style="display: none;">
-      <div class="mono-label" style="margin-bottom: 4px;">MODULES // RESOURCES</div>
-      <div class="ndot-title" style="font-size: 18px; margin-bottom: 14px;">ПОЛЕЗНЫЕ МАТЕРИАЛЫ</div>
+      <div class="intro-zoom-item" style="animation-delay: 0.05s;">
+        <div class="mono-label" style="margin-bottom: 4px;">MODULES // RESOURCES</div>
+        <div class="ndot-title" style="font-size: 18px; margin-bottom: 14px;">ПОЛЕЗНЫЕ МАТЕРИАЛЫ</div>
+      </div>
 
-      <div class="useful-banner" onclick="openSubView('coauthors-view')">
+      <div class="useful-banner intro-zoom-item" onclick="openSubView('coauthors-view')" style="animation-delay: 0.1s;">
         <div class="useful-icon-box">
           <svg class="nothing-icon-svg" viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><circle cx="17" cy="11" r="3"/><path d="M21 21v-1.5a3 3 0 0 0-3-3h-1"/></svg>
         </div>
@@ -983,7 +1005,7 @@
         <div class="mono-label" style="font-size: 18px; color: var(--sno-ice);">›</div>
       </div>
 
-      <div class="useful-grid">
+      <div class="useful-grid intro-zoom-item" style="animation-delay: 0.15s;">
         <div class="useful-tile" onclick="window.Telegram.WebApp.openLink('https://drive.google.com/drive/folders/ВАША_ССЫЛКА_ТУТ')">
           <div class="useful-icon-box">
             <svg class="nothing-icon-svg" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
@@ -1005,7 +1027,7 @@
         </div>
       </div>
 
-      <div class="useful-banner" onclick="contactSupport()">
+      <div class="useful-banner intro-zoom-item" onclick="contactSupport()" style="animation-delay: 0.2s;">
         <div class="useful-icon-box">
           <svg class="nothing-icon-svg" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         </div>
@@ -1016,10 +1038,12 @@
         <div class="mono-label" style="font-size: 18px; color: var(--sno-ice);">›</div>
       </div>
 
-      <div class="mono-label" style="margin: 18px 0 4px 4px;">MEDIA // PROJECTS</div>
-      <div class="ndot-title" style="font-size: 18px; margin: 0 0 12px 4px;">ЭТО ИНТЕРЕСНО</div>
+      <div class="intro-zoom-item" style="animation-delay: 0.25s;">
+        <div class="mono-label" style="margin: 18px 0 4px 4px;">MEDIA // PROJECTS</div>
+        <div class="ndot-title" style="font-size: 18px; margin: 0 0 12px 4px;">ЭТО ИНТЕРЕСНО</div>
+      </div>
 
-      <div class="useful-grid">
+      <div class="useful-grid intro-zoom-item" style="animation-delay: 0.3s;">
         <div class="useful-tile" onclick="window.Telegram.WebApp.openLink('https://t.me/HorizonMGSU')">
           <div class="useful-icon-box">
             <svg class="nothing-icon-svg" viewBox="0 0 24 24"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg>
@@ -1041,7 +1065,7 @@
         </div>
       </div>
 
-      <div class="card" style="margin-top: 14px;">
+      <div class="card intro-zoom-item" style="margin-top: 14px; animation-delay: 0.35s;">
         <div class="mono-label" style="margin-bottom: 10px;">OFFICIAL NETWORKS</div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
           <button class="btn-outline" onclick="window.Telegram.WebApp.openLink('https://t.me/snomgsu')">Telegram</button>
@@ -1236,8 +1260,8 @@
   <script>
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwhcJfMMlv2ZKcgJ1UKICfXsBlDt5cP2DazV3pW1fcqukOdNDJpeEBNfJescD9wKEzUFg/exec";
     const SNO_JOIN_FORM_URL = "https://forms.yandex.ru/u/6a82ad2c49af47f4fb6ba82d";
-    const LOCAL_NEWS_KEY = "sno_mgsu_saved_announcements_v4";
-    const LOCAL_DELETED_KEY = "sno_mgsu_deleted_announcements_v4";
+    const LOCAL_NEWS_KEY = "sno_mgsu_saved_announcements_v5";
+    const LOCAL_DELETED_KEY = "sno_mgsu_deleted_announcements_v5";
     const ANN_PREFIX = "[ANNOUNCEMENT]::";
     const tg = window.Telegram.WebApp;
 
@@ -1405,7 +1429,7 @@
             btnText: x.btnText || "Подробнее",
             msgId: x.msgId
           }));
-          tg.CloudStorage.setItem("sno_cloud_news_v4", JSON.stringify(lightCopy), () => {});
+          tg.CloudStorage.setItem("sno_cloud_news_v5", JSON.stringify(lightCopy), () => {});
         }
       } catch (e) {}
     }
@@ -1414,7 +1438,7 @@
       return new Promise((resolve) => {
         try {
           if (tg.CloudStorage && typeof tg.CloudStorage.getItem === "function") {
-            tg.CloudStorage.getItem("sno_cloud_news_v4", (err, val) => {
+            tg.CloudStorage.getItem("sno_cloud_news_v5", (err, val) => {
               if (!err && val) {
                 try { resolve(JSON.parse(val)); return; } catch (e) {}
               }
