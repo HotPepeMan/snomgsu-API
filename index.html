@@ -1,0 +1,2703 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Twemoji для отрисовки эмодзи в едином стиле клиента Telegram -->
+  <script src="https://cdn.jsdelivr.net/npm/@twemoji/api@latest/dist/twemoji.min.js" crossorigin="anonymous"></script>
+  <!-- Lottie Player для анимированных стикеров Telegram -->
+  <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+  <!-- Шрифты Space Grotesk, Space Mono и Nothing OS (NDot 57 / NType 82) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.cdnfonts.com/css/ndot-47" rel="stylesheet">
+  <style>
+    @font-face {
+      font-family: 'NType82';
+      src: local('NType 82'), local('NType82-Regular');
+      unicode-range: U+0000-00FF;
+    }
+
+    :root {
+      --sno-navy: #102048;
+      --sno-navy-dark: #09132B;
+      --sno-ice: #DFF0FF;
+      --sno-ice-mid: #B8DCFF;
+      --sno-accent: #3B82F6;
+      --bg-main: #09132B;
+      --bg-card: #11224D;
+      --bg-card-elevated: #172D63;
+      --border-dot: rgba(223, 240, 255, 0.22);
+      --text-primary: #F2F8FF;
+      --text-muted: #94B2D8;
+      --danger: #FF5252;
+      --success: #22C55E;
+
+      --font-sans: 'NType 82', 'NType82', 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'Lettera Mono LL', 'Space Mono', monospace;
+      --font-ndot: 'NDot 57', 'NDot 47', 'Space Mono', monospace;
+
+      /* Безопасный отступ сверху под кнопку "Закрыть" в Telegram */
+      --safe-top: calc(var(--tg-safe-area-inset-top, env(safe-area-inset-top, 18px)) + var(--tg-content-safe-area-inset-top, 52px));
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      background-image: radial-gradient(rgba(223, 240, 255, 0.1) 1px, transparent 1px);
+      background-size: 16px 16px;
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      margin: 0;
+      /* Опускаем интерфейс ниже системной кнопки "Закрыть" */
+      padding: var(--safe-top) 18px 115px 18px;
+      min-height: 100vh;
+      width: 100%;
+      overflow-x: hidden;
+    }
+
+    button, input, textarea, select {
+      font-family: var(--font-sans);
+    }
+
+    /* Центрированный экран загрузки с анимированным многоточием */
+    .loading-center-screen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: var(--sno-ice);
+      background-color: var(--bg-main);
+      background-image: radial-gradient(rgba(223, 240, 255, 0.1) 1px, transparent 1px);
+      background-size: 16px 16px;
+      z-index: 2000;
+    }
+    .loading-dots {
+      display: inline-block;
+      width: 28px;
+      text-align: left;
+    }
+    .loading-dots::after {
+      content: '';
+      animation: nothingDots 1.4s steps(4, end) infinite;
+    }
+    @keyframes nothingDots {
+      0%   { content: ''; }
+      25%  { content: '.'; }
+      50%  { content: '..'; }
+      75%  { content: '...'; }
+      100% { content: ''; }
+    }
+
+    img.emoji, .tg-custom-emoji {
+      height: 1.2em;
+      width: 1.2em;
+      margin: 0 0.08em 0 0.1em;
+      vertical-align: -0.2em;
+      display: inline-block;
+      border: none !important;
+      background: transparent !important;
+      filter: none !important;
+    }
+
+    .emoji-picker-bar {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+      padding: 8px 10px;
+      background: var(--sno-navy-dark);
+      border: 1px dashed var(--border-dot);
+      border-radius: 12px;
+    }
+    .emoji-btn {
+      background: rgba(223, 240, 255, 0.08);
+      border: 1px solid transparent;
+      border-radius: 8px;
+      padding: 4px 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    .emoji-btn:hover, .emoji-btn:active {
+      border-color: var(--sno-ice);
+      transform: scale(1.1);
+    }
+
+    .ndot-title {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      line-height: 1.25;
+    }
+
+    .ndot-num {
+      font-family: var(--font-ndot);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    .mono-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .app-shell {
+      width: 100%;
+      max-width: 1440px;
+      margin: 0 auto;
+    }
+
+    @media (min-width: 900px) {
+      body {
+        padding: calc(var(--safe-top) + 6px) 40px 120px 40px;
+      }
+      .desktop-two-col {
+        display: grid;
+        grid-template-columns: 420px 1fr;
+        gap: 24px;
+        align-items: start;
+      }
+      .events-grid-desktop {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+        gap: 18px;
+        align-items: start;
+      }
+      .bottom-dock {
+        max-width: 540px;
+        margin: 0 auto;
+      }
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-dot);
+      border-radius: 22px;
+      padding: 18px;
+      margin-bottom: 14px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+      position: relative;
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: var(--sno-ice);
+      color: var(--sno-navy);
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-top: 8px;
+    }
+
+    .coauthor-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px dashed var(--sno-ice);
+      color: var(--sno-ice);
+      background: rgba(223, 240, 255, 0.08);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    #avatar {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background-color: var(--sno-ice);
+      color: var(--sno-navy);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 26px;
+      font-weight: 700;
+      background-size: cover;
+      background-position: center;
+      flex-shrink: 0;
+      border: 2px solid var(--sno-ice);
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .stat-widget {
+      background: var(--bg-card-elevated);
+      border: 1px solid var(--border-dot);
+      border-radius: 16px;
+      padding: 12px;
+      text-align: left;
+    }
+    .stat-val {
+      font-family: var(--font-ndot);
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--sno-ice);
+      margin-top: 4px;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 12px 14px;
+      margin-top: 6px;
+      background: var(--sno-navy-dark);
+      color: var(--text-primary);
+      border: 1px solid var(--border-dot);
+      border-radius: 14px;
+      font-size: 14px;
+      outline: none;
+    }
+    input:focus, textarea:focus, select:focus { border-color: var(--sno-ice); }
+    textarea { resize: vertical; min-height: 84px; }
+
+    .btn-primary {
+      width: 100%;
+      padding: 13px 16px;
+      margin-top: 10px;
+      background: var(--sno-ice);
+      color: var(--sno-navy);
+      border: none;
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    .btn-primary:disabled { opacity: 0.45; }
+
+    .btn-outline {
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--bg-card-elevated);
+      color: var(--sno-ice);
+      border: 1px solid var(--border-dot);
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+    }
+
+    .interest-tag {
+      display: inline-block;
+      background: rgba(223, 240, 255, 0.12);
+      color: var(--sno-ice);
+      border: 1px solid var(--border-dot);
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 500;
+      margin: 0 6px 6px 0;
+    }
+
+    .leaderboard-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 11px 0;
+      border-bottom: 1px dashed rgba(223, 240, 255, 0.15);
+    }
+    .leaderboard-item:last-child { border-bottom: none; }
+    .rank-badge {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      margin-right: 12px;
+      background: var(--bg-card-elevated);
+      color: var(--sno-ice);
+      border: 1px solid var(--border-dot);
+    }
+    .rank-1 { background: var(--sno-ice); color: var(--sno-navy); border-color: var(--sno-ice); }
+    .rank-2 { background: rgba(223, 240, 255, 0.35); color: #fff; }
+    .rank-3 { background: rgba(223, 240, 255, 0.2); color: var(--sno-ice); }
+    .leader-name { font-family: var(--font-sans); font-size: 14px; font-weight: 600; }
+    .leader-score { font-family: var(--font-ndot); font-size: 18px; font-weight: 700; color: var(--sno-ice); }
+
+    /* ============================================================== */
+    /* ЕДИНЫЙ РАЗМЕР МЕДИА И КЛИКАБЕЛЬНОЕ ПРЕВЬЮ ВИДЕО (190PX)        */
+    /* ============================================================== */
+    .nothing-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      filter: contrast(1.08) saturate(0.88);
+      display: block;
+      border: none;
+      background-color: var(--sno-navy-dark);
+      background-image: radial-gradient(rgba(223, 240, 255, 0.14) 1px, transparent 1px);
+      background-size: 10px 10px;
+    }
+
+    .video-preview-wrapper {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      cursor: pointer;
+      overflow: hidden;
+      display: block;
+    }
+    .video-play-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(9, 19, 43, 0.42);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.2s;
+    }
+    .video-preview-wrapper:hover .video-play-overlay {
+      background: rgba(9, 19, 43, 0.25);
+    }
+    .video-play-circle {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      background: rgba(223, 240, 255, 0.95);
+      color: var(--sno-navy);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      padding-left: 4px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+    }
+    .video-platform-tag {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: rgba(9, 19, 43, 0.85);
+      color: var(--sno-ice);
+      border: 1px solid var(--border-dot);
+      text-transform: uppercase;
+    }
+
+    /* Сетка Ленты Анонсов + анимация свайпа */
+    .ann-split-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      transition: opacity 0.22s ease, transform 0.22s ease;
+    }
+    .ann-yellow-zone {
+      background: var(--sno-navy-dark);
+      border: 1px solid var(--border-dot);
+      border-radius: 16px;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .ann-red-zone, .event-media-frame {
+      width: 100%;
+      height: 190px;
+      aspect-ratio: 16 / 9;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border-dot);
+      background: var(--sno-navy-dark);
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    /* Увеличенная синяя рамка под текст анонса (350px) с авто-подгонкой шрифта */
+    .ann-green-zone {
+      background: var(--sno-navy-dark);
+      border: 1px solid var(--border-dot);
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 350px;
+      max-height: 350px;
+      overflow: hidden;
+    }
+
+    .ann-text-content {
+      font-size: 14px;
+      line-height: 1.42;
+      white-space: pre-wrap;
+      word-break: break-word;
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow: hidden;
+      display: block;
+    }
+    .ann-text-content.short-ann-text {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      font-size: 21px;
+      line-height: 1.38;
+      font-weight: 600;
+    }
+
+    /* Зона кнопок переключения анонсов (на ПК вверху справа, на мобильном скрыта) */
+    .news-top-pill-zone {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      background: var(--sno-navy-dark);
+      border: 1px solid var(--border-dot);
+      padding: 5px 10px;
+      border-radius: 999px;
+    }
+    .news-top-pill-btn {
+      width: 34px;
+      height: 28px;
+      border-radius: 999px;
+      background: var(--bg-card-elevated);
+      color: var(--sno-ice);
+      border: 1px solid var(--border-dot);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .news-top-pill-btn:disabled { opacity: 0.35; cursor: default; }
+
+    /* Боковые плавающие кнопки на мобильном */
+    .mobile-side-nav-btn {
+      display: none;
+      position: absolute;
+      top: 48%;
+      transform: translateY(-50%);
+      width: 34px;
+      height: 68px;
+      border-radius: 999px;
+      background: rgba(17, 34, 77, 0.92);
+      backdrop-filter: blur(8px);
+      color: var(--sno-ice);
+      border: 1px solid var(--sno-ice);
+      font-size: 14px;
+      font-weight: 700;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 25;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+    }
+    .mobile-side-nav-btn:disabled {
+      opacity: 0.22;
+      border-color: var(--border-dot);
+    }
+    .mobile-side-nav-prev { left: 4px; }
+    .mobile-side-nav-next { right: 4px; }
+
+    @media (max-width: 767px) {
+      #news-step-controls {
+        display: none !important;
+      }
+      #announcements-box {
+        padding-left: 22px;
+        padding-right: 22px;
+      }
+      .mobile-side-nav-btn.visible-mobile {
+        display: flex;
+      }
+      .ann-green-zone {
+        height: 350px;
+        max-height: 350px;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .ann-split-grid {
+        grid-template-columns: 360px 1fr;
+        grid-template-rows: auto 190px;
+        gap: 14px;
+        align-items: stretch;
+      }
+      .ann-yellow-zone { grid-column: 1; grid-row: 1; }
+      .ann-red-zone    { grid-column: 1; grid-row: 2; height: 190px; }
+      .ann-green-zone  { grid-column: 2; grid-row: 1 / span 2; height: 100%; max-height: 310px; }
+    }
+
+    /* Карусель Афиши Мероприятий (align-items: flex-start чтобы не раскрывались все сразу) */
+    .events-carousel-viewport {
+      overflow: hidden;
+      width: 100%;
+      position: relative;
+    }
+    .events-carousel-track {
+      display: flex;
+      gap: 16px;
+      transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+      will-change: transform;
+      align-items: flex-start;
+    }
+    .events-carousel-track .event-card {
+      flex: 0 0 100%;
+      max-width: 100%;
+      margin-bottom: 0;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      align-self: flex-start;
+    }
+    @media (min-width: 900px) {
+      .events-carousel-track .event-card {
+        flex: 0 0 calc((100% - 32px) / 3);
+        max-width: calc((100% - 32px) / 3);
+      }
+    }
+
+    .event-body { padding: 12px 4px 4px 4px; }
+    .event-details { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border-dot); }
+    .event-card.expanded .event-details { display: block; }
+    .event-date-badge {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--sno-navy);
+      background: var(--sno-ice);
+      padding: 4px 10px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      font-weight: 700;
+      margin-bottom: 8px;
+      margin-right: 6px;
+    }
+
+    /* Вкладка "Полезное" */
+    .useful-banner {
+      background: var(--bg-card);
+      border: 1px solid var(--border-dot);
+      border-radius: 22px;
+      padding: 18px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+    .useful-banner:active, .useful-tile:active { transform: scale(0.98); }
+    .useful-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .useful-tile {
+      background: var(--bg-card);
+      border: 1px solid var(--border-dot);
+      border-radius: 22px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 115px;
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+    .useful-icon-box {
+      width: 48px;
+      height: 48px;
+      border-radius: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: var(--sno-ice);
+      color: var(--sno-navy);
+    }
+    .nothing-icon-svg {
+      width: 24px;
+      height: 24px;
+      stroke: var(--sno-navy);
+      stroke-width: 2;
+      fill: none;
+    }
+    .useful-title { font-family: var(--font-sans); font-size: 16px; font-weight: 700; margin: 12px 0 4px 0; color: var(--text-primary); }
+    .useful-sub { font-family: var(--font-sans); font-size: 12px; color: var(--text-muted); line-height: 1.35; }
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(223, 240, 255, 0.1);
+      color: var(--sno-ice);
+      font-family: var(--font-mono);
+      font-size: 10px;
+    }
+
+    /* Нижнее плавающее меню */
+    .bottom-dock {
+      position: fixed;
+      bottom: 14px;
+      left: 14px;
+      right: 14px;
+      background: rgba(223, 240, 255, 0.96);
+      backdrop-filter: blur(14px);
+      border-radius: 999px;
+      padding: 6px 8px;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+      z-index: 900;
+    }
+    .dock-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 0;
+      border: none;
+      background: transparent;
+      color: #556987;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .dock-icon-pill {
+      width: 48px;
+      height: 30px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 3px;
+      transition: 0.2s;
+    }
+    .dock-item.active { color: var(--sno-navy); font-weight: 700; }
+    .dock-item.active .dock-icon-pill {
+      background: var(--sno-navy);
+      color: var(--sno-ice);
+    }
+    .dock-item svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(6, 12, 28, 0.78);
+      backdrop-filter: blur(6px);
+      display: none; align-items: center; justify-content: center;
+      z-index: 1000; padding: 16px;
+    }
+    .modal-content {
+      background: var(--bg-card);
+      border: 1px solid var(--sno-ice);
+      color: var(--text-primary);
+      width: 100%; max-width: 440px;
+      border-radius: 24px; padding: 22px;
+      max-height: 90vh; overflow-y: auto;
+    }
+
+    details summary::-webkit-details-marker { display: none; }
+    details > summary { list-style: none; outline: none; }
+
+    .upload-zone {
+      border: 1px dashed var(--sno-ice);
+      border-radius: 14px;
+      padding: 12px;
+      text-align: center;
+      margin-top: 8px;
+      cursor: pointer;
+      background: rgba(223, 240, 255, 0.05);
+    }
+    .profile-header-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; width: 100%; }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+
+    <!-- ПЛАШКА ЗАГРУЗКИ ПО ЦЕНТРУ С АНИМАЦИЕЙ МНОГОТОЧИЯ -->
+    <div id="loading" class="loading-center-screen ndot-num">
+      <span>SNO // SYSTEM LOADING</span><span class="loading-dots"></span>
+    </div>
+
+    <!-- ЭКРАН РЕГИСТРАЦИИ + ПРИГЛАШЕНИЕ ВСТУПИТЬ В СНО (АНКЕТА ЯНДЕКС ФОРМЫ) -->
+    <div id="registration-view" class="card" style="display: none; text-align: center; margin-top: 12px; max-width: 480px; margin-left: auto; margin-right: auto;">
+      <div class="mono-label">IDENTIFICATION // REQUIRED</div>
+      <h3 class="ndot-title" style="margin: 8px 0 12px 0; font-size: 20px;">ПРИВЯЗКА ПРОФИЛЯ СНО</h3>
+      <p style="font-size: 13px; color: var(--text-muted); margin: 0 0 16px 0; line-height: 1.45;">
+        Если вы уже состоите в СНО НИУ МГСУ, введите своё ФИО для активации личного кабинета:
+      </p>
+      <form onsubmit="registerUser(event)" style="text-align: left;">
+        <label class="mono-label">ВАШЕ ПОЛНОЕ ФИО</label>
+        <input type="text" id="name-input" placeholder="Иванов Иван Иванович" required>
+        <label style="display: flex; align-items: flex-start; gap: 10px; font-size: 12px; color: var(--text-muted); margin-top: 16px; cursor: pointer;">
+          <input type="checkbox" required style="width: 18px; height: 18px; margin: 0; accent-color: var(--sno-ice);">
+          Я даю согласие на обработку моих персональных данных
+        </label>
+        <button type="submit" class="btn-primary" id="reg-btn" style="margin-top: 18px;">Активировать профиль</button>
+      </form>
+
+      <!-- Блок предложения вступить в СНО -->
+      <div id="join-sno-offer-box" style="margin-top: 20px; padding-top: 18px; border-top: 1px dashed var(--border-dot); text-align: left;">
+        <div class="mono-label" style="color: var(--sno-ice);" id="join-sno-status-label">NEW MEMBER // INVITATION</div>
+        <div class="ndot-title" style="font-size: 15px; margin: 6px 0 8px 0;" id="join-sno-title">ЕЩЁ НЕ В СНО НИУ МГСУ?</div>
+        <p style="font-size: 13px; color: var(--text-muted); margin: 0 0 12px 0; line-height: 1.45;" id="join-sno-desc">
+          Вас пока нет в базе данных активистов? Мы будем рады видеть вас в нашей команде! Заполните анкету на вступление:
+        </p>
+        <button type="button" class="btn-outline" style="border-color: var(--sno-ice);" onclick="openJoinSnoForm()">
+          📝 Анкета для вступления в СНО
+        </button>
+      </div>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО КАРТОЧКИ УЧАСТНИКА -->
+    <div id="user-modal" class="modal-overlay" onclick="closeUserModal()">
+      <div class="modal-content" onclick="event.stopPropagation()">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div style="display: flex; gap: 14px; align-items: center;">
+            <img id="um-photo" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--sno-ice); display: none;">
+            <div id="um-avatar-fallback" class="ndot-title" style="width: 60px; height: 60px; border-radius: 50%; background: var(--sno-ice); color: var(--sno-navy); display: flex; align-items: center; justify-content: center; font-size: 24px;"></div>
+            <div>
+              <h3 id="um-name" style="margin: 0; font-size: 16px; font-weight: 700;"></h3>
+              <div id="um-role" class="mono-label" style="margin-top: 4px; color: var(--sno-ice);"></div>
+            </div>
+          </div>
+          <button onclick="closeUserModal()" style="background: none; border: none; font-size: 20px; color: var(--text-muted); cursor: pointer;">✕</button>
+        </div>
+        <div style="margin-top: 18px; font-size: 13px; border-top: 1px dashed var(--border-dot); padding-top: 14px;">
+          <div style="margin-bottom: 8px;"><span class="mono-label">ГРУППА:</span> <strong id="um-group"></strong></div>
+          <div id="um-phone-row" style="margin-bottom: 8px;"><span class="mono-label">ТЕЛЕФОН:</span> <strong id="um-phone"></strong></div>
+          <div style="margin-bottom: 8px;"><span class="mono-label">СОЦСЕТИ:</span> <strong id="um-socials"></strong></div>
+          <div style="margin-bottom: 8px;"><span class="mono-label">ИНТЕРЕСЫ:</span> <span id="um-interests"></span></div>
+        </div>
+        <button class="btn-primary" id="um-tg-btn" style="margin-top: 16px;">Связаться в Telegram</button>
+      </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- ВКЛАДКА 1: ГЛАВНАЯ (ПРОФИЛЬ + РЕЙТИНГ + АДМИНКА ВНИЗУ)   -->
+    <!-- ======================================================== -->
+    <div id="tab-home" style="display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding: 0 4px;">
+        <div class="ndot-num" style="font-size: 18px; color: var(--sno-ice);">SNO // NOTHING.OS</div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <button onclick="forceFullscreen()" style="background: none; border: 1px solid var(--border-dot); color: var(--sno-ice); border-radius: 999px; padding: 4px 10px; font-family: var(--font-mono); font-size: 10px; cursor: pointer;">⛶ ПОЛНЫЙ ЭКРАН</button>
+          <div class="mono-label">NTYPE-82</div>
+        </div>
+      </div>
+
+      <div class="desktop-two-col">
+        <!-- Левая колонка: Профиль -->
+        <div>
+          <div class="card">
+            <div style="display: flex; gap: 14px; align-items: flex-start;">
+              <div id="avatar"></div>
+              <div style="flex-grow: 1; min-width: 0;">
+                <div class="profile-header-top">
+                  <h3 id="user-name" style="margin: 0; font-size: 17px; font-weight: 700; line-height: 1.25; word-break: break-word;"></h3>
+                  <label class="coauthor-pill">
+                    <input type="checkbox" id="coauthor-checkbox" onchange="toggleCoauthor(this)" style="width: 13px; height: 13px; margin: 0; accent-color: var(--sno-ice);">
+                    СОАВТОР
+                  </label>
+                </div>
+                <div id="user-role" class="badge-pill"></div>
+              </div>
+            </div>
+
+            <div class="stat-grid">
+              <div class="stat-widget">
+                <div class="mono-label">БАЛЛЫ</div>
+                <div id="user-score" class="stat-val">0</div>
+              </div>
+              <div class="stat-widget">
+                <div class="mono-label">ПОЗИЦИЯ</div>
+                <div id="my-rank" class="stat-val">#—</div>
+              </div>
+              <div class="stat-widget">
+                <div class="mono-label">ГРУППА</div>
+                <div id="user-group" style="font-family: var(--font-mono); font-weight: 700; font-size: 14px; color: var(--sno-ice); margin-top: 8px;">—</div>
+              </div>
+            </div>
+
+            <!-- Интересы и Настройки профиля -->
+            <div style="margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--border-dot);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <span class="mono-label">НАУЧНЫЕ ИНТЕРЕСЫ И НАСТРОЙКИ</span>
+                <button onclick="editInterests()" id="edit-interests-btn" class="mono-label" style="background: none; border: none; color: var(--sno-ice); cursor: pointer; padding: 0;">НАСТРОИТЬ</button>
+              </div>
+              <div id="interests-list"></div>
+
+              <div id="interests-edit-box" style="display: none; margin-top: 12px;">
+                <label class="mono-label">НАУЧНЫЕ ИНТЕРЕСЫ (ЧЕРЕЗ ЗАПЯТУЮ)</label>
+                <input type="text" id="interests-input" placeholder="Например: BIM, ЖБК, Геотехника">
+
+                <label class="mono-label" style="display: block; margin-top: 12px;">ДРУГИЕ СОЦСЕТИ (ВК, ПОРТФОЛИО И Т.Д.)</label>
+                <input type="text" id="socials-input" placeholder="https://vk.com/...">
+
+                <label class="mono-label" style="display: block; margin-top: 12px;">ФОТО / GIF ПРОФИЛЯ</label>
+                <label class="upload-zone" style="display: block;">
+                  <input type="file" id="profile-photo-file" accept="image/*" style="display: none;" onchange="handleProfilePhotoUpload(this)">
+                  <span id="profile-upload-label" class="mono-label" style="color: var(--sno-ice);">📷 ВЫБРАТЬ ИЗ ГАЛЕРЕИ</span>
+                </label>
+                <input type="text" id="profile-photo-url-input" placeholder="Или прямая ссылка на фото / GIF (https://...)" style="margin-top: 8px;">
+                <div id="profile-photo-preview-wrap" style="display: none; align-items: center; gap: 10px; margin-top: 10px;">
+                  <img id="profile-photo-preview" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 1px solid var(--sno-ice);">
+                  <button type="button" class="btn-outline" style="width: auto; padding: 6px 12px; font-size: 10px;" onclick="resetUploadedProfilePhoto()">Сбросить до фото ТГ</button>
+                </div>
+
+                <div style="display: flex; gap: 8px; margin-top: 16px;">
+                  <button class="btn-primary" id="save-profile-btn" onclick="saveInterests()" style="margin-top: 0; flex: 1;">Сохранить</button>
+                  <button class="btn-outline" onclick="cancelEditInterests()" style="margin-top: 0; flex: 1;">Отмена</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Правая колонка: Рейтинг + Админка внизу -->
+        <div>
+          <details class="card" open>
+            <summary style="cursor: pointer;">
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+                <div>
+                  <div class="mono-label">LEADERBOARD // TOP ACTIVISTS</div>
+                  <div class="ndot-title" style="font-size: 16px; margin-top: 4px; color: var(--text-primary);">РЕЙТИНГ АКТИВИСТОВ СНО</div>
+                </div>
+                <span class="mono-label" style="color: var(--sno-ice); flex-shrink: 0;">СВЕРНУТЬ</span>
+              </div>
+            </summary>
+            <div id="leaderboard-list" style="margin-top: 14px;"></div>
+          </details>
+
+          <!-- БЛОК КНОПОК АДМИНОВ И РУКОВОДСТВА (Объединены создание и управление анонсами) -->
+          <div id="admin-bottom-block" class="card" style="display: none; border-color: var(--sno-ice);">
+            <div class="mono-label" style="color: var(--sno-ice);">ADMINISTRATION // TERMINAL</div>
+            <div class="ndot-title" style="font-size: 16px; margin: 4px 0 12px 0;">УПРАВЛЕНИЕ И БАЗА СНО</div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <button id="admin-create-ev-btn" class="btn-primary" style="margin-top: 0;" onclick="openAdminForCreate()">Создать мероприятие <!-- доп. подпись --></button>
+              <button id="admin-ann-hub-btn" class="btn-outline" onclick="openAnnouncementsHub()">Анонсы (Создать / Изменить) <!-- доп. подпись --></button>
+              <button class="btn-outline" onclick="openSubView('past-events-admin-view')">Архив мероприятий <!-- доп. подпись --></button>
+              <button class="btn-outline" onclick="renderAllParticipants()">База участников <!-- доп. подпись --></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- ВКЛАДКА 2: АНОНСЫ И МЕРОПРИЯТИЯ                          -->
+    <!-- ======================================================== -->
+    <div id="tab-announcements" style="display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+        <div>
+          <div class="mono-label">FEED // EVENTS & NEWS</div>
+          <div class="ndot-title" style="font-size: 18px;">АНОНСЫ И СОБЫТИЯ</div>
+        </div>
+        <label class="coauthor-pill" style="cursor: pointer;">
+          <input type="checkbox" id="hide-past-checkbox" checked onchange="renderEventsFeed()" style="width: 13px; height: 13px; margin: 0; accent-color: var(--sno-ice);">
+          СКРЫТЬ ПРОШЕДШИЕ
+        </label>
+      </div>
+
+      <!-- Блок Анонсов -->
+      <div class="card" id="announcements-box">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <span class="mono-label" style="color: var(--sno-ice);">● ЛЕНТА АНОНСОВ СНО</span>
+          <!-- Зона кнопок в правом верхнем углу (на мобильном скрыта через CSS) -->
+          <div id="news-step-controls" class="news-top-pill-zone">
+            <button class="news-top-pill-btn" id="news-prev-btn" onclick="changeNewsSlide(-1)">◀</button>
+            <span id="news-counter" class="mono-label" style="color: var(--sno-ice); font-weight: 700; min-width: 34px; text-align: center;">1 / 1</span>
+            <button class="news-top-pill-btn" id="news-next-btn" onclick="changeNewsSlide(1)">▶</button>
+          </div>
+        </div>
+
+        <!-- Боковые кнопки для мобильного интерфейса -->
+        <button class="mobile-side-nav-btn mobile-side-nav-prev" id="news-mob-prev-btn" onclick="changeNewsSlide(-1)">◀</button>
+        <button class="mobile-side-nav-btn mobile-side-nav-next" id="news-mob-next-btn" onclick="changeNewsSlide(1)">▶</button>
+
+        <div id="home-news-list"></div>
+      </div>
+
+      <!-- Шапка и стрелки карусели Афиши Мероприятий -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin: 18px 4px 10px 4px;">
+        <div class="mono-label">АФИША МЕРОПРИЯТИЙ</div>
+        <div id="events-carousel-controls" class="news-top-pill-zone">
+          <button class="news-top-pill-btn" id="ev-prev-btn" onclick="slideEventsCarousel(-1)">◀</button>
+          <span id="ev-carousel-counter" class="mono-label" style="color: var(--sno-ice); font-weight: 700; min-width: 38px; text-align: center;">1 / 1</span>
+          <button class="news-top-pill-btn" id="ev-next-btn" onclick="slideEventsCarousel(1)">▶</button>
+        </div>
+      </div>
+
+      <!-- Голубая зона: Карусель карточек мероприятий -->
+      <div class="events-carousel-viewport">
+        <div id="events-list" class="events-carousel-track"></div>
+      </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- ВКЛАДКА 3: ПОЛЕЗНОЕ                                      -->
+    <!-- ======================================================== -->
+    <div id="tab-useful" style="display: none;">
+      <div class="mono-label" style="margin-bottom: 4px;">MODULES // RESOURCES</div>
+      <div class="ndot-title" style="font-size: 18px; margin-bottom: 14px;">ПОЛЕЗНЫЕ МАТЕРИАЛЫ</div>
+
+      <div class="useful-banner" onclick="openSubView('coauthors-view')">
+        <div class="useful-icon-box">
+          <svg class="nothing-icon-svg" viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><circle cx="17" cy="11" r="3"/><path d="M21 21v-1.5a3 3 0 0 0-3-3h-1"/></svg>
+        </div>
+        <div style="flex-grow: 1;">
+          <div class="useful-title" style="margin-top: 0;">Поиск соавторов</div>
+          <div class="useful-sub" style="display: none;"><!-- доп. описание --></div>
+          <div class="status-chip" id="coauthors-count-chip">● загрузка...</div>
+        </div>
+        <div class="mono-label" style="font-size: 18px; color: var(--sno-ice);">›</div>
+      </div>
+
+      <div class="useful-grid">
+        <div class="useful-tile" onclick="window.Telegram.WebApp.openLink('https://drive.google.com/drive/folders/ВАША_ССЫЛКА_ТУТ')">
+          <div class="useful-icon-box">
+            <svg class="nothing-icon-svg" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          </div>
+          <div>
+            <div class="useful-title" style="margin-bottom: 0;">База знаний</div>
+            <div class="useful-sub" style="display: none;"><!-- доп. описание --></div>
+          </div>
+        </div>
+
+        <div class="useful-tile" onclick="window.Telegram.WebApp.openLink('https://forms.yandex.ru/u/6a82ad2c49af47f4fb6ba82d')">
+          <div class="useful-icon-box">
+            <svg class="nothing-icon-svg" viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+          </div>
+          <div>
+            <div class="useful-title" style="margin-bottom: 0;">Консультация</div>
+            <div class="useful-sub" style="display: none;"><!-- доп. описание --></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="useful-banner" onclick="contactSupport()">
+        <div class="useful-icon-box">
+          <svg class="nothing-icon-svg" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div style="flex-grow: 1;">
+          <div class="useful-title" style="margin-top: 0;">Поддержка бота</div>
+          <div class="useful-sub">Написать напрямую админу <!-- доп. текст --></div>
+        </div>
+        <div class="mono-label" style="font-size: 18px; color: var(--sno-ice);">›</div>
+      </div>
+
+      <!-- ПОДПУНКТ: ЭТО ИНТЕРЕСНО -->
+      <div class="mono-label" style="margin: 18px 0 4px 4px;">MEDIA // PROJECTS</div>
+      <div class="ndot-title" style="font-size: 18px; margin: 0 0 12px 4px;">ЭТО ИНТЕРЕСНО</div>
+
+      <div class="useful-grid">
+        <div class="useful-tile" onclick="window.Telegram.WebApp.openLink('https://t.me/HorizonMGSU')">
+          <div class="useful-icon-box">
+            <svg class="nothing-icon-svg" viewBox="0 0 24 24"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg>
+          </div>
+          <div>
+            <div class="useful-title" style="margin-bottom: 0;">Студенческий Журнал Горизонт</div>
+            <div class="useful-sub" style="display: none;"><!-- доп. описание журнала --></div>
+          </div>
+        </div>
+
+        <div class="useful-tile" onclick="void(0)">
+          <div class="useful-icon-box">
+            <svg class="nothing-icon-svg" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+          </div>
+          <div>
+            <div class="useful-title" style="margin-bottom: 0;">Подкаст «Без фасадов»</div>
+            <div class="useful-sub" style="display: none;"><!-- доп. описание подкаста --></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top: 14px;">
+        <div class="mono-label" style="margin-bottom: 10px;">OFFICIAL NETWORKS</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <button class="btn-outline" onclick="window.Telegram.WebApp.openLink('https://t.me/snomgsu')">Telegram <!-- доп. текст --></button>
+          <button class="btn-outline" onclick="window.Telegram.WebApp.openLink('https://vk.com/snomgsu')">ВКонтакте <!-- доп. текст --></button>
+          <button class="btn-outline" onclick="window.Telegram.WebApp.openLink('https://www.youtube.com/@snouniversity')">YouTube <!-- доп. текст --></button>
+          <button class="btn-outline" onclick="window.Telegram.WebApp.openLink('https://www.tiktok.com/@snouniversity?_r=1&_t=ZP-9BEeogS7KOs')">TikTok <!-- доп. текст --></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- ДОПОЛНИТЕЛЬНЫЕ ЭКРАНЫ                                    -->
+    <!-- ======================================================== -->
+
+    <div id="coauthors-view" style="display: none;">
+      <button class="btn-outline" style="width: auto; margin-bottom: 14px;" onclick="switchMainTab('useful')">⬅ Назад</button>
+      <div class="ndot-title" style="font-size: 17px; margin-bottom: 12px;">АКТИВИСТЫ В ПОИСКЕ СОАВТОРА</div>
+      <div id="coauthors-list" class="events-grid-desktop"></div>
+    </div>
+
+    <div id="past-events-admin-view" style="display: none;">
+      <button class="btn-outline" style="width: auto; margin-bottom: 14px;" onclick="switchMainTab('home')">⬅ Назад</button>
+      <div class="mono-label">ARCHIVE // COMPLETED EVENTS</div>
+      <div class="ndot-title" style="font-size: 17px; margin-bottom: 12px;">АРХИВ МЕРОПРИЯТИЙ</div>
+      <div id="past-events-admin-list" class="events-grid-desktop"></div>
+    </div>
+
+    <div id="event-participants-view" style="display: none;">
+      <button class="btn-outline" style="width: auto; margin-bottom: 14px;" onclick="switchMainTab('announcements')">⬅ Назад</button>
+      <div class="card">
+        <h3 id="ep-title" style="margin-top: 0; font-size: 18px;"></h3>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div class="mono-label">УЧАСТНИКОВ: <strong id="ep-count" style="color: var(--sno-ice);">0</strong></div>
+          <button class="badge-pill" onclick="exportCSV()" style="border: none; cursor: pointer; margin-top: 0;">📥 ВЫГРУЗИТЬ .CSV</button>
+        </div>
+        <div id="ep-list" style="margin-top: 12px;"></div>
+      </div>
+    </div>
+
+    <!-- ЭКРАН: Вся база участников СНО (Поддерживает свайп слева направо для возврата на Главную) -->
+    <div id="all-participants-view" style="display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <button class="btn-outline" style="width: auto;" onclick="switchMainTab('home')">⬅ Назад на Главную</button>
+        <span class="mono-label">СВАЙП ВПРАВО ➔ НАЗАД</span>
+      </div>
+      <div class="ndot-title" style="font-size: 17px; margin-bottom: 10px;">БАЗА УЧАСТНИКОВ СНО</div>
+      <input type="text" id="user-search-input" placeholder="Поиск по ФИО..." onkeyup="filterAllParticipants()" style="margin-bottom: 14px;">
+      <div id="all-participants-list" class="events-grid-desktop"></div>
+    </div>
+
+    <!-- ОБЪЕДИНЕННЫЙ ЭКРАН: СОЗДАНИЕ И УПРАВЛЕНИЕ АНОНСАМИ В ОДНОМ ИНТЕРФЕЙСЕ -->
+    <div id="news-view" style="display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+        <button class="btn-outline" style="width: auto;" onclick="switchMainTab('home')">⬅ Назад на Главную</button>
+        <button class="btn-primary" id="toggle-ann-form-btn" style="width: auto; margin-top: 0; padding: 10px 18px;" onclick="openStandaloneAnnouncementModal()">➕ Добавить новый анонс</button>
+      </div>
+
+      <!-- Встроенная форма создания / редактирования анонса прямо внутри хаба управления -->
+      <div id="ann-editor-card" class="card" style="display: none; max-width: 720px; border-color: var(--sno-ice); margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <div>
+            <div class="mono-label" id="sa-Sublabel" style="color: var(--sno-ice);">BROADCAST // NEW POST</div>
+            <h3 class="ndot-title" id="sa-modal-title" style="margin: 4px 0 0 0;">НОВЫЙ АНОНС</h3>
+          </div>
+          <button type="button" onclick="closeAnnEditorCard()" style="background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer;">✕</button>
+        </div>
+
+        <form onsubmit="submitStandaloneAnnouncement(event)">
+          <input type="hidden" id="sa-edit-index" value="-1">
+          <input type="hidden" id="sa-edit-msgid" value="">
+
+          <label class="mono-label">ЗАГОЛОВОК АНОНСА *</label>
+          <input type="text" id="sa-title" required placeholder="Например: 🚀 Школа СНО // Старт набора">
+
+          <label class="mono-label" style="display: block; margin-top: 12px;">МЕДИА: ФОТО, GIF ИЛИ ССЫЛКА НА ВИДЕО (YOUTUBE / VK)</label>
+          <label class="upload-zone" style="display: block;">
+            <input type="file" id="sa-file-input" accept="image/*" style="display: none;" onchange="handleAnnouncementPreviewUpload(this)">
+            <span id="sa-upload-label" class="mono-label" style="color: var(--sno-ice);">🖼 ВЫБРАТЬ ФОТО / GIF ИЗ ГАЛЕРЕИ</span>
+          </label>
+          <input type="text" id="sa-preview-url" placeholder="Или ссылка на YouTube / VK Видео / .gif / .jpg" style="margin-top: 8px;">
+          <div id="sa-preview-current-wrap" style="display: none; align-items: center; gap: 10px; margin-top: 8px;">
+            <img id="sa-preview-current-img" style="width: 72px; height: 42px; object-fit: cover; border-radius: 8px; border: 1px solid var(--sno-ice);">
+            <button type="button" class="btn-outline" style="width: auto; padding: 5px 10px; font-size: 10px;" onclick="clearAnnouncementPreview()">Очистить медиа</button>
+          </div>
+
+          <label class="mono-label" style="display: block; margin-top: 12px;">ТЕКСТ / ОПИСАНИЕ * (ПОДДЕРЖКА TELEGRAM EMOJI)</label>
+          <div class="emoji-picker-bar">
+            <button type="button" class="emoji-btn" onclick="insertTgEmoji('🔥')">🔥</button>
+            <button type="button" class="emoji-btn" onclick="insertTgEmoji('⚡')">⚡</button>
+            <button type="button" class="emoji-btn" onclick="insertTgEmoji('🚀')">🚀</button>
+            <button type="button" class="emoji-btn" onclick="insertTgEmoji('🎓')">🎓</button>
+            <button type="button" class="emoji-btn" onclick="insertTgEmoji('📢')">📢</button>
+            <button type="button" class="emoji-btn" onclick="insertTgEmoji('🧬')">🧬</button>
+            <button type="button" class="emoji-btn" onclick="insertTgEmoji('🏆')">🏆</button>
+            <button type="button" class="emoji-btn" onclick="insertTgEmoji('💡')">💡</button>
+            <button type="button" class="emoji-btn" onclick="insertTgEmoji('📌')">📌</button>
+            <button type="button" class="emoji-btn" onclick="insertTgEmoji('✅')">✅</button>
+            <button type="button" class="emoji-btn" onclick="insertTgEmoji('💎')">💎</button>
+            <button type="button" class="emoji-btn" onclick="insertTgEmoji('🤝')">🤝</button>
+          </div>
+          <textarea id="sa-desc" required placeholder="Текст вашего анонса..."></textarea>
+
+          <label class="mono-label" style="display: block; margin-top: 12px;">ВНЕШНЯЯ ССЫЛКА (НЕОБЯЗАТЕЛЬНО)</label>
+          <input type="text" id="sa-link" placeholder="https://...">
+
+          <label class="mono-label" style="display: block; margin-top: 12px;">ТЕКСТ КНОПКИ ССЫЛКИ</label>
+          <input type="text" id="sa-btntext" placeholder="Перейти к материалу">
+
+          <label id="sa-post-channel-wrap" style="display: flex; align-items: center; gap: 10px; font-size: 13px; margin: 16px 0; cursor: pointer; background: rgba(223,240,255,0.08); padding: 12px; border-radius: 14px;">
+            <input type="checkbox" id="sa-post-channel" style="width: 18px; height: 18px; margin: 0;">
+            📢 Опубликовать также в Telegram-канале
+          </label>
+
+          <div style="display: flex; gap: 8px; margin-top: 12px;">
+            <button type="submit" class="btn-primary" id="sa-submit-btn" style="margin-top: 0; flex: 2;">Опубликовать анонс</button>
+            <button type="button" class="btn-outline" style="flex: 1;" onclick="closeAnnEditorCard()">Скрыть форму</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="mono-label" style="margin-bottom: 4px;">EXISTING ANNOUNCEMENTS // ARCHIVE & CHANNEL</div>
+      <div class="ndot-title" style="font-size: 17px; margin-bottom: 12px;">ВСЕ АНОНСЫ (РЕДАКТИРОВАНИЕ И УДАЛЕНИЕ)</div>
+      <div id="news-list" class="events-grid-desktop"></div>
+    </div>
+
+    <div id="admin-view" style="display: none;">
+      <button class="btn-outline" style="width: auto; margin-bottom: 14px;" onclick="switchMainTab('home')">⬅ Отмена</button>
+      <div class="card" style="max-width: 680px;">
+        <h3 id="admin-title" class="ndot-title" style="margin-top: 0;">НОВОЕ МЕРОПРИЯТИЕ</h3>
+        <form onsubmit="submitNewEvent(event)">
+          <input type="hidden" id="ev-originalname">
+          <label class="mono-label">НАЗВАНИЕ *</label>
+          <input type="text" id="ev-name" required placeholder="Школа СНО. День Первый">
+          <label class="mono-label" style="display: block; margin-top: 12px;">ДАТА И ВРЕМЯ НАЧАЛА (МСК) *</label>
+          <input type="datetime-local" id="ev-datetime" required>
+          <label class="mono-label" style="display: block; margin-top: 12px;">ДАТА И ВРЕМЯ ОКОНЧАНИЯ (МСК)</label>
+          <input type="datetime-local" id="ev-endtime">
+          <label class="mono-label" style="display: block; margin-top: 12px;">ДЕДЛАЙН РЕГИСТРАЦИИ (МСК)</label>
+          <input type="datetime-local" id="ev-deadline">
+          <label class="mono-label" style="display: block; margin-top: 12px;">ОБЛОЖКА / GIF / ССЫЛКА НА ВИДЕО (URL)</label>
+          <input type="text" id="ev-photo" placeholder="https://... (фото, .gif или ссылка на YouTube/VK)">
+          <label class="mono-label" style="display: block; margin-top: 12px;">ОПИСАНИЕ *</label>
+          <textarea id="ev-desc" required placeholder="Подробности мероприятия..."></textarea>
+
+          <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; margin-top: 14px; cursor: pointer;">
+            <input type="checkbox" id="ev-exemption" style="width: 18px; height: 18px; margin: 0;">
+            🎓 Предоставляется освобождение от занятий
+          </label>
+
+          <label class="mono-label" style="display: block; margin-top: 14px;">ТИП РЕГИСТРАЦИИ *</label>
+          <select id="ev-regtype" onchange="toggleExternalLink()">
+            <option value="internal">Внутренняя (Сбор в таблицу)</option>
+            <option value="no">Регистрация не требуется</option>
+            <option value="external">Внешняя ссылка (Форма)</option>
+          </select>
+          <div id="external-link-box" style="display: none; margin-top: 10px;">
+            <label class="mono-label">ССЫЛКА НА ФОРМУ</label>
+            <input type="text" id="ev-externallink" placeholder="https://forms.yandex.ru/...">
+          </div>
+
+          <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; margin: 16px 0; cursor: pointer; background: rgba(223,240,255,0.08); padding: 12px; border-radius: 14px;">
+            <input type="checkbox" id="ev-post-channel" style="width: 18px; height: 18px; margin: 0;">
+            📢 Дублировать в Telegram-канал
+          </label>
+
+          <button type="submit" class="btn-primary" id="ev-submit-btn">Опубликовать</button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- НИЖНЕЕ МЕНЮ -->
+  <nav class="bottom-dock" id="bottom-dock" style="display: none;">
+    <button class="dock-item active" id="dock-home" onclick="switchMainTab('home')">
+      <div class="dock-icon-pill">
+        <svg viewBox="0 0 24 24"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-9.5z"/></svg>
+      </div>
+      <span>Главная</span>
+    </button>
+    <button class="dock-item" id="dock-announcements" onclick="switchMainTab('announcements')">
+      <div class="dock-icon-pill">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      </div>
+      <span>Анонсы</span>
+    </button>
+    <button class="dock-item" id="dock-useful" onclick="switchMainTab('useful')">
+      <div class="dock-icon-pill">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      </div>
+      <span>Полезное</span>
+    </button>
+  </nav>
+
+  <script>
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwhcJfMMlv2ZKcgJ1UKICfXsBlDt5cP2DazV3pW1fcqukOdNDJpeEBNfJescD9wKEzUFg/exec";
+    const SNO_JOIN_FORM_URL = "https://forms.yandex.ru/u/6a82ad2c49af47f4fb6ba82d";
+    const LOCAL_NEWS_KEY = "sno_mgsu_saved_announcements_v4";
+    const LOCAL_DELETED_KEY = "sno_mgsu_deleted_announcements_v4";
+    const ANN_PREFIX = "[ANNOUNCEMENT]::";
+    const tg = window.Telegram.WebApp;
+
+    const NOTHING_DEFAULT_IMAGE = "data:image/svg+xml;utf8," + encodeURIComponent(`
+      <svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
+        <rect width="800" height="450" fill="#09132B"/>
+        <g fill="rgba(223,240,255,0.18)">
+          <circle cx="70" cy="70" r="3"/><circle cx="110" cy="70" r="3"/><circle cx="150" cy="70" r="3"/><circle cx="190" cy="70" r="3"/>
+          <circle cx="70" cy="110" r="3"/><circle cx="110" cy="110" r="3"/><circle cx="150" cy="110" r="3"/><circle cx="190" cy="110" r="3"/>
+          <circle cx="70" cy="150" r="3"/><circle cx="110" cy="150" r="3"/><circle cx="150" cy="150" r="3"/><circle cx="190" cy="150" r="3"/>
+        </g>
+        <circle cx="580" cy="220" r="135" fill="none" stroke="rgba(223,240,255,0.22)" stroke-width="1.5" stroke-dasharray="6 6"/>
+        <circle cx="580" cy="220" r="82" fill="none" stroke="#DFF0FF" stroke-width="2"/>
+        <circle cx="498" cy="220" r="8" fill="#FF5252"/>
+        <line x1="60" y1="355" x2="740" y2="355" stroke="rgba(223,240,255,0.2)" stroke-width="1"/>
+        <text x="60" y="392" fill="#DFF0FF" font-family="monospace" font-size="16" letter-spacing="4">SNO // MGSU.SYSTEM</text>
+      </svg>
+    `);
+
+    function forceFullscreen() {
+      try {
+        tg.expand();
+        if (typeof tg.requestFullscreen === "function") {
+          tg.requestFullscreen();
+        }
+      } catch (e) {}
+    }
+    tg.ready();
+    forceFullscreen();
+
+    function openJoinSnoForm() {
+      window.Telegram.WebApp.openLink(SNO_JOIN_FORM_URL);
+    }
+
+    let currentUserGlobalName = ""; 
+    let currentUserProfile = null;
+    let globalEventsData = []; 
+    let globalParticipantsData = []; 
+    let globalNewsData = [];
+    let currentNewsIndex = 0;
+    let currentEventsSlide = 0;
+    let isManagerGlobal = false;
+    let canCreateGlobal = false;
+    let currentEventForExport = "";
+
+    let uploadedProfilePhotoBase64 = null;
+    let clearCustomPhotoFlag = false;
+    let uploadedAnnPreviewBase64 = null;
+
+    // --- 1. ОТРИСОВКА ЭМОДЗИ TELEGRAM ---
+    function applyTelegramEmojis(rootElement) {
+      try {
+        if (window.twemoji) {
+          twemoji.parse(rootElement || document.body, {
+            folder: 'svg',
+            ext: '.svg'
+          });
+        }
+      } catch (e) {}
+    }
+
+    function formatTextWithTgEmojis(rawText) {
+      let safe = String(rawText || "").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      safe = safe.replace(/\[emoji:(https?:\/\/[^\]]+)\]/gi, (match, url) => {
+        if (url.endsWith('.json') || url.endsWith('.tgs')) {
+          return `<lottie-player src="${url}" background="transparent" speed="1" style="width: 24px; height: 24px; display: inline-block; vertical-align: middle;" loop autoplay></lottie-player>`;
+        }
+        return `<img src="${url}" class="tg-custom-emoji">`;
+      });
+      return safe;
+    }
+
+    function insertTgEmoji(emojiChar) {
+      const area = document.getElementById('sa-desc');
+      if (!area) return;
+      const start = area.selectionStart || area.value.length;
+      const end = area.selectionEnd || area.value.length;
+      area.value = area.value.substring(0, start) + emojiChar + area.value.substring(end);
+      area.focus();
+      area.selectionStart = area.selectionEnd = start + emojiChar.length;
+    }
+
+    // --- 2. КЛИКАБЕЛЬНОЕ ПРЕВЬЮ ДЛЯ ВИДЕО (YOUTUBE / VK / RUTUBE) ---
+    function parseMediaPreviewInfo(url) {
+      if (!url || typeof url !== "string") return null;
+      const u = url.trim();
+      const ytMatch = u.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+      if (ytMatch) {
+        return {
+          isVideo: true,
+          platform: "YOUTUBE // VIDEO",
+          thumbUrl: `https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg`,
+          targetUrl: `https://www.youtube.com/watch?v=${ytMatch[1]}`
+        };
+      }
+      if (/vk(?:video)?\.(?:ru|com)\/video/i.test(u)) {
+        return {
+          isVideo: true,
+          platform: "VK ВИДЕО // СМОТРЕТЬ",
+          thumbUrl: NOTHING_DEFAULT_IMAGE,
+          targetUrl: u
+        };
+      }
+      if (/rutube\.ru\/video/i.test(u)) {
+        return {
+          isVideo: true,
+          platform: "RUTUBE // СМОТРЕТЬ",
+          thumbUrl: NOTHING_DEFAULT_IMAGE,
+          targetUrl: u
+        };
+      }
+      if (/\.(mp4|webm|mov)(\?.*)?$/i.test(u)) {
+        return {
+          isVideo: true,
+          platform: "VIDEO // ОТКРЫТЬ",
+          thumbUrl: NOTHING_DEFAULT_IMAGE,
+          targetUrl: u
+        };
+      }
+      return null;
+    }
+
+    function buildMediaFrameHtml(mediaUrl, fallbackClickUrl) {
+      const cleanUrl = (mediaUrl && String(mediaUrl).trim() !== "" && !String(mediaUrl).includes("unsplash.com"))
+        ? String(mediaUrl).trim()
+        : "";
+      const videoPreview = parseMediaPreviewInfo(cleanUrl);
+      if (videoPreview) {
+        const clickLink = videoPreview.targetUrl || fallbackClickUrl || cleanUrl;
+        return `
+          <div class="video-preview-wrapper" onclick="event.stopPropagation(); window.Telegram.WebApp.openLink('${clickLink}')">
+            <img src="${videoPreview.thumbUrl}" class="nothing-img" onerror="this.src=NOTHING_DEFAULT_IMAGE">
+            <div class="video-play-overlay">
+              <div class="video-play-circle">▶</div>
+              <span class="video-platform-tag">${videoPreview.platform}</span>
+            </div>
+          </div>
+        `;
+      }
+      const finalImg = cleanUrl || NOTHING_DEFAULT_IMAGE;
+      if (fallbackClickUrl && fallbackClickUrl.startsWith("http")) {
+        return `<img src="${finalImg}" class="nothing-img" style="cursor: pointer;" onclick="event.stopPropagation(); window.Telegram.WebApp.openLink('${fallbackClickUrl}')" onerror="this.src=NOTHING_DEFAULT_IMAGE">`;
+      }
+      return `<img src="${finalImg}" class="nothing-img" onerror="this.src=NOTHING_DEFAULT_IMAGE">`;
+    }
+
+    // --- 3. ХРАНИЛИЩЕ АНОНСОВ ---
+    function getLocalAnnouncements() {
+      try {
+        const raw = localStorage.getItem(LOCAL_NEWS_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) { return []; }
+    }
+
+    function saveLocalAnnouncements(arr) {
+      const sliced = (arr || []).slice(0, 25);
+      try {
+        localStorage.setItem(LOCAL_NEWS_KEY, JSON.stringify(sliced));
+      } catch (e) {}
+      try {
+        if (tg.CloudStorage && typeof tg.CloudStorage.setItem === "function") {
+          const lightCopy = sliced.slice(0, 8).map(x => ({
+            date: x.date,
+            title: x.title,
+            text: String(x.text || "").substring(0, 350),
+            preview: (x.preview && !String(x.preview).startsWith("data:")) ? x.preview : "",
+            link: x.link || "",
+            btnText: x.btnText || "Подробнее",
+            msgId: x.msgId
+          }));
+          tg.CloudStorage.setItem("sno_cloud_news_v4", JSON.stringify(lightCopy), () => {});
+        }
+      } catch (e) {}
+    }
+
+    function loadCloudStorageAnnouncements() {
+      return new Promise((resolve) => {
+        try {
+          if (tg.CloudStorage && typeof tg.CloudStorage.getItem === "function") {
+            tg.CloudStorage.getItem("sno_cloud_news_v4", (err, val) => {
+              if (!err && val) {
+                try { resolve(JSON.parse(val)); return; } catch (e) {}
+              }
+              resolve([]);
+            });
+          } else { resolve([]); }
+        } catch (e) { resolve([]); }
+      });
+    }
+
+    function getDeletedIds() {
+      try {
+        const raw = localStorage.getItem(LOCAL_DELETED_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) { return []; }
+    }
+    function addDeletedId(idOrKey) {
+      try {
+        const list = getDeletedIds();
+        if (!list.includes(idOrKey)) {
+          list.push(idOrKey);
+          localStorage.setItem(LOCAL_DELETED_KEY, JSON.stringify(list));
+        }
+      } catch (e) {}
+    }
+
+    function mergeAllAnnouncements(serverNews, mirrorEventsNews, cloudNews) {
+      const deleted = getDeletedIds();
+      const localList = getLocalAnnouncements();
+      const combined = [];
+      const seen = new Set();
+
+      const addUnique = (item) => {
+        if (!item) return;
+        const msgId = String(item.msgId || "").trim();
+        const title = String(item.title || "").trim();
+        const text = String(item.text || "").trim();
+        if (!text && !title) return;
+        const key = msgId ? ("id_" + msgId) : ("txt_" + title + "::" + text);
+        const textKey = "txt_" + title + "::" + text;
+        if (deleted.includes(key) || deleted.includes(textKey) || (msgId && deleted.includes(msgId))) return;
+        if (!seen.has(key) && !seen.has(textKey)) {
+          seen.add(key);
+          seen.add(textKey);
+          combined.push({
+            date: item.date || new Date().toISOString(),
+            text: text,
+            msgId: msgId || ("app_" + Date.now()),
+            title: title,
+            preview: item.preview || "",
+            link: item.link || "",
+            btnText: item.btnText || "Подробнее",
+            mirrorEventName: item.mirrorEventName || ""
+          });
+        }
+      };
+
+      localList.forEach(addUnique);
+      (cloudNews || []).forEach(addUnique);
+      (mirrorEventsNews || []).forEach(addUnique);
+      (serverNews || []).forEach(addUnique);
+      return combined;
+    }
+
+    function isHiddenFromLeaderboard(fio) {
+      const lower = String(fio || "").toLowerCase();
+      return lower.includes("гула") || lower.includes("вахитов");
+    }
+
+    function switchMainTab(tabName) {
+      const allViews = [
+        'tab-home', 'tab-announcements', 'tab-useful',
+        'coauthors-view', 'past-events-admin-view', 'event-participants-view',
+        'all-participants-view', 'news-view', 'admin-view'
+      ];
+      allViews.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+      });
+
+      document.getElementById('tab-' + tabName).style.display = 'block';
+      ['home', 'announcements', 'useful'].forEach(t => {
+        document.getElementById('dock-' + t).classList.toggle('active', t === tabName);
+      });
+      if (tabName === 'announcements') {
+        setTimeout(() => {
+          slideEventsCarousel(0);
+          fitAnnouncementText();
+        }, 40);
+      }
+      window.scrollTo(0, 0);
+    }
+
+    function openSubView(viewId) {
+      const allViews = [
+        'tab-home', 'tab-announcements', 'tab-useful',
+        'coauthors-view', 'past-events-admin-view', 'event-participants-view',
+        'all-participants-view', 'news-view', 'admin-view'
+      ];
+      allViews.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+      });
+      document.getElementById(viewId).style.display = 'block';
+      window.scrollTo(0, 0);
+    }
+
+    function toggleEvent(element) {
+      const isAlreadyExpanded = element.classList.contains('expanded');
+      document.querySelectorAll('#events-list .event-card.expanded').forEach(card => {
+        if (card !== element) card.classList.remove('expanded');
+      });
+      element.classList.toggle('expanded', !isAlreadyExpanded);
+    }
+
+    // --- 4. МОСКОВСКОЕ ВРЕМЯ БЕЗ СДВИГА НА -3 ЧАСА ---
+    function parseMoscowDateObj(dateString) {
+      if (!dateString) return null;
+      const s = String(dateString).trim();
+      const localIso = s.match(/^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2})$/);
+      if (localIso) {
+        return new Date(`${localIso[1]}-${localIso[2]}-${localIso[3]}T${localIso[4]}:${localIso[5]}:00+03:00`);
+      }
+      const ruMatch = s.match(/^(\d{2})\.(\d{2})\.(\d{4})\s+(\d{2}):(\d{2})/);
+      if (ruMatch) {
+        return new Date(`${ruMatch[3]}-${ruMatch[2]}-${ruMatch[1]}T${ruMatch[4]}:${ruMatch[5]}:00+03:00`);
+      }
+      const d = new Date(s);
+      return isNaN(d.getTime()) ? null : d;
+    }
+
+    function formatLocalDate(dateString) {
+      if (!dateString) return "";
+      try {
+        const s = String(dateString).trim();
+        const directMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2})$/);
+        if (directMatch) {
+          return `${directMatch[3]}.${directMatch[2]}.${directMatch[1]} ${directMatch[4]}:${directMatch[5]}`;
+        }
+        const ruDirect = s.match(/^(\d{2})\.(\d{2})\.(\d{4})\s+(\d{2}):(\d{2})/);
+        if (ruDirect) {
+          return `${ruDirect[1]}.${ruDirect[2]}.${ruDirect[3]} ${ruDirect[4]}:${ruDirect[5]}`;
+        }
+        const d = new Date(s);
+        if (isNaN(d.getTime())) return s;
+        return d.toLocaleString('ru-RU', {
+          timeZone: 'Europe/Moscow',
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        }).replace(',', '');
+      } catch(e) { return String(dateString); }
+    }
+
+    function compressImageFile(file, maxSize, quality, squareCrop, callback) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const rawDataUrl = e.target.result;
+        if (file.type === "image/gif") {
+          if (rawDataUrl.length < 47000) {
+            callback(rawDataUrl);
+          } else {
+            tg.showAlert("⚠️ Этот GIF весит больше 35 КБ. Для больших GIF вставьте прямую ссылку https://... в текстовое поле ниже.");
+          }
+          return;
+        }
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          if (squareCrop) {
+            const minSide = Math.min(img.width, img.height);
+            const sx = (img.width - minSide) / 2;
+            const sy = (img.height - minSide) / 2;
+            canvas.width = maxSize;
+            canvas.height = maxSize;
+            ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, maxSize, maxSize);
+          } else {
+            let w = img.width, h = img.height;
+            if (w > h) { if (w > maxSize) { h = Math.round(h * maxSize / w); w = maxSize; } }
+            else { if (h > maxSize) { w = Math.round(w * maxSize / h); h = maxSize; } }
+            canvas.width = w; canvas.height = h;
+            ctx.drawImage(img, 0, 0, w, h);
+          }
+          callback(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.src = rawDataUrl;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function handleProfilePhotoUpload(input) {
+      if (!input.files || !input.files[0]) return;
+      compressImageFile(input.files[0], 140, 0.68, true, (base64) => {
+        uploadedProfilePhotoBase64 = base64;
+        clearCustomPhotoFlag = false;
+        document.getElementById('profile-upload-label').innerText = "✅ ФОТО ГОТОВО (НАЖМИТЕ СОХРАНИТЬ)";
+        document.getElementById('profile-photo-preview').src = base64;
+        document.getElementById('profile-photo-preview-wrap').style.display = 'flex';
+        const avatarDiv = document.getElementById('avatar');
+        avatarDiv.style.backgroundImage = `url('${base64}')`;
+        avatarDiv.innerHTML = '';
+      });
+    }
+
+    function resetUploadedProfilePhoto() {
+      uploadedProfilePhotoBase64 = "";
+      clearCustomPhotoFlag = true;
+      document.getElementById('profile-photo-url-input').value = "";
+      document.getElementById('profile-upload-label').innerText = "📷 БУДЕТ ИСПОЛЬЗОВАНО ФОТО ИЗ ТГ";
+      document.getElementById('profile-photo-preview-wrap').style.display = 'none';
+    }
+
+    function handleAnnouncementPreviewUpload(input) {
+      if (!input.files || !input.files[0]) return;
+      compressImageFile(input.files[0], 240, 0.6, false, (base64) => {
+        uploadedAnnPreviewBase64 = base64;
+        document.getElementById('sa-upload-label').innerText = "✅ ПРЕВЬЮ ЗАГРУЖЕНО ИЗ ГАЛЕРЕИ";
+        document.getElementById('sa-preview-current-img').src = base64;
+        document.getElementById('sa-preview-current-wrap').style.display = 'flex';
+      });
+    }
+
+    function clearAnnouncementPreview() {
+      uploadedAnnPreviewBase64 = "";
+      document.getElementById('sa-preview-url').value = "";
+      document.getElementById('sa-upload-label').innerText = "🖼 ВЫБРАТЬ ФОТО / GIF ИЗ ГАЛЕРЕИ";
+      document.getElementById('sa-preview-current-wrap').style.display = 'none';
+    }
+
+    function contactSupport() {
+      const ruslan = globalParticipantsData.find(p => String(p.user_id) === "1486703011" || String(p['ФИО'] || "").toLowerCase().includes("вахитов"));
+      const username = (ruslan && ruslan.telegram_raw) ? String(ruslan.telegram_raw).replace('@', '').trim() : 'Hona1i';
+      window.Telegram.WebApp.openLink(`https://t.me/${username}`);
+    }
+
+    // --- 5. РЕНДЕР ЛЕНТЫ АНОНСОВ И УМНАЯ АВТО-ПОДГОНКА ТЕКСТА ПОД СИНЮЮ РАМКУ (350px) ---
+    function fitAnnouncementText() {
+      requestAnimationFrame(() => {
+        const textEl = document.querySelector('#home-news-list .ann-text-content');
+        if (!textEl || textEl.clientHeight === 0) return;
+
+        const rawLen = (textEl.innerText || "").trim().length;
+        const isShort = rawLen > 0 && rawLen <= 95 && (textEl.innerText || "").split('\n').length <= 3;
+
+        textEl.classList.toggle('short-ann-text', isShort);
+
+        let fontSize = isShort ? 21 : (rawLen <= 180 ? 16 : 15);
+        let lineHeight = isShort ? 1.38 : 1.42;
+
+        textEl.style.fontSize = fontSize + "px";
+        textEl.style.lineHeight = String(lineHeight);
+
+        let guard = 0;
+        while (textEl.scrollHeight > textEl.clientHeight && fontSize > 8.5 && guard < 60) {
+          fontSize -= 0.4;
+          if (fontSize < 13) lineHeight = 1.32;
+          if (fontSize < 11.5) lineHeight = 1.24;
+          textEl.style.fontSize = fontSize.toFixed(1) + "px";
+          textEl.style.lineHeight = String(lineHeight);
+          guard++;
+        }
+      });
+    }
+    window.addEventListener('resize', fitAnnouncementText);
+
+    function renderNewsSlider() {
+      const container = document.getElementById('home-news-list');
+      const controls = document.getElementById('news-step-controls');
+      const mobPrev = document.getElementById('news-mob-prev-btn');
+      const mobNext = document.getElementById('news-mob-next-btn');
+      
+      if (!globalNewsData || globalNewsData.length === 0) {
+        controls.style.display = 'none';
+        if (mobPrev) mobPrev.classList.remove('visible-mobile');
+        if (mobNext) mobNext.classList.remove('visible-mobile');
+        container.innerHTML = `
+          <div class="ann-split-grid">
+            <div class="ann-yellow-zone">
+              <div class="mono-label">STATUS // EMPTY</div>
+              <div class="ndot-title" style="font-size: 16px; margin-top: 4px; color: var(--sno-ice);">НЕТ АКТИВНЫХ АНОНСОВ</div>
+            </div>
+            <div class="ann-red-zone">
+              <img src="${NOTHING_DEFAULT_IMAGE}" class="nothing-img">
+            </div>
+            <div class="ann-green-zone">
+              <div class="mono-label" style="margin: auto; text-align: center;">ПОКА НЕТ ОПУБЛИКОВАННЫХ АНОНСОВ</div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      if (currentNewsIndex >= globalNewsData.length) currentNewsIndex = 0;
+      if (currentNewsIndex < 0) currentNewsIndex = 0;
+
+      const item = globalNewsData[currentNewsIndex];
+      const hasMultiple = globalNewsData.length > 1;
+      controls.style.display = hasMultiple ? 'flex' : 'none';
+      if (mobPrev) {
+        mobPrev.classList.toggle('visible-mobile', hasMultiple);
+        mobPrev.disabled = (currentNewsIndex === 0);
+      }
+      if (mobNext) {
+        mobNext.classList.toggle('visible-mobile', hasMultiple);
+        mobNext.disabled = (currentNewsIndex === globalNewsData.length - 1);
+      }
+
+      document.getElementById('news-counter').innerText = `${currentNewsIndex + 1}/${globalNewsData.length}`;
+      document.getElementById('news-prev-btn').disabled = (currentNewsIndex === 0);
+      document.getElementById('news-next-btn').disabled = (currentNewsIndex === globalNewsData.length - 1);
+
+      const safeTitle = item.title
+        ? formatTextWithTgEmojis(item.title)
+        : "АНОНС СНО МГСУ";
+      const mediaHtml = buildMediaFrameHtml(item.preview, item.link);
+      const rawTextTrimmed = String(item.text || "").trim();
+      const isShortText = rawTextTrimmed.length > 0 && rawTextTrimmed.length <= 95 && rawTextTrimmed.split('\n').length <= 3;
+      const safeText = formatTextWithTgEmojis(rawTextTrimmed);
+      
+      const linkBtn = (item.link && item.link.startsWith('http'))
+        ? `<button class="btn-primary" style="margin-top: 10px; padding: 10px 14px;" onclick="window.Telegram.WebApp.openLink('${item.link}')">🔗 ${item.btnText || 'Перейти по ссылке'}</button>`
+        : '';
+
+      const adminActionsHtml = canCreateGlobal ? `
+        <div style="display: flex; gap: 8px; margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--border-dot);">
+          <button class="btn-outline" style="padding: 7px 10px; font-size: 10px; flex: 1;" onclick="openEditAnnouncementModal(${currentNewsIndex})">✎ Изменить</button>
+          <button class="btn-outline" style="padding: 7px 10px; font-size: 10px; flex: 1; color: var(--danger);" onclick="deleteNewsItem('${item.msgId || ''}', ${currentNewsIndex})">✕ Удалить</button>
+        </div>
+      ` : '';
+
+      container.innerHTML = `
+        <div class="ann-split-grid" id="ann-active-grid">
+          <div class="ann-yellow-zone">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <span class="mono-label" style="color: var(--sno-ice);">📅 ${formatLocalDate(item.date)}</span>
+              ${currentNewsIndex === 0 ? '<span class="badge-pill" style="margin-top:0; padding: 2px 8px; font-size: 9px;">NEW</span>' : ''}
+            </div>
+            <div class="ndot-title" style="font-size: 16px; color: var(--text-primary); word-break: break-word;">${safeTitle}</div>
+          </div>
+
+          <div class="ann-red-zone">
+            ${mediaHtml}
+          </div>
+
+          <div class="ann-green-zone">
+            <div class="ann-text-content ${isShortText ? 'short-ann-text' : ''}">${safeText}</div>
+            <div>
+              ${linkBtn}
+              ${adminActionsHtml}
+            </div>
+          </div>
+        </div>
+      `;
+      applyTelegramEmojis(container);
+      fitAnnouncementText();
+    }
+
+    function changeNewsSlide(delta) {
+      if (!globalNewsData || globalNewsData.length <= 1) return;
+      const nextIdx = currentNewsIndex + delta;
+      if (nextIdx < 0 || nextIdx >= globalNewsData.length) return;
+
+      const grid = document.getElementById('ann-active-grid');
+      if (grid) {
+        grid.style.opacity = '0';
+        grid.style.transform = `translateX(${delta > 0 ? '-18px' : '18px'})`;
+        setTimeout(() => {
+          currentNewsIndex = nextIdx;
+          renderNewsSlider();
+        }, 160);
+      } else {
+        currentNewsIndex = nextIdx;
+        renderNewsSlider();
+      }
+    }
+
+    // Свайпы: 1) Лента анонсов, 2) Карусель мероприятий, 3) Свайп назад в "Базе участников СНО"
+    function initTouchSwipes() {
+      const annBox = document.getElementById('announcements-box');
+      if (annBox) {
+        let startX = 0, startY = 0;
+        annBox.addEventListener('touchstart', (e) => {
+          startX = e.changedTouches[0].screenX;
+          startY = e.changedTouches[0].screenY;
+        }, { passive: true });
+        annBox.addEventListener('touchend', (e) => {
+          const dx = e.changedTouches[0].screenX - startX;
+          const dy = e.changedTouches[0].screenY - startY;
+          if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.3) {
+            changeNewsSlide(dx < 0 ? 1 : -1);
+          }
+        }, { passive: true });
+      }
+
+      const evViewport = document.querySelector('.events-carousel-viewport');
+      if (evViewport) {
+        let evStartX = 0, evStartY = 0;
+        evViewport.addEventListener('touchstart', (e) => {
+          evStartX = e.changedTouches[0].screenX;
+          evStartY = e.changedTouches[0].screenY;
+        }, { passive: true });
+        evViewport.addEventListener('touchend', (e) => {
+          const dx = e.changedTouches[0].screenX - evStartX;
+          const dy = e.changedTouches[0].screenY - evStartY;
+          if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.3) {
+            slideEventsCarousel(dx < 0 ? 1 : -1);
+          }
+        }, { passive: true });
+      }
+
+      // Свайп назад (слева направо) в интерфейсе просмотра всех участников СНО
+      const allPartView = document.getElementById('all-participants-view');
+      if (allPartView) {
+        let apStartX = 0, apStartY = 0;
+        allPartView.addEventListener('touchstart', (e) => {
+          apStartX = e.changedTouches[0].screenX;
+          apStartY = e.changedTouches[0].screenY;
+        }, { passive: true });
+        allPartView.addEventListener('touchend', (e) => {
+          const dx = e.changedTouches[0].screenX - apStartX;
+          const dy = e.changedTouches[0].screenY - apStartY;
+          // Если свайпнули слева направо (dx > 65px) — возвращаемся на Главную страницу
+          if (dx > 65 && Math.abs(dx) > Math.abs(dy) * 1.4) {
+            switchMainTab('home');
+          }
+        }, { passive: true });
+      }
+    }
+
+    // --- 6. ЕДИНЫЙ ИНТЕРФЕЙС СОЗДАНИЯ И УПРАВЛЕНИЯ АНОНСАМИ ---
+    function openAnnouncementsHub() {
+      closeAnnEditorCard();
+      renderAdminNewsList();
+      openSubView('news-view');
+    }
+
+    function closeAnnEditorCard() {
+      const card = document.getElementById('ann-editor-card');
+      if (card) card.style.display = 'none';
+    }
+
+    function renderAdminNewsList() {
+      const listEl = document.getElementById('news-list');
+      if (!listEl) return;
+      listEl.innerHTML = globalNewsData.map((n, i) => {
+        return `<div class="card" style="padding: 14px; margin-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span class="mono-label">📅 ${formatLocalDate(n.date)}</span>
+            <div style="display: flex; gap: 10px;">
+              <button onclick="openEditAnnouncementModal(${i})" class="mono-label" style="background: none; border: none; color: var(--sno-ice); cursor: pointer;">✎ Изменить</button>
+              <button onclick="deleteNewsItem('${n.msgId || ''}', ${i})" class="mono-label" style="background: none; border: none; color: var(--danger); cursor: pointer;">✕ Удалить</button>
+            </div>
+          </div>
+          <div class="event-media-frame" style="margin-bottom: 10px;">
+            ${buildMediaFrameHtml(n.preview, n.link)}
+          </div>
+          ${n.title ? `<div style="font-weight:700; margin-bottom:6px; color: var(--sno-ice);">${formatTextWithTgEmojis(n.title)}</div>` : ''}
+          <div style="font-size: 13.5px; margin-bottom: 12px; line-height: 1.4; white-space: pre-wrap;">${formatTextWithTgEmojis(n.text)}</div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn-outline" style="flex: 1;" onclick="openEditAnnouncementModal(${i})">✎ Исправить</button>
+            <button class="btn-outline" style="flex: 1;" onclick="openAdminForCreate(\`${String(n.text).replace(/`/g, '')}\`)">📅 В мероприятие</button>
+          </div>
+        </div>`;
+      }).join('') || "<div class='mono-label' style='text-align: center; padding: 20px;'>ПОКА НЕТ АНОНСОВ</div>";
+      applyTelegramEmojis(listEl);
+    }
+
+    function openStandaloneAnnouncementModal() {
+      uploadedAnnPreviewBase64 = null;
+      document.getElementById('sa-edit-index').value = "-1";
+      document.getElementById('sa-edit-msgid').value = "";
+      document.getElementById('sa-Sublabel').innerText = "BROADCAST // NEW POST";
+      document.getElementById('sa-modal-title').innerText = "НОВЫЙ АНОНС";
+      document.getElementById('sa-submit-btn').innerText = "Опубликовать анонс";
+      document.getElementById('sa-title').value = "";
+      document.getElementById('sa-preview-url').value = "";
+      document.getElementById('sa-desc').value = "";
+      document.getElementById('sa-link').value = "";
+      document.getElementById('sa-btntext').value = "";
+      document.getElementById('sa-post-channel').checked = false;
+      document.getElementById('sa-post-channel-wrap').style.display = 'flex';
+      document.getElementById('sa-upload-label').innerText = "🖼 ВЫБРАТЬ ФОТО / GIF ИЗ ГАЛЕРЕИ";
+      document.getElementById('sa-preview-current-wrap').style.display = 'none';
+
+      openSubView('news-view');
+      document.getElementById('ann-editor-card').style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function openEditAnnouncementModal(index) {
+      const item = globalNewsData[index];
+      if (!item) return;
+
+      document.getElementById('sa-edit-index').value = String(index);
+      document.getElementById('sa-edit-msgid').value = item.msgId || "";
+      document.getElementById('sa-Sublabel').innerText = "BROADCAST // EDIT POST";
+      document.getElementById('sa-modal-title').innerText = "РЕДАКТИРОВАНИЕ АНОНСА";
+      document.getElementById('sa-submit-btn').innerText = "Сохранить изменения";
+
+      document.getElementById('sa-title').value = item.title || "";
+      document.getElementById('sa-desc').value = item.text || "";
+      document.getElementById('sa-link').value = item.link || "";
+      document.getElementById('sa-btntext').value = item.btnText || "";
+      document.getElementById('sa-post-channel').checked = false;
+      document.getElementById('sa-post-channel-wrap').style.display = 'none';
+
+      if (item.preview && String(item.preview).startsWith('data:image')) {
+        uploadedAnnPreviewBase64 = item.preview;
+        document.getElementById('sa-preview-url').value = "";
+        document.getElementById('sa-upload-label').innerText = "✅ ТЕКУЩЕЕ ПРЕВЬЮ ИЗ ГАЛЕРЕИ";
+        document.getElementById('sa-preview-current-img').src = item.preview;
+        document.getElementById('sa-preview-current-wrap').style.display = 'flex';
+      } else if (item.preview) {
+        uploadedAnnPreviewBase64 = null;
+        document.getElementById('sa-preview-url').value = item.preview;
+        document.getElementById('sa-upload-label').innerText = "🖼 ЗАМЕНИТЬ ФОТО / GIF ИЗ ГАЛЕРЕИ";
+        document.getElementById('sa-preview-current-img').src = item.preview;
+        document.getElementById('sa-preview-current-wrap').style.display = 'flex';
+      } else {
+        uploadedAnnPreviewBase64 = null;
+        document.getElementById('sa-preview-url').value = "";
+        document.getElementById('sa-upload-label').innerText = "🖼 ВЫБРАТЬ ФОТО / GIF ИЗ ГАЛЕРЕИ";
+        document.getElementById('sa-preview-current-wrap').style.display = 'none';
+      }
+
+      openSubView('news-view');
+      document.getElementById('ann-editor-card').style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function submitStandaloneAnnouncement(e) {
+      e.preventDefault();
+      const btn = document.getElementById('sa-submit-btn');
+      const editIdx = parseInt(document.getElementById('sa-edit-index').value, 10);
+      const isEditing = !isNaN(editIdx) && editIdx >= 0 && globalNewsData[editIdx];
+
+      btn.innerText = "Сохранение..."; btn.disabled = true;
+
+      const rawPreview = (uploadedAnnPreviewBase64 !== null)
+        ? uploadedAnnPreviewBase64
+        : document.getElementById('sa-preview-url').value.trim();
+      const safePreview = (rawPreview && rawPreview.length < 45000) ? rawPreview : "";
+      const titleVal = document.getElementById('sa-title').value.trim();
+      const descVal = document.getElementById('sa-desc').value.trim();
+      const linkVal = document.getElementById('sa-link').value.trim();
+      const btnTextVal = document.getElementById('sa-btntext').value.trim() || "Подробнее";
+
+      if (isEditing) {
+        const oldItem = globalNewsData[editIdx];
+        const finalId = oldItem.msgId || ("app_" + Date.now());
+        const mirrorName = ANN_PREFIX + titleVal;
+        const oldMirrorName = oldItem.mirrorEventName || (ANN_PREFIX + (oldItem.title || ""));
+
+        globalNewsData[editIdx] = {
+          date: oldItem.date || new Date().toISOString(),
+          title: titleVal,
+          text: descVal,
+          preview: safePreview,
+          link: linkVal,
+          btnText: btnTextVal,
+          msgId: finalId,
+          mirrorEventName: mirrorName
+        };
+        saveLocalAnnouncements(globalNewsData);
+
+        try {
+          const urlPreviewParam = safePreview.startsWith("data:") ? "" : safePreview;
+          fetch(`${APPS_SCRIPT_URL}?action=edit_event&originalName=${encodeURIComponent(oldMirrorName)}&name=${encodeURIComponent(mirrorName)}&datetime=${encodeURIComponent(globalNewsData[editIdx].date)}&endtime=${encodeURIComponent(btnTextVal)}&deadline=${encodeURIComponent(finalId)}&photo=${encodeURIComponent(urlPreviewParam)}&desc=${encodeURIComponent(descVal)}&regType=${encodeURIComponent(linkVal || 'no')}&exemption=false`).catch(()=>{});
+          await fetch(APPS_SCRIPT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({
+              app_action: "edit_standalone_announcement",
+              msgId: finalId,
+              originalText: oldItem.text || "",
+              originalTitle: oldItem.title || "",
+              title: titleVal,
+              preview: safePreview,
+              desc: descVal,
+              link: linkVal,
+              btnText: btnTextVal
+            })
+          });
+        } catch (err) {}
+
+        currentNewsIndex = editIdx;
+        renderNewsSlider();
+        renderAdminNewsList();
+        closeAnnEditorCard();
+        btn.innerText = "Сохранить изменения"; btn.disabled = false;
+        switchMainTab('announcements');
+      } else {
+        const createdId = "app_" + Date.now();
+        const nowIso = new Date().toISOString();
+        const postToCh = document.getElementById('sa-post-channel').checked;
+        const mirrorName = ANN_PREFIX + titleVal;
+
+        const newItemObj = {
+          date: nowIso,
+          title: titleVal,
+          text: descVal,
+          preview: safePreview,
+          link: linkVal,
+          btnText: btnTextVal,
+          msgId: createdId,
+          mirrorEventName: mirrorName
+        };
+
+        globalNewsData.unshift(newItemObj);
+        saveLocalAnnouncements(globalNewsData);
+
+        try {
+          const urlPreviewParam = safePreview.startsWith("data:") ? "" : safePreview;
+          await fetch(`${APPS_SCRIPT_URL}?action=create_event&name=${encodeURIComponent(mirrorName)}&datetime=${encodeURIComponent(nowIso)}&endtime=${encodeURIComponent(btnTextVal)}&deadline=${encodeURIComponent(createdId)}&photo=${encodeURIComponent(urlPreviewParam)}&desc=${encodeURIComponent(descVal)}&regType=${encodeURIComponent(linkVal || 'no')}&exemption=false&postToChannel=${postToCh}`);
+
+          fetch(APPS_SCRIPT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({
+              app_action: "create_standalone_announcement",
+              msgId: createdId,
+              title: titleVal,
+              preview: safePreview,
+              desc: descVal,
+              link: linkVal,
+              btnText: btnTextVal,
+              postToChannel: postToCh
+            })
+          }).catch(()=>{});
+        } catch (err) {}
+
+        currentNewsIndex = 0;
+        renderNewsSlider();
+        renderAdminNewsList();
+        closeAnnEditorCard();
+        btn.innerText = "Опубликовать анонс"; btn.disabled = false;
+        switchMainTab('announcements');
+      }
+    }
+
+    async function deleteNewsItem(msgId, index) {
+      const item = globalNewsData[index];
+      if (!item) return;
+      tg.showConfirm("Удалить этот анонс?", async (ok) => {
+        if (ok) {
+          const key = item.msgId ? ("id_" + item.msgId) : ("txt_" + (item.title || "") + "::" + (item.text || ""));
+          addDeletedId(key);
+          addDeletedId("txt_" + (item.title || "") + "::" + (item.text || ""));
+          if (item.msgId) addDeletedId(item.msgId);
+
+          const mirrorToDelete = item.mirrorEventName || (ANN_PREFIX + (item.title || ""));
+          globalNewsData.splice(index, 1);
+          saveLocalAnnouncements(globalNewsData);
+          currentNewsIndex = 0;
+          renderNewsSlider();
+          renderAdminNewsList();
+
+          try {
+            fetch(`${APPS_SCRIPT_URL}?action=delete_event&eventName=${encodeURIComponent(mirrorToDelete)}`).catch(()=>{});
+            await fetch(`${APPS_SCRIPT_URL}?action=delete_news&msgId=${encodeURIComponent(msgId || '')}&text=${encodeURIComponent(item.text)}`);
+          } catch (e) {}
+        }
+      });
+    }
+
+    async function toggleCoauthor(checkbox) {
+      const isChecked = checkbox.checked;
+      const currentUserId = tg.initDataUnsafe?.user?.id;
+      if (!currentUserId) return;
+      checkbox.disabled = true;
+      try { await fetch(`${APPS_SCRIPT_URL}?action=update_profile&userId=${currentUserId}&coauthor=${isChecked}`); checkbox.disabled = false; } 
+      catch (e) { checkbox.checked = !isChecked; checkbox.disabled = false; tg.showAlert("Ошибка сохранения"); }
+    }
+
+    function editInterests() {
+      document.getElementById('interests-list').style.display = 'none';
+      document.getElementById('edit-interests-btn').style.display = 'none';
+      document.getElementById('interests-edit-box').style.display = 'block';
+      uploadedProfilePhotoBase64 = null;
+      clearCustomPhotoFlag = false;
+      if (currentUserProfile) {
+        document.getElementById('interests-input').value = currentUserProfile['Научные интересы'] || "";
+        document.getElementById('socials-input').value = currentUserProfile['Другие соцсети'] || "";
+        document.getElementById('profile-photo-url-input').value = (currentUserProfile['Фото'] && String(currentUserProfile['Фото']).startsWith('http')) ? currentUserProfile['Фото'] : "";
+        if (currentUserProfile['Фото']) {
+          document.getElementById('profile-photo-preview').src = currentUserProfile['Фото'];
+          document.getElementById('profile-photo-preview-wrap').style.display = 'flex';
+        }
+      }
+    }
+
+    function cancelEditInterests() {
+      document.getElementById('interests-list').style.display = 'block';
+      document.getElementById('edit-interests-btn').style.display = 'block';
+      document.getElementById('interests-edit-box').style.display = 'none';
+    }
+
+    async function saveInterests() {
+      const currentUserId = tg.initDataUnsafe?.user?.id;
+      if (!currentUserId) return;
+      const btn = document.getElementById('save-profile-btn');
+      btn.innerText = "Сохранение..."; btn.disabled = true;
+
+      const interestsVal = document.getElementById('interests-input').value;
+      const socialsVal = document.getElementById('socials-input').value;
+      const urlPhotoVal = document.getElementById('profile-photo-url-input').value.trim();
+      const finalPhoto = uploadedProfilePhotoBase64 || urlPhotoVal;
+
+      const payload = {
+        app_action: "update_profile_post",
+        userId: currentUserId,
+        interests: interestsVal,
+        socials: socialsVal,
+        photo: finalPhoto,
+        clearPhoto: clearCustomPhotoFlag
+      };
+
+      try {
+        if (!finalPhoto.startsWith("data:")) {
+          fetch(`${APPS_SCRIPT_URL}?action=update_profile&userId=${currentUserId}&interests=${encodeURIComponent(interestsVal)}&socials=${encodeURIComponent(socialsVal)}&photo=${encodeURIComponent(clearCustomPhotoFlag ? "" : finalPhoto)}`).catch(()=>{});
+        }
+        await fetch(APPS_SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload)
+        });
+        currentUserProfile['Научные интересы'] = interestsVal;
+        currentUserProfile['Другие соцсети'] = socialsVal;
+        if (finalPhoto) {
+          currentUserProfile['Фото'] = finalPhoto;
+          const avatarDiv = document.getElementById('avatar');
+          avatarDiv.style.backgroundImage = `url('${finalPhoto}')`;
+          avatarDiv.innerHTML = '';
+        } else if (clearCustomPhotoFlag) {
+          currentUserProfile['Фото'] = "";
+        }
+        document.getElementById('interests-list').innerHTML = interestsVal
+          ? interestsVal.split(',').map(tag => `<span class="interest-tag">${tag.trim()}</span>`).join('')
+          : '<span class="mono-label">ИНТЕРЕСЫ НЕ УКАЗАНЫ</span>';
+        btn.innerText = "Сохранить"; btn.disabled = false;
+        cancelEditInterests();
+      } catch (e) {
+        alert("Ошибка сохранения");
+        btn.innerText = "Сохранить"; btn.disabled = false;
+      }
+    }
+
+    function showUserDetails(userId) {
+      const u = globalParticipantsData.find(p => String(p.user_id) === String(userId));
+      if (!u) return;
+      const isCoauthor = String(u['Ищу соавтора']).toLowerCase() === 'true';
+      
+      document.getElementById('um-name').innerText = u['ФИО'];
+      document.getElementById('um-role').innerText = u['Должность'] || "Активист СНО";
+      document.getElementById('um-group').innerText = u['Институт/Группа'] || "—";
+      document.getElementById('um-interests').innerText = u['Научные интересы'] || "Не указаны";
+      
+      if (!isManagerGlobal) {
+        document.getElementById('um-phone-row').style.display = 'none';
+        document.getElementById('um-socials').innerText = u['Другие соцсети'] || "Не указаны";
+      } else {
+        document.getElementById('um-phone-row').style.display = 'block';
+        document.getElementById('um-phone').innerText = u['Телефон'] || "Не указан";
+        document.getElementById('um-socials').innerText = u['Другие соцсети'] || "Не указаны";
+      }
+      
+      const photoEl = document.getElementById('um-photo');
+      const fallbackEl = document.getElementById('um-avatar-fallback');
+      const finalPhotoSrc = u['Фото'] || u['TG Фото'] || null;
+
+      if (finalPhotoSrc) { photoEl.src = finalPhotoSrc; photoEl.style.display = 'block'; fallbackEl.style.display = 'none'; }
+      else { photoEl.style.display = 'none'; fallbackEl.innerText = u['ФИО'] ? u['ФИО'].charAt(0) : '?'; fallbackEl.style.display = 'flex'; }
+      
+      const tgBtn = document.getElementById('um-tg-btn');
+      if (u.telegram_raw && (isCoauthor || isManagerGlobal)) { 
+        tgBtn.style.display = 'block'; 
+        tgBtn.onclick = () => window.Telegram.WebApp.openLink(`https://t.me/${String(u.telegram_raw).replace('@','')}`); 
+      } else { tgBtn.style.display = 'none'; }
+      
+      document.getElementById('user-modal').style.display = 'flex';
+    }
+    function closeUserModal() { document.getElementById('user-modal').style.display = 'none'; }
+
+    function renderAllParticipants(filterText = "") {
+      openSubView('all-participants-view');
+      const listEl = document.getElementById('all-participants-list');
+      const lowerFilter = filterText.toLowerCase();
+      const filtered = globalParticipantsData.filter(p => p['ФИО'] && p['ФИО'].toLowerCase().includes(lowerFilter));
+      
+      listEl.innerHTML = filtered.map(user => {
+        const photoSrc = user['Фото'] || user['TG Фото'] || null;
+        const avatarHtml = photoSrc
+          ? `<img src="${photoSrc}" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 1px solid var(--sno-ice);">`
+          : `<div class="ndot-title" style="width: 44px; height: 44px; border-radius: 50%; background: var(--sno-ice); color: var(--sno-navy); display: flex; align-items: center; justify-content: center; font-size: 18px;">${user['ФИО'] ? String(user['ФИО']).charAt(0) : '?'}</div>`;
+        return `<div class="card" style="padding: 14px; margin-bottom: 10px; cursor:pointer; display: flex; gap: 12px; align-items: center;" onclick="showUserDetails('${user.user_id}')">
+          ${avatarHtml}
+          <div>
+            <div style="font-weight: 700; font-size: 14px;">${user['ФИО']}</div>
+            <div class="mono-label" style="margin-top: 3px;">${user['Институт/Группа'] || '—'} // ${user['Должность'] || 'Активист'}</div>
+          </div>
+        </div>`;
+      }).join('') || `<div class="mono-label" style="text-align: center; padding: 20px;">НИЧЕГО НЕ НАЙДЕНО</div>`;
+    }
+    function filterAllParticipants() { renderAllParticipants(document.getElementById('user-search-input').value); }
+
+    function openAdminForCreate(presetDesc = "") {
+      document.getElementById('admin-title').innerText = "НОВОЕ МЕРОПРИЯТИЕ";
+      document.getElementById('ev-submit-btn').innerText = "Опубликовать";
+      document.getElementById('ev-originalname').value = "";
+      document.getElementById('ev-name').value = "";
+      document.getElementById('ev-datetime').value = "";
+      document.getElementById('ev-endtime').value = "";
+      document.getElementById('ev-deadline').value = "";
+      document.getElementById('ev-photo').value = "";
+      document.getElementById('ev-desc').value = presetDesc;
+      document.getElementById('ev-regtype').value = "internal";
+      document.getElementById('ev-exemption').checked = false;
+      document.getElementById('ev-post-channel').checked = false;
+      toggleExternalLink();
+      openSubView('admin-view');
+    }
+
+    function toInputDatetimeLocalMsk(val) {
+      if (!val) return "";
+      const s = String(val).trim();
+      if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(s) && !s.endsWith("Z")) {
+        return s.substring(0, 16);
+      }
+      const d = parseMoscowDateObj(s);
+      if (!d) return "";
+      const parts = new Intl.DateTimeFormat('ru-RU', {
+        timeZone: 'Europe/Moscow',
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit'
+      }).formatToParts(d);
+      const map = {};
+      parts.forEach(p => map[p.type] = p.value);
+      return `${map.year}-${map.month}-${map.day}T${map.hour}:${map.minute}`;
+    }
+
+    function openAdminForEdit(eventName) {
+      const ev = globalEventsData.find(e => e.name === eventName);
+      if (!ev) return;
+      document.getElementById('admin-title').innerText = "РЕДАКТИРОВАНИЕ";
+      document.getElementById('ev-submit-btn').innerText = "Сохранить изменения";
+      document.getElementById('ev-originalname').value = ev.name;
+      document.getElementById('ev-name').value = ev.name;
+      document.getElementById('ev-datetime').value = toInputDatetimeLocalMsk(ev.datetime);
+      document.getElementById('ev-endtime').value = toInputDatetimeLocalMsk(ev.endtime);
+      document.getElementById('ev-deadline').value = toInputDatetimeLocalMsk(ev.deadline);
+      document.getElementById('ev-photo').value = ev.photo || "";
+      document.getElementById('ev-desc').value = ev.desc || "";
+      document.getElementById('ev-exemption').checked = (ev.exemption === "true"); 
+      document.getElementById('ev-post-channel').checked = false; 
+      if (ev.regType === 'internal' || ev.regType === 'no' || ev.regType === 'нет') {
+        document.getElementById('ev-regtype').value = (ev.regType === 'нет' ? 'no' : ev.regType);
+      } else {
+        document.getElementById('ev-regtype').value = "external";
+        document.getElementById('ev-externallink').value = ev.regType;
+      }
+      toggleExternalLink();
+      openSubView('admin-view');
+    }
+    function toggleExternalLink() { document.getElementById('external-link-box').style.display = (document.getElementById('ev-regtype').value === 'external') ? 'block' : 'none'; }
+
+    function viewParticipants(eventName) {
+      const ev = globalEventsData.find(e => e.name === eventName);
+      if (!ev) return;
+      currentEventForExport = ev.name;
+      document.getElementById('ep-title').innerText = ev.name;
+      const ids = ev.participants ? ev.participants.split(',').map(id => id.trim()).filter(id => id !== "") : [];
+      document.getElementById('ep-count').innerText = ids.length;
+      
+      if (ids.length === 0) {
+        document.getElementById('ep-list').innerHTML = "<div class='mono-label' style='text-align: center; margin-top: 20px;'>ПОКА НИКТО НЕ ЗАПИСАЛСЯ</div>";
+      } else {
+        document.getElementById('ep-list').innerHTML = ids.map((id, index) => {
+          const user = globalParticipantsData.find(p => String(p.user_id) === String(id));
+          const name = user ? user['ФИО'] : `ID: ${id}`;
+          const group = user ? user['Институт/Группа'] : '—';
+          return `
+            <div style="padding: 12px 0; border-bottom: 1px dashed var(--border-dot); display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="showUserDetails('${id}')">
+              <div>
+                <div style="font-size: 14px; font-weight: 600;">${index + 1}. ${name}</div>
+                <div class="mono-label" style="margin-top: 2px;">${group}</div>
+              </div>
+              <span style="color: var(--sno-ice);">❯</span>
+            </div>
+          `;
+        }).join('');
+      }
+      openSubView('event-participants-view');
+    }
+
+    function exportCSVForEvent(eventName) {
+      currentEventForExport = eventName;
+      exportCSV();
+    }
+
+    function exportCSV() {
+      const ev = globalEventsData.find(e => e.name === currentEventForExport);
+      if (!ev) return;
+      const ids = ev.participants ? ev.participants.split(',').map(id => id.trim()).filter(id => id !== "") : [];
+      let csv = "data:text/csv;charset=utf-8,\uFEFFФИО;Группа;Телефон;Telegram;Другие соцсети\n";
+      ids.forEach(id => {
+        const u = globalParticipantsData.find(p => String(p.user_id) === String(id));
+        if (u) csv += `"${u['ФИО']}";"${u['Институт/Группа']}";"${u['Телефон'] || ''}";"${u.telegram_raw || ''}";"${u['Другие соцсети'] || ''}"\n`;
+      });
+      const link = document.createElement("a");
+      link.setAttribute("href", encodeURI(csv));
+      link.setAttribute("download", `Участники_${currentEventForExport}.csv`);
+      document.body.appendChild(link); link.click(); link.remove();
+    }
+
+    async function deleteEvent(eventName) {
+      tg.showConfirm(`Удалить мероприятие «${eventName}»?`, async (confirm) => {
+        if (confirm) {
+          try { await fetch(`${APPS_SCRIPT_URL}?action=delete_event&adminId=${tg.initDataUnsafe?.user?.id}&eventName=${encodeURIComponent(eventName)}`); location.reload(); }
+          catch (e) { alert("Ошибка"); }
+        }
+      });
+    }
+
+    async function submitNewEvent(event) {
+      event.preventDefault();
+      const btn = document.getElementById('ev-submit-btn'); btn.innerText = "Загрузка..."; btn.disabled = true;
+      const originalName = document.getElementById('ev-originalname').value; 
+      const name = document.getElementById('ev-name').value;
+      const datetime = document.getElementById('ev-datetime').value;
+      const endtime = document.getElementById('ev-endtime').value;
+      const deadline = document.getElementById('ev-deadline').value;
+      const photo = document.getElementById('ev-photo').value;
+      const desc = document.getElementById('ev-desc').value;
+      const exemption = document.getElementById('ev-exemption').checked;
+      let regType = document.getElementById('ev-regtype').value;
+      if (regType === 'external') regType = document.getElementById('ev-externallink').value;
+      const postToChannel = document.getElementById('ev-post-channel') ? document.getElementById('ev-post-channel').checked : false;
+
+      const action = originalName ? "edit_event" : "create_event";
+      const url = `${APPS_SCRIPT_URL}?action=${action}&adminId=${tg.initDataUnsafe?.user?.id}&originalName=${encodeURIComponent(originalName)}&name=${encodeURIComponent(name)}&datetime=${encodeURIComponent(datetime)}&endtime=${encodeURIComponent(endtime)}&deadline=${encodeURIComponent(deadline)}&photo=${encodeURIComponent(photo)}&desc=${encodeURIComponent(desc)}&regType=${encodeURIComponent(regType)}&exemption=${exemption}&postToChannel=${postToChannel}`;
+      try { await fetch(url); location.reload(); } catch(e) { alert("Ошибка сети"); btn.innerText = "Опубликовать"; btn.disabled = false; }
+    }
+
+    async function registerForEvent(eventName, btnElement, eventObj) {
+      eventObj.stopPropagation();
+      btnElement.innerText = "Запись..."; btnElement.disabled = true;
+      try { await fetch(`${APPS_SCRIPT_URL}?action=join_event&eventName=${encodeURIComponent(eventName)}&userId=${tg.initDataUnsafe?.user?.id}`); tg.showAlert("✅ Вы записаны!"); location.reload(); } 
+      catch (e) { btnElement.innerText = "Ошибка"; btnElement.disabled = false; }
+    }
+
+    async function leaveEvent(eventName, eventObj) {
+      eventObj.stopPropagation();
+      tg.showConfirm(`Отменить запись на «${eventName}»?`, async (confirm) => {
+        if (confirm) {
+          try { await fetch(`${APPS_SCRIPT_URL}?action=leave_event&eventName=${encodeURIComponent(eventName)}&userId=${tg.initDataUnsafe?.user?.id}`); location.reload(); }
+          catch (e) { alert("Ошибка сети"); }
+        }
+      });
+    }
+
+    function isEventPast(ev, now) {
+      const startD = parseMoscowDateObj(ev.datetime);
+      const endD = parseMoscowDateObj(ev.endtime);
+      if (endD) return now > endD;
+      if (startD) {
+        return now > new Date(startD.getTime() + 6 * 3600 * 1000);
+      }
+      return false;
+    }
+
+    function slideEventsCarousel(delta) {
+      const track = document.getElementById('events-list');
+      const cards = track ? track.querySelectorAll('.event-card') : [];
+      const isDesktop = window.innerWidth >= 900;
+      const visibleCount = isDesktop ? 3 : 1;
+      const maxIndex = Math.max(0, cards.length - visibleCount);
+
+      currentEventsSlide = Math.min(Math.max(0, currentEventsSlide + delta), maxIndex);
+
+      if (cards.length > 0) {
+        const cardWidth = cards[0].getBoundingClientRect().width;
+        const gap = 16;
+        track.style.transform = `translateX(-${currentEventsSlide * (cardWidth + gap)}px)`;
+      }
+
+      const prevBtn = document.getElementById('ev-prev-btn');
+      const nextBtn = document.getElementById('ev-next-btn');
+      const counter = document.getElementById('ev-carousel-counter');
+      if (prevBtn) prevBtn.disabled = (currentEventsSlide === 0);
+      if (nextBtn) nextBtn.disabled = (currentEventsSlide >= maxIndex);
+      if (counter) counter.innerText = `${currentEventsSlide + 1} / ${maxIndex + 1}`;
+    }
+    window.addEventListener('resize', () => slideEventsCarousel(0));
+
+    function renderEventsFeed() {
+      const currentUserId = tg.initDataUnsafe?.user?.id;
+      const hidePast = document.getElementById('hide-past-checkbox') ? document.getElementById('hide-past-checkbox').checked : true;
+      const now = new Date();
+
+      const visibleEvents = globalEventsData.filter(ev => !hidePast || !isEventPast(ev, now));
+
+      const eventsContainer = document.getElementById('events-list');
+      eventsContainer.innerHTML = visibleEvents.map(ev => {
+        const isJoined = ev.participants && String(ev.participants).includes(String(currentUserId));
+        let btnHtml = ""; let statusHtml = "";
+        
+        const startD = parseMoscowDateObj(ev.datetime);
+        const endD = parseMoscowDateObj(ev.endtime);
+        const dlD = parseMoscowDateObj(ev.deadline);
+        const past = isEventPast(ev, now);
+        let isClosed = past;
+
+        if (startD) {
+          if (past) {
+            statusHtml = `<span class="event-date-badge" style="background: rgba(255,255,255,0.15); color: var(--text-muted);">🏁 ПРОШЛО (${formatLocalDate(ev.datetime)})</span>`;
+          } else if (now >= startD && (!endD || now <= endD)) {
+            statusHtml = `<span class="event-date-badge" style="background: var(--success); color: #000;">🔥 В ПРОЦЕССЕ</span>`;
+          } else {
+            statusHtml = `<span class="event-date-badge">📅 ${formatLocalDate(ev.datetime)}</span>`;
+          }
+        }
+        if (dlD && now > dlD) isClosed = true;
+        
+        let regType = String(ev.regType).trim().toLowerCase();
+        if (regType === 'no' || regType === 'нет') {
+          btnHtml = `<div class="mono-label" style="text-align: center; margin-top: 8px;">РЕГИСТРАЦИЯ НЕ ТРЕБУЕТСЯ</div>`;
+        } else if (regType.startsWith('http')) {
+          btnHtml = `<button class="btn-primary" onclick="event.stopPropagation(); window.Telegram.WebApp.openLink('${ev.regType}')" style="margin-top: 0;">Внешняя регистрация ➔</button>`;
+        } else {
+          if (isJoined) {
+            btnHtml = `<button class="btn-primary" style="background: var(--success); color: #000; margin-top: 0; pointer-events: none;">✅ Вы записаны</button>
+                       ${!past ? `<div style="text-align: center; margin-top: 10px;"><span onclick="leaveEvent('${ev.name}', event)" class="mono-label" style="color: var(--danger); cursor: pointer; text-decoration: underline;">Отменить запись</span></div>` : ''}`;
+          } else if (isClosed) {
+            btnHtml = `<button class="btn-outline" style="margin-top: 0;" disabled>⏳ Регистрация закрыта</button>`;
+          } else {
+            btnHtml = `<button class="btn-primary" onclick="registerForEvent('${ev.name}', this, event)" style="margin-top: 0;">Зарегистрироваться</button>`;
+          }
+        }
+        
+        const pCount = ev.participants ? ev.participants.split(',').filter(x => x.trim() !== '').length : 0;
+        const adminPBtn = isManagerGlobal ? `<button class="btn-outline" onclick="event.stopPropagation(); viewParticipants('${ev.name}')" style="margin-top: 10px;">👀 Участники и CSV (${pCount})</button>` : '';
+        const adminEBtn = canCreateGlobal ? `<div style="display: flex; gap: 8px; margin-top: 8px;"><button class="btn-outline" onclick="event.stopPropagation(); openAdminForEdit('${ev.name}')" style="flex: 1;">✏️ Изменить</button><button class="btn-outline" onclick="event.stopPropagation(); deleteEvent('${ev.name}')" style="flex: 1; color: var(--danger);">🗑️ Удалить</button></div>` : '';
+        const exemptionHtml = (ev.exemption === 'true') ? `<div class="badge-pill" style="margin-bottom: 12px;">🎓 ОСВОБОЖДЕНИЕ ОТ ПАР</div>` : '';
+        const endTimeInfo = ev.endtime ? `<div class="mono-label" style="margin-bottom: 6px;">🏁 ОКОНЧАНИЕ: ${formatLocalDate(ev.endtime)}</div>` : '';
+
+        return `<div class="card event-card" onclick="toggleEvent(this)">
+          <div class="event-media-frame">
+            ${buildMediaFrameHtml(ev.photo)}
+          </div>
+          <div class="event-body">
+            ${statusHtml}
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+              <h3 style="margin: 0; font-size: 16px; font-weight: 700;">${formatTextWithTgEmojis(ev.name)}</h3>
+              <span class="mono-label" style="color: var(--sno-ice); flex-shrink: 0;">[ + ]</span>
+            </div>
+            <div class="event-details">
+              ${endTimeInfo}
+              ${(ev.deadline && !isJoined) ? `<div class="mono-label" style="color: var(--danger); margin-bottom: 8px;">⏳ ДЕДЛАЙН: ${formatLocalDate(ev.deadline)}</div>` : ''}
+              ${ev.desc ? `<p class="event-desc-text" style="color: var(--text-primary); opacity: 0.9;">${formatTextWithTgEmojis(ev.desc)}</p>` : ''}
+              ${exemptionHtml}
+              <div style="margin-top: 12px;">${btnHtml}${adminPBtn}${adminEBtn}</div>
+            </div>
+          </div>
+        </div>`;
+      }).join('') || `<div class="card" style="text-align: center; width: 100%;"><span class="mono-label">НЕТ АКТИВНЫХ МЕРОПРИЯТИЙ</span></div>`;
+
+      applyTelegramEmojis(eventsContainer);
+
+      const evControls = document.getElementById('events-carousel-controls');
+      const minForCarousel = window.innerWidth >= 900 ? 3 : 1;
+      if (evControls) {
+        evControls.style.display = visibleEvents.length > minForCarousel ? 'flex' : 'none';
+      }
+      currentEventsSlide = 0;
+      setTimeout(() => slideEventsCarousel(0), 50);
+
+      const pastEvents = globalEventsData.filter(ev => isEventPast(ev, now));
+      document.getElementById('past-events-admin-list').innerHTML = pastEvents.map(ev => {
+        const pCount = ev.participants ? ev.participants.split(',').filter(x => x.trim() !== '').length : 0;
+        return `<div class="card">
+          <div class="mono-label">🏁 ЗАВЕРШЕНО // ${formatLocalDate(ev.datetime)}</div>
+          <h3 style="margin: 6px 0 12px 0; font-size: 16px; font-weight: 700;">${ev.name}</h3>
+          <div class="mono-label" style="margin-bottom: 12px;">ЗАПИСАВШИХСЯ УЧАСТНИКОВ: <strong style="color: var(--sno-ice);">${pCount}</strong></div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn-primary" style="margin-top: 0; flex: 1;" onclick="exportCSVForEvent('${ev.name}')">📥 Скачать CSV</button>
+            <button class="btn-outline" style="flex: 1;" onclick="viewParticipants('${ev.name}')">👀 Профили (${pCount})</button>
+          </div>
+        </div>`;
+      }).join('') || `<div class="card" style="text-align: center;"><span class="mono-label">АРХИВ МЕРОПРИЯТИЙ ПУСТ</span></div>`;
+    }
+
+    async function loadProfile() {
+      const currentUserId = tg.initDataUnsafe?.user?.id;
+      const currentUserPhotoTg = tg.initDataUnsafe?.user?.photo_url;
+      const adminIds = ["1486703011", "123456789", "789596527", "526927711"];
+      
+      initTouchSwipes();
+
+      try {
+        const [response, cloudNews] = await Promise.all([
+          fetch(`${APPS_SCRIPT_URL}?t=${Date.now()}`),
+          loadCloudStorageAnnouncements()
+        ]);
+        const data = await response.json();
+        globalParticipantsData = data.participants || [];
+
+        const rawEvents = data.events || [];
+        const mirrorAnnouncements = [];
+        globalEventsData = [];
+
+        rawEvents.forEach(ev => {
+          const evName = String(ev.name || "");
+          if (evName.startsWith(ANN_PREFIX)) {
+            mirrorAnnouncements.unshift({
+              date: ev.datetime || new Date().toISOString(),
+              title: evName.replace(ANN_PREFIX, ""),
+              text: ev.desc || "",
+              preview: (ev.photo && !String(ev.photo).includes("unsplash.com")) ? ev.photo : "",
+              link: (ev.regType && String(ev.regType).startsWith("http")) ? ev.regType : "",
+              btnText: ev.endtime || "Подробнее",
+              msgId: ev.deadline || ("mirror_" + evName),
+              mirrorEventName: evName
+            });
+          } else {
+            globalEventsData.push(ev);
+          }
+        });
+
+        globalNewsData = mergeAllAnnouncements(data.news || [], mirrorAnnouncements, cloudNews);
+        saveLocalAnnouncements(globalNewsData);
+
+        currentUserProfile = globalParticipantsData.find(item => String(item.user_id) === String(currentUserId));
+        document.getElementById('loading').style.display = 'none';
+
+        if (currentUserProfile) {
+          const role = currentUserProfile['Должность'] || "Активист СНО";
+          const isSuperAdmin = adminIds.includes(String(currentUserId));
+          isManagerGlobal = isSuperAdmin || role === "Председатель" || role === "Зам. Председателя" || role === "Руководство";
+          canCreateGlobal = isSuperAdmin || role === "Председатель" || role === "Зам. Председателя";
+
+          const savedTgPhoto = currentUserProfile['TG Фото'] || "";
+          if (currentUserPhotoTg && currentUserPhotoTg !== savedTgPhoto) {
+            fetch(`${APPS_SCRIPT_URL}?action=sync_tg_photo&userId=${currentUserId}&tgPhoto=${encodeURIComponent(currentUserPhotoTg)}`).catch(()=>{});
+          }
+
+          document.getElementById('bottom-dock').style.display = 'flex';
+          switchMainTab('home');
+          
+          currentUserGlobalName = currentUserProfile['ФИО'] || "Без имени";
+          document.getElementById('user-name').innerText = currentUserGlobalName;
+          document.getElementById('user-role').innerText = role;
+          
+          const rawScore = parseFloat(String(currentUserProfile['score']).replace(',', '.')) || 0;
+          document.getElementById('user-score').innerText = Number(rawScore.toFixed(2));
+          document.getElementById('user-group').innerText = currentUserProfile['Институт/Группа'] || "—";
+          document.getElementById('coauthor-checkbox').checked = String(currentUserProfile['Ищу соавтора']).toLowerCase() === 'true';
+
+          const avatarDiv = document.getElementById('avatar');
+          const customPhoto = currentUserProfile['Фото'];
+          const activePhoto = customPhoto || currentUserPhotoTg || savedTgPhoto;
+          if (activePhoto) { avatarDiv.style.backgroundImage = `url('${activePhoto}')`; avatarDiv.innerHTML = ''; } 
+          else { avatarDiv.style.backgroundImage = 'none'; avatarDiv.innerHTML = currentUserGlobalName.charAt(0); }
+
+          if (isManagerGlobal) {
+            document.getElementById('admin-bottom-block').style.display = 'block';
+            if (!canCreateGlobal) { 
+              document.getElementById('admin-create-ev-btn').style.display = 'none'; 
+              document.getElementById('admin-ann-hub-btn').style.display = 'none';
+            }
+          }
+
+          document.getElementById('interests-list').innerHTML = (currentUserProfile['Научные интересы'])
+            ? currentUserProfile['Научные интересы'].split(',').map(tag => `<span class="interest-tag">${tag.trim()}</span>`).join('')
+            : '<span class="mono-label">ИНТЕРЕСЫ НЕ УКАЗАНЫ</span>';
+
+          const visibleRankedParticipants = globalParticipantsData
+            .filter(p => p['ФИО'] && !isHiddenFromLeaderboard(p['ФИО']) && (parseFloat(String(p['score']).replace(',','.')) || 0) > 0)
+            .sort((a, b) => (parseFloat(String(b['score']).replace(',','.')) || 0) - (parseFloat(String(a['score']).replace(',','.')) || 0));
+
+          document.getElementById('leaderboard-list').innerHTML = visibleRankedParticipants.slice(0, 15).map((user, index) => {
+            let rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : index === 2 ? 'rank-3' : '';
+            const val = Number((parseFloat(String(user['score']).replace(',','.')) || 0).toFixed(2));
+            return `<div class="leaderboard-item">
+              <div style="display: flex; align-items: center;">
+                <div class="rank-badge ${rankClass}">${index + 1}</div>
+                <div class="leader-name">${user['ФИО'].split(' ').slice(0, 2).join(' ')}</div>
+              </div>
+              <div class="leader-score">${val}</div>
+            </div>`;
+          }).join('');
+
+          const myVisibleIdx = visibleRankedParticipants.findIndex(p => String(p.user_id) === String(currentUserId));
+          if (isHiddenFromLeaderboard(currentUserGlobalName)) {
+            document.getElementById('my-rank').innerText = "HQ";
+          } else {
+            document.getElementById('my-rank').innerText = myVisibleIdx !== -1 ? `#${myVisibleIdx + 1}` : "—";
+          }
+
+          const coauthorsArr = globalParticipantsData.filter(p => String(p['Ищу соавтора']).toLowerCase() === 'true' && String(p.user_id) !== String(currentUserId));
+          document.getElementById('coauthors-count-chip').innerText = coauthorsArr.length > 0 ? `● ищут сейчас: ${coauthorsArr.length}` : `● сейчас никто не ищет`;
+
+          document.getElementById('coauthors-list').innerHTML = coauthorsArr.map(user => {
+            const photoSrc = user['Фото'] || user['TG Фото'] || null;
+            const avatarHtml = photoSrc
+              ? `<img src="${photoSrc}" style="width: 46px; height: 46px; border-radius: 50%; object-fit: cover; border: 1px solid var(--sno-ice);">`
+              : `<div class="ndot-title" style="width: 46px; height: 46px; border-radius: 50%; background: var(--sno-ice); color: var(--sno-navy); display: flex; align-items: center; justify-content: center; font-size: 18px;">${user['ФИО'] ? String(user['ФИО']).charAt(0) : '?'}</div>`;
+            const tagsHtml = (user['Научные интересы'] || '').split(',').map(t => t.trim() ? `<span class="interest-tag">${t.trim()}</span>` : '').join('');
+            return `<div class="card" style="padding: 16px; margin-bottom: 12px; cursor:pointer;" onclick="showUserDetails('${user.user_id}')">
+              <div style="display: flex; gap: 12px; align-items: center;">
+                ${avatarHtml}
+                <div>
+                  <div style="font-weight: 700; font-size: 15px;">${user['ФИО']}</div>
+                  <div class="mono-label" style="margin-top: 2px;">${user['Институт/Группа'] || 'СНО'}</div>
+                </div>
+              </div>
+              <div style="margin-top: 12px;">${tagsHtml || '<span class="mono-label">ИНТЕРЕСЫ НЕ УКАЗАНЫ</span>'}</div>
+            </div>`;
+          }).join('') || `<div class="card" style="text-align: center;"><span class="mono-label">СЕЙЧАС НИКТО НЕ ИЩЕТ СОАВТОРОВ</span></div>`;
+
+          renderEventsFeed();
+          currentNewsIndex = 0;
+          renderNewsSlider();
+          renderAdminNewsList();
+          applyTelegramEmojis(document.body);
+
+        } else {
+          document.getElementById('registration-view').style.display = 'block';
+        }
+      } catch (error) {
+        document.getElementById('loading').innerHTML = '<span>SYSTEM ERROR // NO CONNECTION</span>';
+      }
+    }
+
+    async function registerUser(event) {
+      event.preventDefault();
+      const nameInput = document.getElementById('name-input').value;
+      const btn = document.getElementById('reg-btn');
+      btn.innerText = "ПРОВЕРКА В БАЗЕ..."; btn.disabled = true;
+      try {
+        const response = await fetch(`${APPS_SCRIPT_URL}?action=register&userId=${tg.initDataUnsafe?.user?.id}&fullName=${encodeURIComponent(nameInput)}`);
+        const result = await response.json();
+        if (result.status === "success") {
+          location.reload();
+        } else {
+          btn.innerText = "Попробовать снова";
+          btn.disabled = false;
+          const offerBox = document.getElementById('join-sno-offer-box');
+          document.getElementById('join-sno-status-label').innerText = "NOT FOUND // ПРИГЛАШЕНИЕ В СНО";
+          document.getElementById('join-sno-status-label').style.color = "var(--danger)";
+          document.getElementById('join-sno-title').innerText = "ВАШЕ ФИО НЕ НАЙДЕНО В БАЗЕ СНО";
+          document.getElementById('join-sno-desc').innerText = "Похоже, вы ещё не числитесь в списке участников СНО НИУ МГСУ. Хотите вступить к нам? Заполните анкету по кнопке ниже:";
+          offerBox.style.background = "rgba(255, 82, 82, 0.08)";
+          offerBox.style.padding = "16px";
+          offerBox.style.borderRadius = "16px";
+          offerBox.style.border = "1px solid var(--danger)";
+        }
+      } catch (e) {
+        alert("Ошибка сети");
+        btn.innerText = "Активировать профиль";
+        btn.disabled = false;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadProfile);
+  </script>
+</body>
+</html>
