@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <!-- Инструмент 1: Twemoji для отрисовки эмодзи в едином стиле клиента Telegram -->
+  <!-- Twemoji для отрисовки эмодзи в едином стиле клиента Telegram -->
   <script src="https://cdn.jsdelivr.net/npm/@twemoji/api@latest/dist/twemoji.min.js" crossorigin="anonymous"></script>
-  <!-- Инструмент 2: Lottie Player для анимированных эмодзи и стикеров Telegram -->
+  <!-- Lottie Player для анимированных стикеров Telegram -->
   <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
   <!-- Шрифты Space Grotesk, Space Mono и Nothing OS (NDot 57 / NType 82) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -62,7 +62,6 @@
       font-family: var(--font-sans);
     }
 
-    /* Стилизация эмодзи Telegram (Twemoji + Кастомные TG Emoji) */
     img.emoji, .tg-custom-emoji {
       height: 1.2em;
       width: 1.2em;
@@ -141,6 +140,7 @@
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
         gap: 18px;
+        align-items: start;
       }
       .bottom-dock {
         max-width: 540px;
@@ -319,28 +319,74 @@
     .leader-score { font-family: var(--font-ndot); font-size: 18px; font-weight: 700; color: var(--sno-ice); }
 
     /* ============================================================== */
-    /* ЕДИНЫЙ РАЗМЕР МЕДИА (ФОТО + ВИДЕОПЛЕЕР YOUTUBE/VK/MP4) 190PX   */
+    /* ЕДИНЫЙ РАЗМЕР МЕДИА И КЛИКАБЕЛЬНОЕ ПРЕВЬЮ ВИДЕО (190PX)        */
     /* ============================================================== */
-    .nothing-img, .nothing-video-iframe {
+    .nothing-img {
       width: 100%;
       height: 100%;
       object-fit: cover;
       object-position: center;
+      filter: contrast(1.08) saturate(0.88);
       display: block;
       border: none;
       background-color: var(--sno-navy-dark);
       background-image: radial-gradient(rgba(223, 240, 255, 0.14) 1px, transparent 1px);
       background-size: 10px 10px;
     }
-    .nothing-img {
-      filter: contrast(1.08) saturate(0.88);
+
+    .video-preview-wrapper {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      cursor: pointer;
+      overflow: hidden;
+      display: block;
+    }
+    .video-play-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(9, 19, 43, 0.42);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.2s;
+    }
+    .video-preview-wrapper:hover .video-play-overlay {
+      background: rgba(9, 19, 43, 0.25);
+    }
+    .video-play-circle {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      background: rgba(223, 240, 255, 0.95);
+      color: var(--sno-navy);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      padding-left: 4px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+    }
+    .video-platform-tag {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: rgba(9, 19, 43, 0.85);
+      color: var(--sno-ice);
+      border: 1px solid var(--border-dot);
+      text-transform: uppercase;
     }
 
-    /* Сетка Ленты Анонсов: Жёлтая (заголовок), Красная (медиа 190px), Зелёная (текст и кнопки) */
+    /* Сетка Ленты Анонсов + анимация свайпа */
     .ann-split-grid {
       display: grid;
       grid-template-columns: 1fr;
       gap: 14px;
+      transition: opacity 0.22s ease, transform 0.22s ease;
     }
     .ann-yellow-zone {
       background: var(--sno-navy-dark);
@@ -373,6 +419,88 @@
       min-height: 190px;
     }
 
+    /* Увеличение короткого текста в 1.5 раза (чтобы зеленая зона не пустовала) */
+    .ann-text-content {
+      font-size: 14px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 210px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .ann-text-content.short-ann-text {
+      font-size: 21px; /* 14px * 1.5 */
+      line-height: 1.4;
+      font-weight: 600;
+      margin: auto 0;
+      padding: 8px 0;
+    }
+
+    /* Зона кнопок переключения анонсов (Скрин 3 - ПК капсула вверху справа, Скрин 2 - по бокам на мобильном) */
+    .news-top-pill-zone {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      background: var(--sno-navy-dark);
+      border: 1px solid var(--border-dot);
+      padding: 5px 10px;
+      border-radius: 999px;
+    }
+    .news-top-pill-btn {
+      width: 34px;
+      height: 28px;
+      border-radius: 999px;
+      background: var(--bg-card-elevated);
+      color: var(--sno-ice);
+      border: 1px solid var(--border-dot);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .news-top-pill-btn:disabled { opacity: 0.35; cursor: default; }
+
+    /* Боковые плавающие кнопки на мобильном (Скрин 2) */
+    .mobile-side-nav-btn {
+      display: none;
+      position: absolute;
+      top: 52%;
+      transform: translateY(-50%);
+      width: 34px;
+      height: 68px;
+      border-radius: 999px;
+      background: rgba(17, 34, 77, 0.92);
+      backdrop-filter: blur(8px);
+      color: var(--sno-ice);
+      border: 1px solid var(--sno-ice);
+      font-size: 14px;
+      font-weight: 700;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 25;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+    }
+    .mobile-side-nav-btn:disabled {
+      opacity: 0.22;
+      border-color: var(--border-dot);
+    }
+    .mobile-side-nav-prev { left: 4px; }
+    .mobile-side-nav-next { right: 4px; }
+
+    @media (max-width: 767px) {
+      #announcements-box {
+        padding-left: 22px;
+        padding-right: 22px;
+      }
+      .mobile-side-nav-btn.visible-mobile {
+        display: flex;
+      }
+    }
+
     @media (min-width: 768px) {
       .ann-split-grid {
         grid-template-columns: 360px 1fr;
@@ -385,7 +513,7 @@
       .ann-green-zone  { grid-column: 2; grid-row: 1 / span 2; height: 100%; }
     }
 
-    /* Карусель Афиши Мероприятий */
+    /* Карусель Афиши Мероприятий (ИСПРАВЛЕН БАГ: align-items: flex-start чтобы не раскрывались все сразу) */
     .events-carousel-viewport {
       overflow: hidden;
       width: 100%;
@@ -396,7 +524,7 @@
       gap: 16px;
       transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
       will-change: transform;
-      align-items: stretch;
+      align-items: flex-start; /* Каждая карточка имеет независимую высоту */
     }
     .events-carousel-track .event-card {
       flex: 0 0 100%;
@@ -405,6 +533,7 @@
       padding: 12px;
       display: flex;
       flex-direction: column;
+      align-self: flex-start;
     }
     @media (min-width: 900px) {
       .events-carousel-track .event-card {
@@ -413,7 +542,7 @@
       }
     }
 
-    .event-body { padding: 12px 4px 4px 4px; flex-grow: 1; }
+    .event-body { padding: 12px 4px 4px 4px; }
     .event-details { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border-dot); }
     .event-card.expanded .event-details { display: block; }
     .event-date-badge {
@@ -582,10 +711,13 @@
       SNO // SYSTEM LOADING...
     </div>
 
-    <!-- ЭКРАН РЕГИСТРАЦИИ -->
+    <!-- ЭКРАН РЕГИСТРАЦИИ + ПРИГЛАШЕНИЕ ВСТУПИТЬ В СНО (АНКЕТА ЯНДЕКС ФОРМЫ) -->
     <div id="registration-view" class="card" style="display: none; text-align: center; margin-top: 24px; max-width: 480px; margin-left: auto; margin-right: auto;">
       <div class="mono-label">IDENTIFICATION // REQUIRED</div>
-      <h3 class="ndot-title" style="margin: 8px 0 16px 0; font-size: 20px;">ПРИВЯЗКА ПРОФИЛЯ</h3>
+      <h3 class="ndot-title" style="margin: 8px 0 12px 0; font-size: 20px;">ПРИВЯЗКА ПРОФИЛЯ СНО</h3>
+      <p style="font-size: 13px; color: var(--text-muted); margin: 0 0 16px 0; line-height: 1.45;">
+        Если вы уже состоите в СНО НИУ МГСУ, введите своё ФИО для активации личного кабинета:
+      </p>
       <form onsubmit="registerUser(event)" style="text-align: left;">
         <label class="mono-label">ВАШЕ ПОЛНОЕ ФИО</label>
         <input type="text" id="name-input" placeholder="Иванов Иван Иванович" required>
@@ -595,6 +727,18 @@
         </label>
         <button type="submit" class="btn-primary" id="reg-btn" style="margin-top: 18px;">Активировать профиль</button>
       </form>
+
+      <!-- Блок предложения вступить в СНО (показывается сразу и подсвечивается, если ФИО не найдено в базе) -->
+      <div id="join-sno-offer-box" style="margin-top: 20px; padding-top: 18px; border-top: 1px dashed var(--border-dot); text-align: left;">
+        <div class="mono-label" style="color: var(--sno-ice);" id="join-sno-status-label">NEW MEMBER // INVITATION</div>
+        <div class="ndot-title" style="font-size: 15px; margin: 6px 0 8px 0;" id="join-sno-title">ЕЩЁ НЕ В СНО НИУ МГСУ?</div>
+        <p style="font-size: 13px; color: var(--text-muted); margin: 0 0 12px 0; line-height: 1.45;" id="join-sno-desc">
+          Вас пока нет в базе данных активистов? Мы будем рады видеть вас в нашей команде! Заполните анкету на вступление:
+        </p>
+        <button type="button" class="btn-outline" style="border-color: var(--sno-ice);" onclick="openJoinSnoForm()">
+          📝 Анкета для вступления в СНО
+        </button>
+      </div>
     </div>
 
     <!-- МОДАЛЬНОЕ ОКНО КАРТОЧКИ УЧАСТНИКА -->
@@ -747,26 +891,32 @@
         </label>
       </div>
 
-      <!-- Блок Анонсов (Жёлтая зона - заголовок, Красная - фото или видеоплеер YouTube/VK 190px, Зелёная - текст с эмодзи ТГ) -->
+      <!-- Блок Анонсов (Поддержка свайпов + боковые кнопки на мобильном [скрин 2] + верхняя капсула [скрин 3]) -->
       <div class="card" id="announcements-box">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
           <span class="mono-label" style="color: var(--sno-ice);">● ЛЕНТА АНОНСОВ СНО</span>
-          <div id="news-step-controls" style="display: none; align-items: center; gap: 6px;">
-            <button class="btn-outline" id="news-prev-btn" style="width: auto; padding: 4px 10px; font-size: 10px;" onclick="changeNewsSlide(-1)">◀</button>
-            <span id="news-counter" class="mono-label" style="color: var(--sno-ice);">1/1</span>
-            <button class="btn-outline" id="news-next-btn" style="width: auto; padding: 4px 10px; font-size: 10px;" onclick="changeNewsSlide(1)">▶</button>
+          <!-- Зона кнопок в правом верхнем углу (Скрин 3) -->
+          <div id="news-step-controls" class="news-top-pill-zone">
+            <button class="news-top-pill-btn" id="news-prev-btn" onclick="changeNewsSlide(-1)">◀</button>
+            <span id="news-counter" class="mono-label" style="color: var(--sno-ice); font-weight: 700; min-width: 34px; text-align: center;">1 / 1</span>
+            <button class="news-top-pill-btn" id="news-next-btn" onclick="changeNewsSlide(1)">▶</button>
           </div>
         </div>
+
+        <!-- Боковые кнопки для мобильного интерфейса (Скрин 2) -->
+        <button class="mobile-side-nav-btn mobile-side-nav-prev" id="news-mob-prev-btn" onclick="changeNewsSlide(-1)">◀</button>
+        <button class="mobile-side-nav-btn mobile-side-nav-next" id="news-mob-next-btn" onclick="changeNewsSlide(1)">▶</button>
+
         <div id="home-news-list"></div>
       </div>
 
       <!-- Шапка и стрелки карусели Афиши Мероприятий -->
       <div style="display: flex; justify-content: space-between; align-items: center; margin: 18px 4px 10px 4px;">
         <div class="mono-label">АФИША МЕРОПРИЯТИЙ</div>
-        <div id="events-carousel-controls" style="display: none; align-items: center; gap: 8px;">
-          <button class="btn-outline" id="ev-prev-btn" style="width: auto; padding: 4px 12px; font-size: 11px;" onclick="slideEventsCarousel(-1)">◀</button>
-          <span id="ev-carousel-counter" class="mono-label" style="color: var(--sno-ice);">1 / 1</span>
-          <button class="btn-outline" id="ev-next-btn" style="width: auto; padding: 4px 12px; font-size: 11px;" onclick="slideEventsCarousel(1)">▶</button>
+        <div id="events-carousel-controls" class="news-top-pill-zone">
+          <button class="news-top-pill-btn" id="ev-prev-btn" onclick="slideEventsCarousel(-1)">◀</button>
+          <span id="ev-carousel-counter" class="mono-label" style="color: var(--sno-ice); font-weight: 700; min-width: 38px; text-align: center;">1 / 1</span>
+          <button class="news-top-pill-btn" id="ev-next-btn" onclick="slideEventsCarousel(1)">▶</button>
         </div>
       </div>
 
@@ -826,6 +976,32 @@
           <div class="useful-sub">Написать напрямую админу <!-- доп. текст --></div>
         </div>
         <div class="mono-label" style="font-size: 18px; color: var(--sno-ice);">›</div>
+      </div>
+
+      <!-- НОВЫЙ ПОДПУНКТ: ЭТО ИНТЕРЕСНО -->
+      <div class="mono-label" style="margin: 18px 0 4px 4px;">MEDIA // PROJECTS</div>
+      <div class="ndot-title" style="font-size: 18px; margin: 0 0 12px 4px;">ЭТО ИНТЕРЕСНО</div>
+
+      <div class="useful-grid">
+        <div class="useful-tile" onclick="window.Telegram.WebApp.openLink('https://t.me/HorizonMGSU')">
+          <div class="useful-icon-box">
+            <svg class="nothing-icon-svg" viewBox="0 0 24 24"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg>
+          </div>
+          <div>
+            <div class="useful-title" style="margin-bottom: 0;">Студенческий Журнал Горизонт</div>
+            <div class="useful-sub" style="display: none;"><!-- доп. описание журнала --></div>
+          </div>
+        </div>
+
+        <div class="useful-tile" onclick="void(0)">
+          <div class="useful-icon-box">
+            <svg class="nothing-icon-svg" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+          </div>
+          <div>
+            <div class="useful-title" style="margin-bottom: 0;">Подкаст «Без фасадов»</div>
+            <div class="useful-sub" style="display: none;"><!-- доп. описание подкаста --></div>
+          </div>
+        </div>
       </div>
 
       <div class="card" style="margin-top: 14px;">
@@ -889,13 +1065,13 @@
           <input type="hidden" id="ev-originalname">
           <label class="mono-label">НАЗВАНИЕ *</label>
           <input type="text" id="ev-name" required placeholder="Школа СНО. День Первый">
-          <label class="mono-label" style="display: block; margin-top: 12px;">ДАТА И ВРЕМЯ НАЧАЛА *</label>
+          <label class="mono-label" style="display: block; margin-top: 12px;">ДАТА И ВРЕМЯ НАЧАЛА (МСК) *</label>
           <input type="datetime-local" id="ev-datetime" required>
-          <label class="mono-label" style="display: block; margin-top: 12px;">ДАТА И ВРЕМЯ ОКОНЧАНИЯ</label>
+          <label class="mono-label" style="display: block; margin-top: 12px;">ДАТА И ВРЕМЯ ОКОНЧАНИЯ (МСК)</label>
           <input type="datetime-local" id="ev-endtime">
-          <label class="mono-label" style="display: block; margin-top: 12px;">ДЕДЛАЙН РЕГИСТРАЦИИ</label>
+          <label class="mono-label" style="display: block; margin-top: 12px;">ДЕДЛАЙН РЕГИСТРАЦИИ (МСК)</label>
           <input type="datetime-local" id="ev-deadline">
-          <label class="mono-label" style="display: block; margin-top: 12px;">ОБЛОЖКА / GIF / YOUTUBE-ВИДЕО (URL)</label>
+          <label class="mono-label" style="display: block; margin-top: 12px;">ОБЛОЖКА / GIF / ССЫЛКА НА ВИДЕО (URL)</label>
           <input type="text" id="ev-photo" placeholder="https://... (фото, .gif или ссылка на YouTube/VK)">
           <label class="mono-label" style="display: block; margin-top: 12px;">ОПИСАНИЕ *</label>
           <textarea id="ev-desc" required placeholder="Подробности мероприятия..."></textarea>
@@ -926,7 +1102,7 @@
       </div>
     </div>
 
-    <!-- ЭКРАН: Создание и Редактирование анонса (с поддержкой TG-эмодзи и Видеоплеера) -->
+    <!-- ЭКРАН: Создание и Редактирование анонса -->
     <div id="standalone-ann-view" style="display: none;">
       <button class="btn-outline" style="width: auto; margin-bottom: 14px;" onclick="switchMainTab('announcements')">⬅ Отмена</button>
       <div class="card" style="max-width: 680px;">
@@ -939,19 +1115,18 @@
           <label class="mono-label">ЗАГОЛОВОК АНОНСА *</label>
           <input type="text" id="sa-title" required placeholder="Например: 🚀 Школа СНО // Старт набора">
 
-          <label class="mono-label" style="display: block; margin-top: 12px;">МЕДИА: ФОТО, GIF ИЛИ ССЫЛКА НА YOUTUBE / VK ВИДЕО</label>
+          <label class="mono-label" style="display: block; margin-top: 12px;">МЕДИА: ФОТО, GIF ИЛИ ССЫЛКА НА ВИДЕО (YOUTUBE / VK)</label>
           <label class="upload-zone" style="display: block;">
             <input type="file" id="sa-file-input" accept="image/*" style="display: none;" onchange="handleAnnouncementPreviewUpload(this)">
             <span id="sa-upload-label" class="mono-label" style="color: var(--sno-ice);">🖼 ВЫБРАТЬ ФОТО / GIF ИЗ ГАЛЕРЕИ</span>
           </label>
-          <input type="text" id="sa-preview-url" placeholder="Или ссылка на YouTube / VK Видео / .mp4 / .gif / .jpg" style="margin-top: 8px;">
+          <input type="text" id="sa-preview-url" placeholder="Или ссылка на YouTube / VK Видео / .gif / .jpg" style="margin-top: 8px;">
           <div id="sa-preview-current-wrap" style="display: none; align-items: center; gap: 10px; margin-top: 8px;">
             <img id="sa-preview-current-img" style="width: 72px; height: 42px; object-fit: cover; border-radius: 8px; border: 1px solid var(--sno-ice);">
             <button type="button" class="btn-outline" style="width: auto; padding: 5px 10px; font-size: 10px;" onclick="clearAnnouncementPreview()">Очистить медиа</button>
           </div>
 
           <label class="mono-label" style="display: block; margin-top: 12px;">ТЕКСТ / ОПИСАНИЕ * (ПОДДЕРЖКА TELEGRAM EMOJI)</label>
-          <!-- Панель быстрой вставки фирменных эмодзи Telegram -->
           <div class="emoji-picker-bar">
             <button type="button" class="emoji-btn" onclick="insertTgEmoji('🔥')">🔥</button>
             <button type="button" class="emoji-btn" onclick="insertTgEmoji('⚡')">⚡</button>
@@ -1010,8 +1185,10 @@
 
   <script>
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwhcJfMMlv2ZKcgJ1UKICfXsBlDt5cP2DazV3pW1fcqukOdNDJpeEBNfJescD9wKEzUFg/exec";
-    const LOCAL_NEWS_KEY = "sno_mgsu_saved_announcements_v3";
-    const LOCAL_DELETED_KEY = "sno_mgsu_deleted_announcements_v3";
+    // Ссылка на Яндекс.Форму "Анкета для вступления в СНО"
+    const SNO_JOIN_FORM_URL = "https://forms.yandex.ru/u/6a82ad2c49af47f4fb6ba82d";
+    const LOCAL_NEWS_KEY = "sno_mgsu_saved_announcements_v4";
+    const LOCAL_DELETED_KEY = "sno_mgsu_deleted_announcements_v4";
     const ANN_PREFIX = "[ANNOUNCEMENT]::";
     const tg = window.Telegram.WebApp;
 
@@ -1042,6 +1219,10 @@
     tg.ready();
     forceFullscreen();
 
+    function openJoinSnoForm() {
+      window.Telegram.WebApp.openLink(SNO_JOIN_FORM_URL);
+    }
+
     let currentUserGlobalName = ""; 
     let currentUserProfile = null;
     let globalEventsData = []; 
@@ -1057,7 +1238,7 @@
     let clearCustomPhotoFlag = false;
     let uploadedAnnPreviewBase64 = null;
 
-    // --- 1. ОТРИСОВКА ЭМОДЗИ TELEGRAM И АНИМИРОВАННЫХ СТИКЕРОВ ---
+    // --- 1. ОТРИСОВКА ЭМОДЗИ TELEGRAM ---
     function applyTelegramEmojis(rootElement) {
       try {
         if (window.twemoji) {
@@ -1071,7 +1252,6 @@
 
     function formatTextWithTgEmojis(rawText) {
       let safe = String(rawText || "").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-      // Поддержка шорткодов кастомных/анимированных эмодзи [emoji:https://...json/.webp/.gif]
       safe = safe.replace(/\[emoji:(https?:\/\/[^\]]+)\]/gi, (match, url) => {
         if (url.endsWith('.json') || url.endsWith('.tgs')) {
           return `<lottie-player src="${url}" background="transparent" speed="1" style="width: 24px; height: 24px; display: inline-block; vertical-align: middle;" loop autoplay></lottie-player>`;
@@ -1091,53 +1271,75 @@
       area.selectionStart = area.selectionEnd = start + emojiChar.length;
     }
 
-    // --- 2. УНИВЕРСАЛЬНЫЙ ВИДЕОПЛЕЕР (YOUTUBE, VK VIDEO, RUTUBE, MP4) + ФОТО ---
-    function parseVideoEmbedUrl(url) {
+    // --- 2. КЛИКАБЕЛЬНОЕ ПРЕВЬЮ ДЛЯ ВИДЕО (YOUTUBE / VK / RUTUBE) С ПЕРЕХОДОМ НА СТРАНИЦУ КОНТЕНТА ---
+    function parseMediaPreviewInfo(url) {
       if (!url || typeof url !== "string") return null;
       const u = url.trim();
-      // YouTube (обычные ссылки, Shorts, youtu.be, embed)
+      // YouTube: достаем оригинальное превью ролика и при клике ведем на страницу видео
       const ytMatch = u.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
       if (ytMatch) {
-        return { type: "iframe", src: `https://www.youtube.com/embed/${ytMatch[1]}?rel=0&modestbranding=1&playsinline=1` };
+        return {
+          isVideo: true,
+          platform: "YOUTUBE // VIDEO",
+          thumbUrl: `https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg`,
+          targetUrl: `https://www.youtube.com/watch?v=${ytMatch[1]}`
+        };
       }
-      // VK Video
-      const vkMatch = u.match(/vk(?:video)?\.(?:ru|com)\/video(-?\d+)_(\d+)/);
-      if (vkMatch) {
-        return { type: "iframe", src: `https://vk.com/video_ext.php?oid=${vkMatch[1]}&id=${vkMatch[2]}&hd=2` };
-      }
-      if (u.includes("vk.com/video_ext.php")) {
-        return { type: "iframe", src: u };
+      // VK Видео
+      if (/vk(?:video)?\.(?:ru|com)\/video/i.test(u)) {
+        return {
+          isVideo: true,
+          platform: "VK ВИДЕО // СМОТРЕТЬ",
+          thumbUrl: NOTHING_DEFAULT_IMAGE,
+          targetUrl: u
+        };
       }
       // Rutube
-      const rtMatch = u.match(/rutube\.ru\/video\/([a-zA-Z0-9]+)/);
-      if (rtMatch) {
-        return { type: "iframe", src: `https://rutube.ru/play/embed/${rtMatch[1]}` };
+      if (/rutube\.ru\/video/i.test(u)) {
+        return {
+          isVideo: true,
+          platform: "RUTUBE // СМОТРЕТЬ",
+          thumbUrl: NOTHING_DEFAULT_IMAGE,
+          targetUrl: u
+        };
       }
-      // Прямой видеофайл (.mp4 / .webm)
+      // Прямой видеофайл
       if (/\.(mp4|webm|mov)(\?.*)?$/i.test(u)) {
-        return { type: "video", src: u };
+        return {
+          isVideo: true,
+          platform: "VIDEO // ОТКРЫТЬ",
+          thumbUrl: NOTHING_DEFAULT_IMAGE,
+          targetUrl: u
+        };
       }
       return null;
     }
 
-    function buildMediaFrameHtml(mediaUrl) {
+    function buildMediaFrameHtml(mediaUrl, fallbackClickUrl) {
       const cleanUrl = (mediaUrl && String(mediaUrl).trim() !== "" && !String(mediaUrl).includes("unsplash.com"))
         ? String(mediaUrl).trim()
         : "";
-      const videoInfo = parseVideoEmbedUrl(cleanUrl);
-      if (videoInfo) {
-        if (videoInfo.type === "iframe") {
-          return `<iframe src="${videoInfo.src}" class="nothing-video-iframe" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen onclick="event.stopPropagation()"></iframe>`;
-        }
-        if (videoInfo.type === "video") {
-          return `<video src="${videoInfo.src}" class="nothing-video-iframe" controls playsinline preload="metadata" onclick="event.stopPropagation()"></video>`;
-        }
+      const videoPreview = parseMediaPreviewInfo(cleanUrl);
+      if (videoPreview) {
+        const clickLink = videoPreview.targetUrl || fallbackClickUrl || cleanUrl;
+        return `
+          <div class="video-preview-wrapper" onclick="event.stopPropagation(); window.Telegram.WebApp.openLink('${clickLink}')">
+            <img src="${videoPreview.thumbUrl}" class="nothing-img" onerror="this.src=NOTHING_DEFAULT_IMAGE">
+            <div class="video-play-overlay">
+              <div class="video-play-circle">▶</div>
+              <span class="video-platform-tag">${videoPreview.platform}</span>
+            </div>
+          </div>
+        `;
       }
       const finalImg = cleanUrl || NOTHING_DEFAULT_IMAGE;
+      if (fallbackClickUrl && fallbackClickUrl.startsWith("http")) {
+        return `<img src="${finalImg}" class="nothing-img" style="cursor: pointer;" onclick="event.stopPropagation(); window.Telegram.WebApp.openLink('${fallbackClickUrl}')" onerror="this.src=NOTHING_DEFAULT_IMAGE">`;
+      }
       return `<img src="${finalImg}" class="nothing-img" onerror="this.src=NOTHING_DEFAULT_IMAGE">`;
     }
 
-    // --- 3. ТРОЙНАЯ ЗАЩИТА СОХРАНЕНИЯ АНОНСОВ (LocalStorage + Telegram CloudStorage + Таблица) ---
+    // --- 3. ХРАНИЛИЩЕ АНОНСОВ ---
     function getLocalAnnouncements() {
       try {
         const raw = localStorage.getItem(LOCAL_NEWS_KEY);
@@ -1150,7 +1352,6 @@
       try {
         localStorage.setItem(LOCAL_NEWS_KEY, JSON.stringify(sliced));
       } catch (e) {}
-      // Сохраняем компактную копию (без тяжелых base64) в Telegram CloudStorage
       try {
         if (tg.CloudStorage && typeof tg.CloudStorage.setItem === "function") {
           const lightCopy = sliced.slice(0, 8).map(x => ({
@@ -1162,7 +1363,7 @@
             btnText: x.btnText || "Подробнее",
             msgId: x.msgId
           }));
-          tg.CloudStorage.setItem("sno_cloud_news_v3", JSON.stringify(lightCopy), () => {});
+          tg.CloudStorage.setItem("sno_cloud_news_v4", JSON.stringify(lightCopy), () => {});
         }
       } catch (e) {}
     }
@@ -1171,7 +1372,7 @@
       return new Promise((resolve) => {
         try {
           if (tg.CloudStorage && typeof tg.CloudStorage.getItem === "function") {
-            tg.CloudStorage.getItem("sno_cloud_news_v3", (err, val) => {
+            tg.CloudStorage.getItem("sno_cloud_news_v4", (err, val) => {
               if (!err && val) {
                 try { resolve(JSON.parse(val)); return; } catch (e) {}
               }
@@ -1276,17 +1477,58 @@
       window.scrollTo(0, 0);
     }
 
-    function toggleEvent(element) { element.classList.toggle('expanded'); }
+    // ИСПРАВЛЕНО: Раскрывается строго одна карточка мероприятия, остальные остаются закрытыми
+    function toggleEvent(element) {
+      const isAlreadyExpanded = element.classList.contains('expanded');
+      document.querySelectorAll('#events-list .event-card.expanded').forEach(card => {
+        if (card !== element) card.classList.remove('expanded');
+      });
+      element.classList.toggle('expanded', !isAlreadyExpanded);
+    }
+
+    // --- 4. МОСКОВСКОЕ ВРЕМЯ БЕЗ СДВИГА НА -3 ЧАСА ---
+    // Перевод даты в объект Date по Московскому часовому поясу (+03:00)
+    function parseMoscowDateObj(dateString) {
+      if (!dateString) return null;
+      const s = String(dateString).trim();
+      // Если строка в формате "2026-12-01T16:30" (без Z) — трактуем строго как Московское время (+03:00)
+      const localIso = s.match(/^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2})$/);
+      if (localIso) {
+        return new Date(`${localIso[1]}-${localIso[2]}-${localIso[3]}T${localIso[4]}:${localIso[5]}:00+03:00`);
+      }
+      // Если строка в формате "01.12.2026 16:30"
+      const ruMatch = s.match(/^(\d{2})\.(\d{2})\.(\d{4})\s+(\d{2}):(\d{2})/);
+      if (ruMatch) {
+        return new Date(`${ruMatch[3]}-${ruMatch[2]}-${ruMatch[1]}T${ruMatch[4]}:${ruMatch[5]}:00+03:00`);
+      }
+      const d = new Date(s);
+      return isNaN(d.getTime()) ? null : d;
+    }
 
     function formatLocalDate(dateString) {
       if (!dateString) return "";
       try {
         const s = String(dateString).trim();
-        const match = s.match(/^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2})/);
-        if (match) return `${match[3]}.${match[2]}.${match[1]} ${match[4]}:${match[5]}`;
+        // Если строка уже без часового пояса "2026-12-01T16:30", отдаем её напрямую без сдвига!
+        const directMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2})$/);
+        if (directMatch) {
+          return `${directMatch[3]}.${directMatch[2]}.${directMatch[1]} ${directMatch[4]}:${directMatch[5]}`;
+        }
+        const ruDirect = s.match(/^(\d{2})\.(\d{2})\.(\d{4})\s+(\d{2}):(\d{2})/);
+        if (ruDirect) {
+          return `${ruDirect[1]}.${ruDirect[2]}.${ruDirect[3]} ${ruDirect[4]}:${ruDirect[5]}`;
+        }
+        // Если дата пришла из таблицы в формате UTC ("...Z"), принудительно переводим в Europe/Moscow (+3)
         const d = new Date(s);
         if (isNaN(d.getTime())) return s;
-        return d.toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(',', '');
+        return d.toLocaleString('ru-RU', {
+          timeZone: 'Europe/Moscow',
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        }).replace(',', '');
       } catch(e) { return String(dateString); }
     }
 
@@ -1372,13 +1614,17 @@
       window.Telegram.WebApp.openLink(`https://t.me/${username}`);
     }
 
-    // Рендер Ленты Анонсов (Жёлтая зона - заголовок, Красная - единое медиа/видеоплеер 190px, Зелёная - текст с эмодзи ТГ)
+    // --- 5. РЕНДЕР ЛЕНТЫ АНОНСОВ (С АВТО-УВЕЛИЧЕНИЕМ КОРОТКОГО ТЕКСТА В 1.5 РАЗА И СВАЙПАМИ) ---
     function renderNewsSlider() {
       const container = document.getElementById('home-news-list');
       const controls = document.getElementById('news-step-controls');
+      const mobPrev = document.getElementById('news-mob-prev-btn');
+      const mobNext = document.getElementById('news-mob-next-btn');
       
       if (!globalNewsData || globalNewsData.length === 0) {
         controls.style.display = 'none';
+        if (mobPrev) mobPrev.classList.remove('visible-mobile');
+        if (mobNext) mobNext.classList.remove('visible-mobile');
         container.innerHTML = `
           <div class="ann-split-grid">
             <div class="ann-yellow-zone">
@@ -1400,7 +1646,17 @@
       if (currentNewsIndex < 0) currentNewsIndex = 0;
 
       const item = globalNewsData[currentNewsIndex];
-      controls.style.display = globalNewsData.length > 1 ? 'flex' : 'none';
+      const hasMultiple = globalNewsData.length > 1;
+      controls.style.display = hasMultiple ? 'flex' : 'none';
+      if (mobPrev) {
+        mobPrev.classList.toggle('visible-mobile', hasMultiple);
+        mobPrev.disabled = (currentNewsIndex === 0);
+      }
+      if (mobNext) {
+        mobNext.classList.toggle('visible-mobile', hasMultiple);
+        mobNext.disabled = (currentNewsIndex === globalNewsData.length - 1);
+      }
+
       document.getElementById('news-counter').innerText = `${currentNewsIndex + 1}/${globalNewsData.length}`;
       document.getElementById('news-prev-btn').disabled = (currentNewsIndex === 0);
       document.getElementById('news-next-btn').disabled = (currentNewsIndex === globalNewsData.length - 1);
@@ -1408,8 +1664,10 @@
       const safeTitle = item.title
         ? formatTextWithTgEmojis(item.title)
         : "АНОНС СНО МГСУ";
-      const mediaHtml = buildMediaFrameHtml(item.preview);
-      const safeText = formatTextWithTgEmojis(item.text);
+      const mediaHtml = buildMediaFrameHtml(item.preview, item.link);
+      const rawTextTrimmed = String(item.text || "").trim();
+      const isShortText = rawTextTrimmed.length > 0 && rawTextTrimmed.length <= 120 && rawTextTrimmed.split('\n').length <= 3;
+      const safeText = formatTextWithTgEmojis(rawTextTrimmed);
       
       const linkBtn = (item.link && item.link.startsWith('http'))
         ? `<button class="btn-primary" style="margin-top: 14px;" onclick="window.Telegram.WebApp.openLink('${item.link}')">🔗 ${item.btnText || 'Перейти по ссылке'}</button>`
@@ -1423,7 +1681,7 @@
       ` : '';
 
       container.innerHTML = `
-        <div class="ann-split-grid">
+        <div class="ann-split-grid" id="ann-active-grid">
           <div class="ann-yellow-zone">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
               <span class="mono-label" style="color: var(--sno-ice);">📅 ${formatLocalDate(item.date)}</span>
@@ -1437,7 +1695,7 @@
           </div>
 
           <div class="ann-green-zone">
-            <div style="font-size: 14px; line-height: 1.55; white-space: pre-wrap; word-break: break-word; max-height: 210px; overflow-y: auto; padding-right: 4px;">${safeText}</div>
+            <div class="ann-text-content ${isShortText ? 'short-ann-text' : ''}">${safeText}</div>
             <div>
               ${linkBtn}
               ${adminActionsHtml}
@@ -1449,8 +1707,57 @@
     }
 
     function changeNewsSlide(delta) {
-      currentNewsIndex += delta;
-      renderNewsSlider();
+      if (!globalNewsData || globalNewsData.length <= 1) return;
+      const nextIdx = currentNewsIndex + delta;
+      if (nextIdx < 0 || nextIdx >= globalNewsData.length) return;
+
+      const grid = document.getElementById('ann-active-grid');
+      if (grid) {
+        grid.style.opacity = '0';
+        grid.style.transform = `translateX(${delta > 0 ? '-18px' : '18px'})`;
+        setTimeout(() => {
+          currentNewsIndex = nextIdx;
+          renderNewsSlider();
+        }, 160);
+      } else {
+        currentNewsIndex = nextIdx;
+        renderNewsSlider();
+      }
+    }
+
+    // Поддержка свайпов пальцем для блока анонсов и карусели мероприятий
+    function initTouchSwipes() {
+      const annBox = document.getElementById('announcements-box');
+      if (annBox) {
+        let startX = 0, startY = 0;
+        annBox.addEventListener('touchstart', (e) => {
+          startX = e.changedTouches[0].screenX;
+          startY = e.changedTouches[0].screenY;
+        }, { passive: true });
+        annBox.addEventListener('touchend', (e) => {
+          const dx = e.changedTouches[0].screenX - startX;
+          const dy = e.changedTouches[0].screenY - startY;
+          if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.3) {
+            changeNewsSlide(dx < 0 ? 1 : -1);
+          }
+        }, { passive: true });
+      }
+
+      const evViewport = document.querySelector('.events-carousel-viewport');
+      if (evViewport) {
+        let evStartX = 0, evStartY = 0;
+        evViewport.addEventListener('touchstart', (e) => {
+          evStartX = e.changedTouches[0].screenX;
+          evStartY = e.changedTouches[0].screenY;
+        }, { passive: true });
+        evViewport.addEventListener('touchend', (e) => {
+          const dx = e.changedTouches[0].screenX - evStartX;
+          const dy = e.changedTouches[0].screenY - evStartY;
+          if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.3) {
+            slideEventsCarousel(dx < 0 ? 1 : -1);
+          }
+        }, { passive: true });
+      }
     }
 
     function renderAdminNewsList() {
@@ -1466,7 +1773,7 @@
             </div>
           </div>
           <div class="event-media-frame" style="margin-bottom: 10px;">
-            ${buildMediaFrameHtml(n.preview)}
+            ${buildMediaFrameHtml(n.preview, n.link)}
           </div>
           ${n.title ? `<div style="font-weight:700; margin-bottom:6px; color: var(--sno-ice);">${formatTextWithTgEmojis(n.title)}</div>` : ''}
           <div style="font-size: 13.5px; margin-bottom: 12px; line-height: 1.4; white-space: pre-wrap;">${formatTextWithTgEmojis(n.text)}</div>
@@ -1574,9 +1881,7 @@
 
         try {
           const urlPreviewParam = safePreview.startsWith("data:") ? "" : safePreview;
-          // Канал 1: Зеркальное обновление через edit_event (работает даже на старом Код.gs!)
           fetch(`${APPS_SCRIPT_URL}?action=edit_event&originalName=${encodeURIComponent(oldMirrorName)}&name=${encodeURIComponent(mirrorName)}&datetime=${encodeURIComponent(globalNewsData[editIdx].date)}&endtime=${encodeURIComponent(btnTextVal)}&deadline=${encodeURIComponent(finalId)}&photo=${encodeURIComponent(urlPreviewParam)}&desc=${encodeURIComponent(descVal)}&regType=${encodeURIComponent(linkVal || 'no')}&exemption=false`).catch(()=>{});
-          // Канал 2: Прямое обновление листа News
           await fetch(APPS_SCRIPT_URL, {
             method: "POST",
             headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -1616,17 +1921,13 @@
           mirrorEventName: mirrorName
         };
 
-        // 1. Сохраняем в localStorage + Telegram CloudStorage
         globalNewsData.unshift(newItemObj);
         saveLocalAnnouncements(globalNewsData);
 
-        // 2. Отправляем в Google Таблицу сразу по всем каналам (включая 100% рабочий create_event)
         try {
           const urlPreviewParam = safePreview.startsWith("data:") ? "" : safePreview;
-          // Зеркальная запись через create_event — гарантированно сохраняется в таблицу на любой версии Код.gs
           await fetch(`${APPS_SCRIPT_URL}?action=create_event&name=${encodeURIComponent(mirrorName)}&datetime=${encodeURIComponent(nowIso)}&endtime=${encodeURIComponent(btnTextVal)}&deadline=${encodeURIComponent(createdId)}&photo=${encodeURIComponent(urlPreviewParam)}&desc=${encodeURIComponent(descVal)}&regType=${encodeURIComponent(linkVal || 'no')}&exemption=false&postToChannel=${postToCh}`);
 
-          // Запись на лист News
           fetch(APPS_SCRIPT_URL, {
             method: "POST",
             headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -1833,6 +2134,25 @@
       openSubView('admin-view');
     }
 
+    // При открытии редактирования мероприятия переводим время обратно в формат datetime-local (МСК)
+    function toInputDatetimeLocalMsk(val) {
+      if (!val) return "";
+      const s = String(val).trim();
+      if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(s) && !s.endsWith("Z")) {
+        return s.substring(0, 16);
+      }
+      const d = parseMoscowDateObj(s);
+      if (!d) return "";
+      const parts = new Intl.DateTimeFormat('ru-RU', {
+        timeZone: 'Europe/Moscow',
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit'
+      }).formatToParts(d);
+      const map = {};
+      parts.forEach(p => map[p.type] = p.value);
+      return `${map.year}-${map.month}-${map.day}T${map.hour}:${map.minute}`;
+    }
+
     function openAdminForEdit(eventName) {
       const ev = globalEventsData.find(e => e.name === eventName);
       if (!ev) return;
@@ -1840,9 +2160,9 @@
       document.getElementById('ev-submit-btn').innerText = "Сохранить изменения";
       document.getElementById('ev-originalname').value = ev.name;
       document.getElementById('ev-name').value = ev.name;
-      document.getElementById('ev-datetime').value = ev.datetime || "";
-      document.getElementById('ev-endtime').value = ev.endtime || "";
-      document.getElementById('ev-deadline').value = ev.deadline || "";
+      document.getElementById('ev-datetime').value = toInputDatetimeLocalMsk(ev.datetime);
+      document.getElementById('ev-endtime').value = toInputDatetimeLocalMsk(ev.endtime);
+      document.getElementById('ev-deadline').value = toInputDatetimeLocalMsk(ev.deadline);
       document.getElementById('ev-photo').value = ev.photo || "";
       document.getElementById('ev-desc').value = ev.desc || "";
       document.getElementById('ev-exemption').checked = (ev.exemption === "true"); 
@@ -1954,10 +2274,10 @@
     }
 
     function isEventPast(ev, now) {
-      const startD = ev.datetime ? new Date(ev.datetime) : null;
-      const endD = ev.endtime ? new Date(ev.endtime) : null;
-      if (endD && !isNaN(endD.getTime())) return now > endD;
-      if (startD && !isNaN(startD.getTime())) {
+      const startD = parseMoscowDateObj(ev.datetime);
+      const endD = parseMoscowDateObj(ev.endtime);
+      if (endD) return now > endD;
+      if (startD) {
         return now > new Date(startD.getTime() + 6 * 3600 * 1000);
       }
       return false;
@@ -1999,9 +2319,9 @@
         const isJoined = ev.participants && String(ev.participants).includes(String(currentUserId));
         let btnHtml = ""; let statusHtml = "";
         
-        const startD = ev.datetime ? new Date(ev.datetime) : null;
-        const endD = ev.endtime ? new Date(ev.endtime) : null;
-        const dlD = ev.deadline ? new Date(ev.deadline) : null;
+        const startD = parseMoscowDateObj(ev.datetime);
+        const endD = parseMoscowDateObj(ev.endtime);
+        const dlD = parseMoscowDateObj(ev.deadline);
         const past = isEventPast(ev, now);
         let isClosed = past;
 
@@ -2039,7 +2359,6 @@
         const endTimeInfo = ev.endtime ? `<div class="mono-label" style="margin-bottom: 6px;">🏁 ОКОНЧАНИЕ: ${formatLocalDate(ev.endtime)}</div>` : '';
 
         return `<div class="card event-card" onclick="toggleEvent(this)">
-          <!-- Единая рамка 190px (16:9) с авто-поддержкой фото, GIF и видеоплеера YouTube/VK -->
           <div class="event-media-frame">
             ${buildMediaFrameHtml(ev.photo)}
           </div>
@@ -2090,6 +2409,8 @@
       const currentUserPhotoTg = tg.initDataUnsafe?.user?.photo_url;
       const adminIds = ["1486703011", "123456789", "789596527", "526927711"];
       
+      initTouchSwipes();
+
       try {
         const [response, cloudNews] = await Promise.all([
           fetch(`${APPS_SCRIPT_URL}?t=${Date.now()}`),
@@ -2098,7 +2419,6 @@
         const data = await response.json();
         globalParticipantsData = data.participants || [];
 
-        // Отделяем обычные мероприятия от зеркально сохраненных анонсов ([ANNOUNCEMENT]::)
         const rawEvents = data.events || [];
         const mirrorAnnouncements = [];
         globalEventsData = [];
@@ -2121,7 +2441,6 @@
           }
         });
 
-        // Объединяем все 4 источника анонсов (LocalStorage + CloudStorage + Зеркало Events + Лист News)
         globalNewsData = mergeAllAnnouncements(data.news || [], mirrorAnnouncements, cloudNews);
         saveLocalAnnouncements(globalNewsData);
 
@@ -2228,17 +2547,35 @@
       }
     }
 
+    // Если при попытке регистрации ФИО не найдено в базе — подсвечиваем блок приглашения вступить в СНО
     async function registerUser(event) {
       event.preventDefault();
       const nameInput = document.getElementById('name-input').value;
       const btn = document.getElementById('reg-btn');
-      btn.innerText = "СИНХРОНИЗАЦИЯ..."; btn.disabled = true;
+      btn.innerText = "ПРОВЕРКА В БАЗЕ..."; btn.disabled = true;
       try {
         const response = await fetch(`${APPS_SCRIPT_URL}?action=register&userId=${tg.initDataUnsafe?.user?.id}&fullName=${encodeURIComponent(nameInput)}`);
         const result = await response.json();
-        if (result.status === "success") location.reload();
-        else { alert(result.message); btn.innerText = "Активировать профиль"; btn.disabled = false; }
-      } catch (e) { alert("Ошибка сети"); btn.disabled = false; }
+        if (result.status === "success") {
+          location.reload();
+        } else {
+          btn.innerText = "Попробовать снова";
+          btn.disabled = false;
+          const offerBox = document.getElementById('join-sno-offer-box');
+          document.getElementById('join-sno-status-label').innerText = "NOT FOUND // ПРИГЛАШЕНИЕ В СНО";
+          document.getElementById('join-sno-status-label').style.color = "var(--danger)";
+          document.getElementById('join-sno-title').innerText = "ВАШЕ ФИО НЕ НАЙДЕНО В БАЗЕ СНО";
+          document.getElementById('join-sno-desc').innerText = "Похоже, вы ещё не числитесь в списке участников СНО НИУ МГСУ. Хотите вступить к нам? Заполните анкету по кнопке ниже:";
+          offerBox.style.background = "rgba(255, 82, 82, 0.08)";
+          offerBox.style.padding = "16px";
+          offerBox.style.borderRadius = "16px";
+          offerBox.style.border = "1px solid var(--danger)";
+        }
+      } catch (e) {
+        alert("Ошибка сети");
+        btn.innerText = "Активировать профиль";
+        btn.disabled = false;
+      }
     }
 
     document.addEventListener('DOMContentLoaded', loadProfile);
