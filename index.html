@@ -39,7 +39,6 @@
       --font-mono: 'Lettera Mono LL', 'Space Mono', monospace;
       --font-ndot: 'NDot 57', 'NDot 47', 'Space Mono', monospace;
 
-      /* Безопасный отступ сверху под кнопку "Закрыть" в Telegram */
       --safe-top: calc(var(--tg-safe-area-inset-top, env(safe-area-inset-top, 18px)) + var(--tg-content-safe-area-inset-top, 52px));
     }
 
@@ -48,14 +47,16 @@
       -webkit-tap-highlight-color: transparent;
     }
 
+    /* Фоновые космические обои Nothing OS в единой гамме СНО */
     body {
       background-color: var(--bg-main);
-      background-image: radial-gradient(rgba(223, 240, 255, 0.1) 1px, transparent 1px);
-      background-size: 16px 16px;
+      background-image: 
+        radial-gradient(circle at 75% 30%, rgba(21, 40, 88, 0.6) 0%, transparent 60%),
+        radial-gradient(rgba(223, 240, 255, 0.08) 1px, transparent 1px);
+      background-size: 100% 100%, 16px 16px;
       color: var(--text-primary);
       font-family: var(--font-sans);
       margin: 0;
-      /* Опускаем интерфейс ниже системной кнопки "Закрыть" */
       padding: var(--safe-top) 18px 115px 18px;
       min-height: 100vh;
       width: 100%;
@@ -87,9 +88,9 @@
     }
     .loading-dots::after {
       content: '';
-      animation: Dots 1.4s steps(4, end) infinite;
+      animation: nothingDots 1.4s steps(4, end) infinite;
     }
-    @keyframes Dots {
+    @keyframes nothingDots {
       0%   { content: ''; }
       25%  { content: '.'; }
       50%  { content: '..'; }
@@ -356,7 +357,7 @@
     /* ============================================================== */
     /* ЕДИНЫЙ РАЗМЕР МЕДИА И КЛИКАБЕЛЬНОЕ ПРЕВЬЮ ВИДЕО (190PX)        */
     /* ============================================================== */
-    .-img {
+    .nothing-img {
       width: 100%;
       height: 100%;
       object-fit: cover;
@@ -560,7 +561,7 @@
       .ann-green-zone  { grid-column: 2; grid-row: 1 / span 2; height: 100%; max-height: 310px; }
     }
 
-    /* Карусель Афиши Мероприятий (align-items: flex-start чтобы не раскрывались все сразу) */
+    /* Карусель Афиши Мероприятий */
     .events-carousel-viewport {
       overflow: hidden;
       width: 100%;
@@ -649,7 +650,7 @@
       background: var(--sno-ice);
       color: var(--sno-navy);
     }
-    .-icon-svg {
+    .nothing-icon-svg {
       width: 24px;
       height: 24px;
       stroke: var(--sno-navy);
@@ -759,7 +760,7 @@
       <span>SNO // SYSTEM LOADING</span><span class="loading-dots"></span>
     </div>
 
-    <!-- ЭКРАН РЕГИСТРАЦИИ + ПРИГЛАШЕНИЕ ВСТУПИТЬ В СНО (АНКЕТА ЯНДЕКС ФОРМЫ) -->
+    <!-- ЭКРАН РЕГИСТРАЦИИ + ПРИГЛАШЕНИЕ ВСТУПИТЬ В СНО -->
     <div id="registration-view" class="card" style="display: none; text-align: center; margin-top: 12px; max-width: 480px; margin-left: auto; margin-right: auto;">
       <div class="mono-label">IDENTIFICATION // REQUIRED</div>
       <h3 class="ndot-title" style="margin: 8px 0 12px 0; font-size: 20px;">ПРИВЯЗКА ПРОФИЛЯ СНО</h3>
@@ -776,7 +777,6 @@
         <button type="submit" class="btn-primary" id="reg-btn" style="margin-top: 18px;">Активировать профиль</button>
       </form>
 
-      <!-- Блок предложения вступить в СНО -->
       <div id="join-sno-offer-box" style="margin-top: 20px; padding-top: 18px; border-top: 1px dashed var(--border-dot); text-align: left;">
         <div class="mono-label" style="color: var(--sno-ice);" id="join-sno-status-label">NEW MEMBER // INVITATION</div>
         <div class="ndot-title" style="font-size: 15px; margin: 6px 0 8px 0;" id="join-sno-title">ЕЩЁ НЕ В СНО НИУ МГСУ?</div>
@@ -826,7 +826,6 @@
       </div>
 
       <div class="desktop-two-col">
-        <!-- Левая колонка: Профиль -->
         <div>
           <div class="card">
             <div style="display: flex; gap: 14px; align-items: flex-start;">
@@ -858,7 +857,6 @@
               </div>
             </div>
 
-            <!-- Интересы и Настройки профиля -->
             <div style="margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--border-dot);">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                 <span class="mono-label">НАУЧНЫЕ ИНТЕРЕСЫ И НАСТРОЙКИ</span>
@@ -893,7 +891,6 @@
           </div>
         </div>
 
-        <!-- Правая колонка: Рейтинг + Админка внизу -->
         <div>
           <details class="card" open>
             <summary style="cursor: pointer;">
@@ -908,15 +905,14 @@
             <div id="leaderboard-list" style="margin-top: 14px;"></div>
           </details>
 
-          <!-- БЛОК КНОПОК АДМИНОВ И РУКОВОДСТВА (Объединены создание и управление анонсами) -->
           <div id="admin-bottom-block" class="card" style="display: none; border-color: var(--sno-ice);">
             <div class="mono-label" style="color: var(--sno-ice);">ADMINISTRATION // TERMINAL</div>
             <div class="ndot-title" style="font-size: 16px; margin: 4px 0 12px 0;">УПРАВЛЕНИЕ И БАЗА СНО</div>
             <div style="display: flex; flex-direction: column; gap: 8px;">
-              <button id="admin-create-ev-btn" class="btn-primary" style="margin-top: 0;" onclick="openAdminForCreate()">Создать мероприятие <!-- доп. подпись --></button>
-              <button id="admin-ann-hub-btn" class="btn-outline" onclick="openAnnouncementsHub()">Анонсы (Создать / Изменить) <!-- доп. подпись --></button>
-              <button class="btn-outline" onclick="openSubView('past-events-admin-view')">Архив мероприятий <!-- доп. подпись --></button>
-              <button class="btn-outline" onclick="renderAllParticipants()">База участников <!-- доп. подпись --></button>
+              <button id="admin-create-ev-btn" class="btn-primary" style="margin-top: 0;" onclick="openAdminForCreate()">Создать мероприятие</button>
+              <button id="admin-ann-hub-btn" class="btn-outline" onclick="openAnnouncementsHub()">Анонсы (Создать / Изменить)</button>
+              <button class="btn-outline" onclick="openSubView('past-events-admin-view')">Архив мероприятий</button>
+              <button class="btn-outline" onclick="renderAllParticipants()">База участников</button>
             </div>
           </div>
         </div>
@@ -938,11 +934,9 @@
         </label>
       </div>
 
-      <!-- Блок Анонсов -->
       <div class="card" id="announcements-box">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
           <span class="mono-label" style="color: var(--sno-ice);">● ЛЕНТА АНОНСОВ СНО</span>
-          <!-- Зона кнопок в правом верхнем углу (на мобильном скрыта через CSS) -->
           <div id="news-step-controls" class="news-top-pill-zone">
             <button class="news-top-pill-btn" id="news-prev-btn" onclick="changeNewsSlide(-1)">◀</button>
             <span id="news-counter" class="mono-label" style="color: var(--sno-ice); font-weight: 700; min-width: 34px; text-align: center;">1 / 1</span>
@@ -950,14 +944,12 @@
           </div>
         </div>
 
-        <!-- Боковые кнопки для мобильного интерфейса -->
         <button class="mobile-side-nav-btn mobile-side-nav-prev" id="news-mob-prev-btn" onclick="changeNewsSlide(-1)">◀</button>
         <button class="mobile-side-nav-btn mobile-side-nav-next" id="news-mob-next-btn" onclick="changeNewsSlide(1)">▶</button>
 
         <div id="home-news-list"></div>
       </div>
 
-      <!-- Шапка и стрелки карусели Афиши Мероприятий -->
       <div style="display: flex; justify-content: space-between; align-items: center; margin: 18px 4px 10px 4px;">
         <div class="mono-label">АФИША МЕРОПРИЯТИЙ</div>
         <div id="events-carousel-controls" class="news-top-pill-zone">
@@ -967,7 +959,6 @@
         </div>
       </div>
 
-      <!-- Голубая зона: Карусель карточек мероприятий -->
       <div class="events-carousel-viewport">
         <div id="events-list" class="events-carousel-track"></div>
       </div>
@@ -986,7 +977,7 @@
         </div>
         <div style="flex-grow: 1;">
           <div class="useful-title" style="margin-top: 0;">Поиск соавторов</div>
-          <div class="useful-sub" style="display: none;"><!-- доп. описание --></div>
+          <div class="useful-sub" style="display: none;"></div>
           <div class="status-chip" id="coauthors-count-chip">● загрузка...</div>
         </div>
         <div class="mono-label" style="font-size: 18px; color: var(--sno-ice);">›</div>
@@ -999,7 +990,7 @@
           </div>
           <div>
             <div class="useful-title" style="margin-bottom: 0;">База знаний</div>
-            <div class="useful-sub" style="display: none;"><!-- доп. описание --></div>
+            <div class="useful-sub" style="display: none;"></div>
           </div>
         </div>
 
@@ -1009,7 +1000,7 @@
           </div>
           <div>
             <div class="useful-title" style="margin-bottom: 0;">Консультация</div>
-            <div class="useful-sub" style="display: none;"><!-- доп. описание --></div>
+            <div class="useful-sub" style="display: none;"></div>
           </div>
         </div>
       </div>
@@ -1020,12 +1011,11 @@
         </div>
         <div style="flex-grow: 1;">
           <div class="useful-title" style="margin-top: 0;">Поддержка бота</div>
-          <div class="useful-sub">Написать напрямую админу <!-- доп. текст --></div>
+          <div class="useful-sub">Написать напрямую админу</div>
         </div>
         <div class="mono-label" style="font-size: 18px; color: var(--sno-ice);">›</div>
       </div>
 
-      <!-- ПОДПУНКТ: ЭТО ИНТЕРЕСНО -->
       <div class="mono-label" style="margin: 18px 0 4px 4px;">MEDIA // PROJECTS</div>
       <div class="ndot-title" style="font-size: 18px; margin: 0 0 12px 4px;">ЭТО ИНТЕРЕСНО</div>
 
@@ -1036,7 +1026,7 @@
           </div>
           <div>
             <div class="useful-title" style="margin-bottom: 0;">Студенческий Журнал Горизонт</div>
-            <div class="useful-sub" style="display: none;"><!-- доп. описание журнала --></div>
+            <div class="useful-sub" style="display: none;"></div>
           </div>
         </div>
 
@@ -1046,7 +1036,7 @@
           </div>
           <div>
             <div class="useful-title" style="margin-bottom: 0;">Подкаст «Без фасадов»</div>
-            <div class="useful-sub" style="display: none;"><!-- доп. описание подкаста --></div>
+            <div class="useful-sub" style="display: none;"></div>
           </div>
         </div>
       </div>
@@ -1054,10 +1044,10 @@
       <div class="card" style="margin-top: 14px;">
         <div class="mono-label" style="margin-bottom: 10px;">OFFICIAL NETWORKS</div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-          <button class="btn-outline" onclick="window.Telegram.WebApp.openLink('https://t.me/snomgsu')">Telegram <!-- доп. текст --></button>
-          <button class="btn-outline" onclick="window.Telegram.WebApp.openLink('https://vk.com/snomgsu')">ВКонтакте <!-- доп. текст --></button>
-          <button class="btn-outline" onclick="window.Telegram.WebApp.openLink('https://www.youtube.com/@snouniversity')">YouTube <!-- доп. текст --></button>
-          <button class="btn-outline" onclick="window.Telegram.WebApp.openLink('https://www.tiktok.com/@snouniversity?_r=1&_t=ZP-9BEeogS7KOs')">TikTok <!-- доп. текст --></button>
+          <button class="btn-outline" onclick="window.Telegram.WebApp.openLink('https://t.me/snomgsu')">Telegram</button>
+          <button class="btn-outline" onclick="window.Telegram.WebApp.openLink('https://vk.com/snomgsu')">ВКонтакте</button>
+          <button class="btn-outline" onclick="window.Telegram.WebApp.openLink('https://www.youtube.com/@snouniversity')">YouTube</button>
+          <button class="btn-outline" onclick="window.Telegram.WebApp.openLink('https://www.tiktok.com/@snouniversity?_r=1&_t=ZP-9BEeogS7KOs')">TikTok</button>
         </div>
       </div>
     </div>
@@ -1091,7 +1081,6 @@
       </div>
     </div>
 
-    <!-- ЭКРАН: Вся база участников СНО (Поддерживает свайп слева направо для возврата на Главную) -->
     <div id="all-participants-view" style="display: none;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
         <button class="btn-outline" style="width: auto;" onclick="switchMainTab('home')">⬅ Назад на Главную</button>
@@ -1102,14 +1091,12 @@
       <div id="all-participants-list" class="events-grid-desktop"></div>
     </div>
 
-    <!-- ОБЪЕДИНЕННЫЙ ЭКРАН: СОЗДАНИЕ И УПРАВЛЕНИЕ АНОНСАМИ В ОДНОМ ИНТЕРФЕЙСЕ -->
     <div id="news-view" style="display: none;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
         <button class="btn-outline" style="width: auto;" onclick="switchMainTab('home')">⬅ Назад на Главную</button>
         <button class="btn-primary" id="toggle-ann-form-btn" style="width: auto; margin-top: 0; padding: 10px 18px;" onclick="openStandaloneAnnouncementModal()">➕ Добавить новый анонс</button>
       </div>
 
-      <!-- Встроенная форма создания / редактирования анонса прямо внутри хаба управления -->
       <div id="ann-editor-card" class="card" style="display: none; max-width: 720px; border-color: var(--sno-ice); margin-bottom: 20px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
           <div>
@@ -1300,7 +1287,6 @@
     let clearCustomPhotoFlag = false;
     let uploadedAnnPreviewBase64 = null;
 
-    // --- 1. ОТРИСОВКА ЭМОДЗИ TELEGRAM ---
     function applyTelegramEmojis(rootElement) {
       try {
         if (window.twemoji) {
@@ -1333,7 +1319,6 @@
       area.selectionStart = area.selectionEnd = start + emojiChar.length;
     }
 
-    // --- 2. КЛИКАБЕЛЬНОЕ ПРЕВЬЮ ДЛЯ ВИДЕО (YOUTUBE / VK / RUTUBE) ---
     function parseMediaPreviewInfo(url) {
       if (!url || typeof url !== "string") return null;
       const u = url.trim();
@@ -1397,7 +1382,6 @@
       return `<img src="${finalImg}" class="nothing-img" onerror="this.src=NOTHING_DEFAULT_IMAGE">`;
     }
 
-    // --- 3. ХРАНИЛИЩЕ АНОНСОВ ---
     function getLocalAnnouncements() {
       try {
         const raw = localStorage.getItem(LOCAL_NEWS_KEY);
@@ -1546,7 +1530,6 @@
       element.classList.toggle('expanded', !isAlreadyExpanded);
     }
 
-    // --- 4. МОСКОВСКОЕ ВРЕМЯ БЕЗ СДВИГА НА -3 ЧАСА ---
     function parseMoscowDateObj(dateString) {
       if (!dateString) return null;
       const s = String(dateString).trim();
@@ -1669,7 +1652,6 @@
       window.Telegram.WebApp.openLink(`https://t.me/${username}`);
     }
 
-    // --- 5. РЕНДЕР ЛЕНТЫ АНОНСОВ И УМНАЯ АВТО-ПОДГОНКА ТЕКСТА ПОД СИНЮЮ РАМКУ (350px) ---
     function fitAnnouncementText() {
       requestAnimationFrame(() => {
         const textEl = document.querySelector('#home-news-list .ann-text-content');
@@ -1810,7 +1792,6 @@
       }
     }
 
-    // Свайпы: 1) Лента анонсов, 2) Карусель мероприятий, 3) Свайп назад в "Базе участников СНО"
     function initTouchSwipes() {
       const annBox = document.getElementById('announcements-box');
       if (annBox) {
@@ -1844,7 +1825,6 @@
         }, { passive: true });
       }
 
-      // Свайп назад (слева направо) в интерфейсе просмотра всех участников СНО
       const allPartView = document.getElementById('all-participants-view');
       if (allPartView) {
         let apStartX = 0, apStartY = 0;
@@ -1855,7 +1835,6 @@
         allPartView.addEventListener('touchend', (e) => {
           const dx = e.changedTouches[0].screenX - apStartX;
           const dy = e.changedTouches[0].screenY - apStartY;
-          // Если свайпнули слева направо (dx > 65px) — возвращаемся на Главную страницу
           if (dx > 65 && Math.abs(dx) > Math.abs(dy) * 1.4) {
             switchMainTab('home');
           }
@@ -1863,7 +1842,6 @@
       }
     }
 
-    // --- 6. ЕДИНЫЙ ИНТЕРФЕЙС СОЗДАНИЯ И УПРАВЛЕНИЯ АНОНСАМИ ---
     function openAnnouncementsHub() {
       closeAnnEditorCard();
       renderAdminNewsList();
